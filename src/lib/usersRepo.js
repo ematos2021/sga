@@ -8,8 +8,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
-const URL = import.meta.env.VITE_SUPABASE_URL;
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const URL = import.meta.env.VITE_SUPABASE_URL || 'https://pfyimfplmycakshzyhaj.supabase.co';
+const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_FiqdFTv3TkOimlj2NH3Iug_2ib9CfUw';
 
 export function useUsuarios() {
     const [items, setItems] = useState([]);
