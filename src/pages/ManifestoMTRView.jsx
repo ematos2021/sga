@@ -576,13 +576,13 @@ function ManifestoMTRView({ onBack }) {
             <div className="mtr-tbl">
                 <style>{`
                     .mtr-tbl > div { border: none !important; border-radius: 0 !important; border-top: 1px solid var(--border-color-soft) !important; }
-                    .mtr-tbl table { font-size: 0.7rem !important; }
+                    .mtr-tbl table { font-size: 0.76rem !important; font-variant-numeric: tabular-nums; }
                     .mtr-tbl thead tr { background: transparent !important; }
-                    .mtr-tbl thead th { font-size: 0.56rem !important; letter-spacing: 0.6px; padding: 0.5rem 0.6rem !important; color: var(--color-text-subtle) !important; border-bottom: 1px solid var(--border-color) !important; }
-                    .mtr-tbl tbody td { padding: 0.4rem 0.6rem !important; border-bottom: 1px solid var(--border-color-soft) !important; }
+                    .mtr-tbl thead th { font-size: 0.6rem !important; font-weight: 600 !important; letter-spacing: 0.7px; padding: 0.55rem 0.7rem !important; color: var(--color-text-subtle) !important; border-bottom: 1px solid var(--border-color) !important; }
+                    .mtr-tbl tbody td { padding: 0.6rem 0.7rem !important; border-bottom: 1px solid var(--border-color-soft) !important; line-height: 1.4; font-weight: 400; }
                     .mtr-tbl tbody tr:hover { background: var(--bg-surface-2) !important; }
-                    .mtr-tbl tbody td span, .mtr-tbl tbody td div { font-size: 0.7rem !important; }
-                    .mtr-tbl tbody td div { font-size: 0.62rem !important; }
+                    .mtr-tbl tbody td span, .mtr-tbl tbody td div { font-size: 0.76rem !important; }
+                    .mtr-tbl tbody td div { font-size: 0.66rem !important; color: var(--color-text-subtle); }
                 `}</style>
                 <DataTable dense columns={columns} rows={paginados} empty={loading ? 'Carregando manifestos do Supabase…' : 'Nenhum manifesto. Registre acima ou use Importar dados.'} />
             </div>
