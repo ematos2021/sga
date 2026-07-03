@@ -1037,16 +1037,44 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
         return [...autoFlow, ...manualMapped].sort((a, b) => b.date.localeCompare(a.date));
     }, [autoFlow, manualFlow, manifestos]);
 
-    // Totais Consolidados
+    // Filtros de Data
+    const [filtroMes, setFiltroMes] = useState('todos');
+    const [filtroAno, setFiltroAno] = useState('todos');
+    const [filtroDia, setFiltroDia] = useState('');
+
+    const anosDisponiveis = useMemo(() => {
+        const anos = consolidados.map(it => it.date ? it.date.split('-')[0] : null).filter(Boolean);
+        return [...new Set(anos)].sort((a, b) => b.localeCompare(a));
+    }, [consolidados]);
+
+    const filtradosCaixa = useMemo(() => {
+        return consolidados.filter((it) => {
+            if (!it.date) return true;
+            const [ano, mes] = it.date.split('-');
+            
+            if (filtroDia && it.date !== filtroDia) {
+                return false;
+            }
+            if (filtroMes !== 'todos' && mes !== filtroMes) {
+                return false;
+            }
+            if (filtroAno !== 'todos' && ano !== filtroAno) {
+                return false;
+            }
+            return true;
+        });
+    }, [consolidados, filtroMes, filtroAno, filtroDia]);
+
+    // Totais Consolidados (baseados no filtro para atualização dinâmica)
     const totais = useMemo(() => {
         let entradas = 0;
         let saidas = 0;
-        consolidados.forEach((c) => {
+        filtradosCaixa.forEach((c) => {
             if (c.type === 'entrada') entradas += c.amount;
             else saidas += c.amount;
         });
         return { entradas, saidas, saldo: entradas - saidas };
-    }, [consolidados]);
+    }, [filtradosCaixa]);
 
     const handleAddFlow = async (e) => {
         e.preventDefault();
@@ -1168,6 +1196,91 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
 
             {/* Listagem de Auditoria */}
             <h3 style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)' }}>Demonstrativo de Auditoria Caixa</h3>
+
+            {/* Barra de Filtros por Dias, Mês e Ano */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.8rem', background: 'rgba(255,255,255,0.01)', padding: '0.6rem 0.8rem', borderRadius: 8, border: '1px solid var(--border-color-soft)', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase', marginRight: 'auto' }}>
+                    🔍 Filtrar demonstrativo:
+                </span>
+                
+                {/* Filtro por Dia */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Dia:</span>
+                    <Input
+                        type="date"
+                        value={filtroDia}
+                        onChange={(e) => {
+                            setFiltroDia(e.target.value);
+                            if (e.target.value) {
+                                setFiltroMes('todos');
+                                setFiltroAno('todos');
+                            }
+                        }}
+                        style={{ padding: '0.25rem 0.45rem', fontSize: '0.72rem', width: '130px', height: '28px' }}
+                    />
+                </div>
+
+                {/* Filtro por Mês */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Mês:</span>
+                    <Select
+                        value={filtroMes}
+                        onChange={(e) => {
+                            setFiltroMes(e.target.value);
+                            if (e.target.value !== 'todos') setFiltroDia('');
+                        }}
+                        style={{ padding: '0.25rem 0.45rem', fontSize: '0.72rem', width: '120px', height: '28px' }}
+                    >
+                        <option value="todos">Todos</option>
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </Select>
+                </div>
+
+                {/* Filtro por Ano */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Ano:</span>
+                    <Select
+                        value={filtroAno}
+                        onChange={(e) => {
+                            setFiltroAno(e.target.value);
+                            if (e.target.value !== 'todos') setFiltroDia('');
+                        }}
+                        style={{ padding: '0.25rem 0.45rem', fontSize: '0.72rem', width: '95px', height: '28px' }}
+                    >
+                        <option value="todos">Todos</option>
+                        {anosDisponiveis.map(ano => (
+                            <option key={ano} value={ano}>{ano}</option>
+                        ))}
+                    </Select>
+                </div>
+
+                {(filtroDia !== '' || filtroMes !== 'todos' || filtroAno !== 'todos') && (
+                    <Btn
+                        variant="outline"
+                        color="#ff4757"
+                        onClick={() => {
+                            setFiltroDia('');
+                            setFiltroMes('todos');
+                            setFiltroAno('todos');
+                        }}
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.66rem', height: '28px' }}
+                    >
+                        Limpar Filtros
+                    </Btn>
+                )}
+            </div>
+
             {flowLoading ? (
                 <div style={{ padding: '1.5rem', textAlign: 'center', fontSize: '0.78rem', color: 'var(--color-text-subtle)' }}>
                     Processando auditoria...
@@ -1175,6 +1288,10 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
             ) : consolidados.length === 0 ? (
                 <div style={{ padding: '2rem 1rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border-color)', borderRadius: '10px', fontSize: '0.78rem', color: 'var(--color-text-subtle)', marginBottom: '1.5rem' }}>
                     Nenhum lançamento no fluxo de caixa cadastrado.
+                </div>
+            ) : filtradosCaixa.length === 0 ? (
+                <div style={{ padding: '2rem 1rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border-color)', borderRadius: '10px', fontSize: '0.78rem', color: 'var(--color-text-subtle)', marginBottom: '1.5rem' }}>
+                    Nenhum lançamento encontrado para os filtros selecionados.
                 </div>
             ) : (
                 <div style={{ overflowX: 'auto', border: '1px solid var(--border-color-soft)', borderRadius: '10px', marginBottom: '1.5rem' }}>
@@ -1190,7 +1307,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {consolidados.map((it) => {
+                            {filtradosCaixa.map((it) => {
                                 const corTipo = it.type === 'entrada' ? '#10b981' : '#ef4444';
                                 return (
                                     <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
