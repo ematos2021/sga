@@ -70,6 +70,8 @@ function FichaResiduosView({ onBack }) {
     const [page, setPage] = useState(1);
 
     const [modal, setModal] = useState(null); // { form, id|null }
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState(empty());
 
     const tipos = useMemo(() => [...new Set(items.map((m) => m.waste_type).filter(Boolean))].sort(), [items]);
     const tratamentos = useMemo(() => [...new Set(items.map((m) => m.treatment).filter(Boolean))].sort(), [items]);
@@ -92,6 +94,14 @@ function FichaResiduosView({ onBack }) {
         destinadores: new Set(items.map((m) => m.destinator_name).filter(Boolean)).size,
         perigosos: items.filter((m) => (m.waste_class || '').trim() === 'I' || /GRUPO A/i.test(m.waste_class || '')).length,
     }), [items, tipos.length]);
+
+    const handleInclusao = async (e) => {
+        e.preventDefault();
+        if (!form.waste_type?.trim()) { alert('Informe ao menos o Resíduo.'); return; }
+        await add(form);
+        setForm(empty());
+        setShowForm(false);
+    };
 
     const salvar = async () => {
         if (!modal.form.waste_type?.trim()) { alert('Informe ao menos o Resíduo.'); return; }
@@ -144,7 +154,7 @@ function FichaResiduosView({ onBack }) {
                 <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaFileExcel size={10} /> Exportar Excel
                 </Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => setModal({ form: empty(), id: null })} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                <Btn variant="outline" color="#8b9bb4" onClick={() => { setShowForm(!showForm); setTimeout(() => { document.querySelector('.ficha-form-card')?.scrollIntoView({ behavior: 'smooth' }); }, 50); }} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaPlus size={10} /> Adicionar resíduo
                 </Btn>
             </>}
@@ -156,6 +166,66 @@ function FichaResiduosView({ onBack }) {
                 <Kpi icon={<FaRecycle size={15} />} label="Destinadores" value={kpis.destinadores} color="#10b981" />
                 <Kpi icon={<FaTrash size={15} />} label="Classe I / RSS (perigosos)" value={kpis.perigosos} color={kpis.perigosos ? '#ff4757' : '#10b981'} />
             </div>
+
+            {/* Form de Cadastro retrátil (mesmo design, tamanho, visual e ludicidade do MTR) */}
+            <Card className="ficha-form-card" style={{ marginBottom: '1rem', borderLeft: '3px solid #9d4edd', padding: '0.6rem 0.9rem' }}>
+                <div
+                    onClick={() => setShowForm(!showForm)}
+                    style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+                        userSelect: 'none'
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                        <FaRecycle size={14} color="#9d4edd" />
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
+                            🆕 Registrar Novo Resíduo
+                        </span>
+                    </div>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>
+                        {showForm ? 'Recolher formulário ▴' : 'Expandir formulário ▾'}
+                    </span>
+                </div>
+
+                {showForm && (
+                    <form onSubmit={handleInclusao} className="ficha-form" style={{ marginTop: '1.2rem', animation: 'slideDown 0.25s ease-out' }}>
+                        <style>{`
+                            .ficha-form .input-dark { padding: 0.34rem 0.55rem !important; font-size: 0.76rem !important; }
+                            .ficha-form .label-muted { font-size: 0.58rem !important; display: block; margin-bottom: 0.12rem; }
+                            .ficha-form > div[style*="grid"] { gap: 0.55rem 0.8rem !important; }
+                            @keyframes slideDown {
+                                from { opacity: 0; transform: translateY(-8px); }
+                                to { opacity: 1; transform: translateY(0); }
+                            }
+                        `}</style>
+                        
+                        {SECOES.map((sec) => (
+                            <div key={sec.titulo} style={{ marginBottom: '1.2rem' }}>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#9d4edd', marginBottom: '0.6rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.35rem' }}>
+                                    {sec.titulo}
+                                </div>
+                                <FormGrid cols={3}>
+                                    {sec.campos.map((c) => (
+                                        <Field key={c.key} label={c.label} span={c.span}>
+                                            <Input
+                                                value={form[c.key] || ''}
+                                                placeholder={c.placeholder}
+                                                onChange={(e) => setForm((prev) => ({ ...prev, [c.key]: e.target.value }))}
+                                                className="input-dark"
+                                            />
+                                        </Field>
+                                    ))}
+                                </FormGrid>
+                            </div>
+                        ))}
+                        
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
+                            <Btn variant="outline" color="#8b9bb4" onClick={() => { setShowForm(false); setForm(empty()); }}>Cancelar</Btn>
+                            <Btn color="#9d4edd" type="submit"><FaPlus size={10} /> Adicionar resíduo</Btn>
+                        </div>
+                    </form>
+                )}
+            </Card>
 
             {/* Filtros */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem', flexWrap: 'wrap' }}>
