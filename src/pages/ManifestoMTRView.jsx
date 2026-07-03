@@ -443,7 +443,7 @@ function ManifestoMTRView({ onBack }) {
         { key: 'solicitante', label: 'Solicitante', align: 'center', wrap: true, render: (r) => r.solicitante || '—' },
         { key: 'motorista', label: 'Motorista / Placa', align: 'center', wrap: true, render: (r) => <span>{r.motorista || '—'}{r.placa ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', fontFamily: 'ui-monospace, monospace' }}>{r.placa}</div> : null}</span> },
         { key: 'setorColeta', label: 'Setor de Coleta', align: 'center', render: (r) => r.setorColeta || '—' },
-        { key: 'destinador', label: 'Destinador', align: 'center', wrap: true, render: (r) => r.destinador || '—' },
+        { key: 'destinador', label: 'Fornecedor', align: 'center', wrap: true, render: (r) => r.destinador || '—' },
         { key: 'responsavelSGI', label: 'SGI', align: 'center', wrap: true, render: (r) => r.responsavelSGI || '—' },
         {
             key: 'reembolso', label: 'Reembolso', align: 'center', render: (r) => {
@@ -620,7 +620,7 @@ function ManifestoMTRView({ onBack }) {
                                         </Select>
                                     )}
                                 </Field>
-                                <Field label="Destinador (recebedor)">
+                                <Field label="Fornecedor">
                                     {(destLivre || destinadoresSugeridos.length === 0) ? (
                                         <Input
                                             value={form.destinador}
@@ -637,7 +637,7 @@ function ManifestoMTRView({ onBack }) {
                                                 else if (e.target.value !== '__ATUAL__') set('destinador', e.target.value);
                                             }}
                                         >
-                                            <option value="">Selecione o destinador…</option>
+                                            <option value="">Selecione o fornecedor…</option>
                                             {form.destinador && !destinadoresSugeridos.includes(form.destinador) && (
                                                 <option value="__ATUAL__">{form.destinador}</option>
                                             )}
@@ -870,7 +870,7 @@ function ViewManifestoModal({ manifesto, onClose }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                         <DetailField label="Motorista" value={manifesto.motorista} />
                         <DetailField label="Placa do Veículo" value={manifesto.placa} />
-                        <DetailField label="Destinador (Recebedor)" value={manifesto.destinador} />
+                        <DetailField label="Fornecedor" value={manifesto.destinador} />
                         <DetailField label="Tipo de Destinação" value={manifesto.destinacao} />
                     </div>
                 </div>
@@ -1735,7 +1735,7 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
                             </Select>
                         )}
                     </Field>
-                    <Field label="Destinador (recebedor)">
+                    <Field label="Fornecedor">
                         {(destLivre || destinadoresSugeridos.length === 0) ? (
                             <Input
                                 value={f.destinador}
@@ -1752,7 +1752,7 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
                                     else if (e.target.value !== '__ATUAL__') s('destinador', e.target.value);
                                 }}
                             >
-                                <option value="">Selecione o destinador…</option>
+                                <option value="">Selecione o fornecedor…</option>
                                 {f.destinador && !destinadoresSugeridos.includes(f.destinador) && (
                                     <option value="__ATUAL__">{f.destinador}</option>
                                 )}
