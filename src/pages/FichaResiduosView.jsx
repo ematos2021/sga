@@ -150,6 +150,7 @@ function FichaResiduosView({ onBack }) {
             title="Cadastro de Resíduos"
             subtitle="Ficha mestre · destinadores, transportadores e classificação"
             onBack={onBack}
+            maxWidth="100%"
             actions={<>
                 <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaFileExcel size={10} /> Exportar Excel
@@ -253,8 +254,9 @@ function FichaResiduosView({ onBack }) {
             <div className="ficha-tbl">
                 <style>{`
                     .ficha-tbl table { font-size: 0.68rem !important; }
-                    .ficha-tbl thead th { font-size: 0.54rem !important; padding: 0.4rem 0.45rem !important; }
-                    .ficha-tbl tbody td { padding: 0.3rem 0.45rem !important; line-height: 1.25; }
+                    .ficha-tbl thead th { font-size: 0.54rem !important; padding: 0.4rem 0.45rem !important; border-right: 1px solid var(--border-color-soft); }
+                    .ficha-tbl tbody td { padding: 0.3rem 0.45rem !important; line-height: 1.25; border-right: 1px solid var(--border-color-soft); }
+                    .ficha-tbl thead th:last-child, .ficha-tbl tbody td:last-child { border-right: none; }
                     .ficha-tbl tbody td span, .ficha-tbl tbody td div { font-size: 0.68rem !important; }
                     .ficha-tbl tbody td div { font-size: 0.6rem !important; }
                     .ficha-tbl th:nth-child(1), .ficha-tbl td:nth-child(1) { width: 17%; }
