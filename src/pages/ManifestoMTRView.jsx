@@ -1187,7 +1187,6 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                                 <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Descrição / Origem</th>
                                 <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Valor</th>
                                 <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center' }}>Operador</th>
-                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 60 }}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1223,23 +1222,10 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                                             {it.type === 'entrada' ? '+' : '-'} R$ {Number(it.amount).toFixed(2)}
                                         </td>
                                         <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center', color: 'var(--color-text-muted)', fontWeight: 500, fontSize: '0.66rem' }}>
-                                            👤 {it.created_by || '—'}
-                                        </td>
-                                        <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
-                                            {it.isAuto ? (
-                                                <span title="Lançamento automático via Reembolso MTR" style={{ color: 'var(--color-text-subtle)', cursor: 'help' }}>
-                                                    🔒
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeFlowItem(Number(it.id))}
-                                                    style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer' }}
-                                                    title="Excluir lançamento"
-                                                >
-                                                    <FaTrash size={12} />
-                                                </button>
-                                            )}
+                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
+                                                <span>👤</span>
+                                                <span>{it.created_by || '—'}</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
