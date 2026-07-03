@@ -74,11 +74,7 @@ const MANIFESTO_STEPS = [
         title: 'Responder no grupo do WhatsApp',
         description: 'Comunique no grupo que o manifesto está pronto e disponível para retirada.',
     },
-    {
-        type: 'action', icon: '📝',
-        title: 'Preencher a FR 615',
-        description: 'Registre os dados do manifesto emitido na planilha FR 615 para controle interno.',
-    },
+
     {
         type: 'end',
         title: 'Tarefa concluída',
