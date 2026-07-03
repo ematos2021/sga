@@ -49,13 +49,14 @@ export function useCashFlow() {
         reload();
     }, [reload]);
 
-    const add = useCallback(async (record) => {
+    const add = useCallback(async (record, username) => {
         const payload = {
             manifest_id: record.manifest_id ? Number(record.manifest_id) : null,
             type: record.type || 'saida',
             description: record.description || '',
             amount: Number(record.amount || 0),
             date: record.date || new Date().toISOString().slice(0, 10),
+            created_by: username || null,
         };
 
         if (isLocal) {

@@ -56,7 +56,7 @@ export function useRefunds(manifestId = null) {
         reload();
     }, [reload]);
 
-    const add = useCallback(async (record) => {
+    const add = useCallback(async (record, username) => {
         const payload = {
             manifest_id: manifestId,
             description: record.description || '',
@@ -64,6 +64,7 @@ export function useRefunds(manifestId = null) {
             unit: record.unit || 'kg',
             unit_price: Number(record.unit_price || 0),
             total_price: Number((record.quantity || 0) * (record.unit_price || 0)),
+            created_by: username || null,
         };
 
         if (isLocal) {

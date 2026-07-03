@@ -758,6 +758,7 @@ function ManifestoMTRView({ onBack }) {
             {refundModalItem && (
                 <RefundsManagerModal
                     manifesto={refundModalItem}
+                    currentUser={currentUser}
                     onClose={() => { setRefundModalItem(null); reloadAllRefunds(); }}
                 />
             )}
@@ -775,6 +776,7 @@ function ManifestoMTRView({ onBack }) {
                 <CashFlowAuditModal
                     manifestos={items}
                     allRefunds={allRefunds}
+                    currentUser={currentUser}
                     onClose={() => { setShowCashFlowModal(false); reloadAllRefunds(); }}
                 />
             )}
@@ -928,7 +930,7 @@ function DetailField({ label, value }) {
 }
 
 // ── Modal de Auditoria de Fluxo de Caixa (Entradas & Saídas) ──
-function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
+function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
     const { items: manualFlow, add: addFlowItem, remove: removeFlowItem, loading: flowLoading, isLocal } = useCashFlow();
 
     const [form, setForm] = useState({
@@ -955,6 +957,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
                 description: `Reembolso: ${ref.description}`,
                 amount: Number(ref.total_price || 0),
                 date: mtr?.data || ref.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+                created_by: ref.created_by || 'Sistema',
             };
         });
     }, [allRefunds, manifestos]);
@@ -973,6 +976,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
                 description: f.description,
                 amount: Number(f.amount || 0),
                 date: f.date,
+                created_by: f.created_by || '—',
             };
         });
         return [...autoFlow, ...manualMapped].sort((a, b) => b.date.localeCompare(a.date));
@@ -995,7 +999,8 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
             alert('Preencha os campos com valores válidos.');
             return;
         }
-        await addFlowItem(form);
+        const username = currentUser?.name || currentUser?.username || '';
+        await addFlowItem(form, username);
         setForm({
             manifest_id: '',
             type: 'saida',
@@ -1008,7 +1013,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
     const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
 
     return (
-        <Modal title="Auditoria de Fluxo de Caixa (MTR)" onClose={onClose} width={940}>
+        <Modal title="Auditoria de Fluxo de Caixa (MTR)" onClose={onClose} width={1140}>
             {isLocal && (
                 <div style={{
                     padding: '0.6rem 0.8rem', borderRadius: 8, background: 'rgba(255, 183, 0, 0.08)',
@@ -1051,7 +1056,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
                         .mtr-cashflow-form .input-dark { padding: 0.35rem 0.55rem !important; font-size: 0.76rem !important; }
                         .mtr-cashflow-form .label-muted { font-size: 0.58rem !important; display: block; margin-bottom: 0.12rem; }
                     `}</style>
-                    <FormGrid cols={4}>
+                    <FormGrid cols={5}>
                         <Field label="Tipo" required>
                             <Select value={form.type} onChange={(e) => set('type', e.target.value)}>
                                 <option value="saida">Saída (-) Despesa</option>
@@ -1097,13 +1102,12 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
                                 required
                             />
                         </Field>
-                        <div style={{ gridColumn: 'span 2' }}></div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-                            <Btn type="submit" color="#ff9f43" style={{ padding: '0.45rem 1rem' }}>
-                                <FaPlus size={10} /> Registrar Lançamento
-                            </Btn>
-                        </div>
                     </FormGrid>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.8rem' }}>
+                        <Btn type="submit" color="#ff9f43" style={{ padding: '0.45rem 1rem' }}>
+                            <FaPlus size={10} /> Registrar Lançamento
+                        </Btn>
+                    </div>
                 </form>
             </Card>
 
@@ -1127,6 +1131,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
                                 <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Manifesto (MTR)</th>
                                 <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Descrição / Origem</th>
                                 <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Valor</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center' }}>Operador</th>
                                 <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 60 }}>Ações</th>
                             </tr>
                         </thead>
@@ -1159,8 +1164,11 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
                                         <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
                                             {it.description}
                                         </td>
-                                        <td style={{ padding: '0.5rem 0.7rem', color: corTipo, fontWeight: 700, textAlign: 'right' }}>
+                                        <td style={{ padding: '0.5rem 0.7rem', color: corTipo, fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>
                                             {it.type === 'entrada' ? '+' : '-'} R$ {Number(it.amount).toFixed(2)}
+                                        </td>
+                                        <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center', color: 'var(--color-text-muted)', fontWeight: 500, fontSize: '0.66rem' }}>
+                                            👤 {it.created_by || '—'}
                                         </td>
                                         <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
                                             {it.isAuto ? (
@@ -1194,7 +1202,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
 }
 
 // ── Modal de Gerenciamento de Reembolsos ──
-function RefundsManagerModal({ manifesto, onClose }) {
+function RefundsManagerModal({ manifesto, currentUser, onClose }) {
     const { items, add, remove, loading, isLocal } = useRefunds(manifesto.id);
     const { items: catalog, add: addCatalogItem } = useRefundCatalog();
     
@@ -1234,7 +1242,8 @@ function RefundsManagerModal({ manifesto, onClose }) {
             return;
         }
 
-        await add({ ...form, description: finalDescription });
+        const username = currentUser?.name || currentUser?.username || '';
+        await add({ ...form, description: finalDescription }, username);
         
         setForm({
             description: '',
