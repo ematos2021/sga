@@ -816,6 +816,12 @@ function ViewManifestoModal({ manifesto, onClose }) {
     const partesResiduos = (manifesto.residuo || '').split(/\s*\|\s*/).filter(Boolean);
     const corStatus = manifesto.status === 'Emitido' ? '#10b981' : '#ffb700';
 
+    const { items: refundItems, loading: refundLoading } = useRefunds(manifesto.id);
+
+    const totalReembolso = useMemo(() => {
+        return refundItems.reduce((acc, curr) => acc + Number(curr.total_price || 0), 0);
+    }, [refundItems]);
+
     return (
         <Modal title="Detalhes do Manifesto" onClose={onClose} width={820}>
             {/* Header resumo */}
@@ -906,6 +912,55 @@ function ViewManifestoModal({ manifesto, onClose }) {
                             </div>
                         ))}
                     </div>
+                </div>
+
+                {/* Bloco 5: Demonstrativo de Reembolsos do Manifesto */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem', gridColumn: 'span 2' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                        <h3 style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#ff9f43', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            💰 Demonstrativo de Reembolso
+                        </h3>
+                        {totalReembolso > 0 && (
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ff9f43' }}>
+                                Total: R$ {totalReembolso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                        )}
+                    </div>
+
+                    {refundLoading ? (
+                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', padding: '0.5rem 0' }}>Carregando reembolsos...</div>
+                    ) : refundItems.length === 0 ? (
+                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', fontStyle: 'italic', padding: '0.5rem 0' }}>
+                            Nenhum reembolso cadastrado para este manifesto.
+                        </div>
+                    ) : (
+                        <div style={{ overflowX: 'auto', border: '1px solid var(--border-color-soft)', borderRadius: '8px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.7rem', textAlign: 'left' }}>
+                                <thead>
+                                    <tr style={{ background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color-soft)' }}>
+                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Item / Descrição</th>
+                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Qtd</th>
+                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 60 }}>Unidade</th>
+                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Preço Unit.</th>
+                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Valor Total</th>
+                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center' }}>Operador</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {refundItems.map((it) => (
+                                        <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
+                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', fontWeight: 500, whiteSpace: 'normal', wordBreak: 'break-word' }}>{it.description}</td>
+                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
+                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>{it.unit}</td>
+                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', textAlign: 'right' }}>R$ {Number(it.unit_price).toFixed(2)}</td>
+                                            <td style={{ padding: '0.4rem 0.6rem', color: '#ff9f43', fontWeight: 600, textAlign: 'right' }}>R$ {Number(it.total_price).toFixed(2)}</td>
+                                            <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.62rem' }}>👤 {it.created_by || '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
             </div>
