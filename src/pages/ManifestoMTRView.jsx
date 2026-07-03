@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FaTruckMoving, FaPlus, FaTrash, FaFileExcel, FaExternalLinkAlt, FaEdit, FaForward, FaPrint, FaClipboardList } from 'react-icons/fa';
+import { FaTruckMoving, FaPlus, FaTrash, FaFileExcel, FaExternalLinkAlt, FaEdit, FaForward, FaPrint, FaClipboardList, FaSave, FaTimes, FaDollarSign } from 'react-icons/fa';
 import { PageShell, Btn, Card, Field, Input, Select, Textarea, FormGrid, DataTable, RowAction, Modal, Kpi } from '../components/ui';
 import { uid } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +8,8 @@ import { useWasteRegistry } from '../lib/wasteRegistryRepo';
 import { STATUS_MANIFESTO, TIPOS_DESTINACAO, SINIR_URL } from '../lib/constants';
 import { exportToExcel } from '../lib/excel';
 import { parseWasteManifestsSQL } from '../lib/importManifestos';
+import { useRefunds, useRefundCatalog } from '../lib/refundsRepo';
+import { useCashFlow } from '../lib/cashFlowRepo';
 import ProcessGuide from '../components/ProcessGuide';
 import FichaPicker from '../components/FichaPicker';
 import FR231Print from '../components/FR231Print';
@@ -92,7 +94,7 @@ const MANIFESTO_NOTES = [
     'Manifesto Ambulatorial é feito apenas na última sexta-feira do mês e segue o fluxo de 1 MTR.',
 ];
 
-const empty = () => ({
+const emptyForm = () => ({
     numeroMTR: '', data: new Date().toISOString().slice(0, 10), hora: new Date().toTimeString().slice(0, 5), residuo: '',
     solicitante: '', motorista: '', placa: '', responsavelSGI: '',
     notaFiscal: '', ticketSustentare: '', manifestoSupertrans: '', setorColeta: '',
@@ -116,38 +118,116 @@ const destinacaoDeTratamento = (t = '') => {
     return '';
 };
 
-// Emoji por resíduo (leitura rápida na tabela)
+// Emoji por resíduo (leitura rápida na tabela, suporta múltiplos resíduos separados por ' | ')
 const iconeResiduo = (nome = '') => {
-    const t = nome.toUpperCase();
-    if (/ISOPOR|PLÁSTIC|PLASTIC/.test(t)) return '🧴';
-    if (/PAPEL|PAPELÃO|PAPELAO|TUBETE/.test(t)) return '📦';
-    if (/METAL|SUCATA|AÇO|ACO/.test(t)) return '🔩';
-    if (/VIDRO/.test(t)) return '🫙';
-    if (/MADEIRA|LENHA|PALLET|ENGRAD/.test(t)) return '🪵';
-    if (/ÓLEO|OLEO|LUBRIF/.test(t)) return '🛢️';
-    if (/BORRACHA|PNEU/.test(t)) return '🛞';
-    if (/LÂMPADA|LAMPADA/.test(t)) return '💡';
-    if (/PILHA|BATERIA/.test(t)) return '🔋';
-    if (/ELETRÔNIC|ELETRONIC|INFORMÁTIC|INFORMATIC/.test(t)) return '💻';
-    if (/AMBULATORIAL|INFECT|RSS/.test(t)) return '⚕️';
-    if (/EFLUENTE|SANITÁRIO|SANITARIO/.test(t)) return '💧';
-    if (/ENTULHO/.test(t)) return '🧱';
-    if (/CONTAMINAD/.test(t)) return '☣️';
-    if (/ATERRO|LIXO|COMUM/.test(t)) return '🗑️';
-    return '♻️';
+    const partes = nome.split(/\s*\|\s*/).filter(Boolean);
+    if (partes.length === 0) return '♻️';
+    const icones = partes.map((p) => {
+        const t = p.toUpperCase();
+        if (/ISOPOR|PLÁSTIC|PLASTIC/.test(t)) return '🧴';
+        if (/PAPEL|PAPELÃO|PAPELAO|TUBETE/.test(t)) return '📦';
+        if (/METAL|SUCATA|AÇO|ACO/.test(t)) return '🔩';
+        if (/VIDRO/.test(t)) return '🫙';
+        if (/MADEIRA|LENHA|PALLET|ENGRAD/.test(t)) return '🪵';
+        if (/ÓLEO|OLEO|LUBRIF/.test(t)) return '🛢️';
+        if (/BORRACHA|PNEU/.test(t)) return '🛞';
+        if (/LÂMPADA|LAMPADA/.test(t)) return '💡';
+        if (/PILHA|BATERIA/.test(t)) return '🔋';
+        if (/ELETRÔNIC|ELETRONIC|INFORMÁTIC|INFORMATIC/.test(t)) return '💻';
+        if (/AMBULATORIAL|INFECT|RSS/.test(t)) return '⚕️';
+        if (/EFLUENTE|SANITÁRIO|SANITARIO/.test(t)) return '💧';
+        if (/ENTULHO/.test(t)) return '🧱';
+        if (/CONTAMINAD/.test(t)) return '☣️';
+        if (/ATERRO|LIXO|COMUM/.test(t)) return '🗑️';
+        return '♻️';
+    });
+    return [...new Set(icones)].join('');
 };
+
+
+// Componente para seleção e exibição de múltiplos resíduos no mesmo manifesto
+function MultiWasteSelector({ value, onChange, residuosUnicos, fichas, onAddWasteDetails }) {
+    const list = useMemo(() => (value ? value.split(/\s*\|\s*/).filter(Boolean) : []), [value]);
+    const [selected, setSelected] = useState('');
+
+    const handleAdd = () => {
+        if (!selected || list.includes(selected)) return;
+        const newList = [...list, selected];
+        onChange(newList.join(' | '));
+        if (onAddWasteDetails) {
+            onAddWasteDetails(selected);
+        }
+        setSelected('');
+    };
+
+    const handleRemove = (itemToRemove) => {
+        const newList = list.filter((item) => item !== itemToRemove);
+        onChange(newList.join(' | '));
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                    <Select value={selected} onChange={(e) => setSelected(e.target.value)} placeholder="Selecione um resíduo para adicionar…">
+                        <option value="">Selecione um resíduo…</option>
+                        {residuosUnicos.map((nome, idx) => (
+                            <option key={idx} value={nome} disabled={list.includes(nome)}>
+                                {nome}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
+                <Btn onClick={handleAdd} disabled={!selected} style={{ padding: '0.38rem 0.8rem', height: '100%', minHeight: '34px' }}>
+                    <FaPlus size={10} /> Adicionar
+                </Btn>
+            </div>
+            
+            {list.length > 0 && (
+                <div style={{
+                    display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.15rem',
+                    padding: '0.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px',
+                    border: '1px solid var(--border-color-soft)'
+                }}>
+                    {list.map((item, idx) => (
+                        <div key={idx} style={{
+                            display: 'flex', alignItems: 'center', gap: '0.35rem',
+                            padding: '0.2rem 0.55rem', background: 'var(--bg-surface-3)',
+                            borderRadius: '16px', border: '1px solid var(--border-color)',
+                            fontSize: '0.74rem', color: 'var(--color-text-main)'
+                        }}>
+                            <span style={{ fontSize: '0.85rem' }}>{iconeResiduo(item)}</span>
+                            <span>{item}</span>
+                            <button
+                                type="button"
+                                onClick={() => handleRemove(item)}
+                                style={{
+                                    background: 'transparent', border: 'none', color: 'var(--color-danger)',
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: '0 2px', fontSize: '0.74rem', fontWeight: 'bold'
+                                }}
+                            >
+                                <FaTimes size={10} />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 
 function ManifestoMTRView({ onBack }) {
     const { items, add, update, remove, setAll, loading, error } = useManifestos();
     const { items: fichas } = useWasteRegistry();
     const { currentUser } = useAuth();
     const nomeUsuario = currentUser?.name || currentUser?.username || '';
-    const [form, setForm] = useState(empty());
+    const [form, setForm] = useState(emptyForm());
     const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
     // Preenche o Solicitante com o usuário logado (ao montar / login resolver)
     useEffect(() => {
-        if (!editId) setForm((f) => (f.solicitante ? f : { ...f, solicitante: nomeUsuario }));
+        setForm((f) => (f.solicitante ? f : { ...f, solicitante: nomeUsuario }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nomeUsuario]);
 
@@ -171,8 +251,8 @@ function ManifestoMTRView({ onBack }) {
     // Setor de coleta: escolher na lista (setores já usados) ou digitar novo
     const [setorLivre, setSetorLivre] = useState(false);
 
-    // Edição de manifesto (null = criando novo)
-    const [editId, setEditId] = useState(null);
+    // Modal de edição (objeto do manifesto sendo editado, ou null)
+    const [editModal, setEditModal] = useState(null);
 
     // Confirmação de exclusão (manifesto a excluir)
     const [confirmDel, setConfirmDel] = useState(null);
@@ -180,51 +260,52 @@ function ManifestoMTRView({ onBack }) {
     // Exibição do guia de fluxo (acionado por botão no topo)
     const [showGuide, setShowGuide] = useState(false);
 
-    const onResiduo = (nome) => {
+    // Reembolsos totais para cálculo de KPI e estado do modal de reembolso
+    const { items: allRefunds, reload: reloadAllRefunds } = useRefunds();
+    const [refundModalItem, setRefundModalItem] = useState(null);
+
+    // Estado para o modal de visualização de detalhes do manifesto
+    const [viewModalItem, setViewModalItem] = useState(null);
+
+    // Estado para exibir o modal de Fluxo de Caixa
+    const [showCashFlowModal, setShowCashFlowModal] = useState(false);
+
+    const onAddWasteDetails = (nome) => {
         const f = fichas.find((x) => x.waste_type === nome);
         setForm((prev) => ({ 
             ...prev, 
-            residuo: nome, 
             destinador: f?.destinator_name || prev.destinador, 
             destinacao: f ? destinacaoDeTratamento(f.treatment) || prev.destinacao : prev.destinacao 
         }));
     };
 
-    // Auto-preenchimento a partir de uma ficha do Cadastro de Resíduos
+    // Auto-preenchimento a partir de uma ficha do Cadastro de Resíduos (adiciona à lista existente)
     const carregarFicha = (id) => {
         const f = fichas.find((x) => String(x.id) === String(id));
         if (!f) return;
         const residuo = `${f.waste_type || ''}${f.category ? ' - ' + f.category : ''}`.trim();
-        setForm((prev) => ({
-            ...prev,
-            residuo,
-            destinador: f.destinator_name || prev.destinador,
-            destinacao: destinacaoDeTratamento(f.treatment) || prev.destinacao,
-        }));
+        setForm((prev) => {
+            const list = prev.residuo ? prev.residuo.split(/\s*\|\s*/).filter(Boolean) : [];
+            const novoResiduo = list.includes(residuo) ? prev.residuo : [...list, residuo].join(' | ');
+            return {
+                ...prev,
+                residuo: novoResiduo,
+                destinador: f.destinator_name || prev.destinador,
+                destinacao: destinacaoDeTratamento(f.treatment) || prev.destinacao,
+            };
+        });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (editId) update(editId, { ...form });
-        else add({ ...form });
-        setForm({ ...empty(), solicitante: nomeUsuario });
-        setEditId(null);
+        add({ ...form });
+        setForm({ ...emptyForm(), solicitante: nomeUsuario });
         setDestLivre(false);
     };
 
-    // Carrega um manifesto no formulário para edição
+    // Abre o modal de edição com os dados do manifesto
     const editarManifesto = (m) => {
-        setForm({ ...empty(), ...m });
-        setEditId(m.id);
-        setDestLivre(false);
-        setShowForm(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const cancelarEdicao = () => {
-        setForm({ ...empty(), solicitante: nomeUsuario });
-        setEditId(null);
-        setDestLivre(false);
+        setEditModal({ ...m });
     };
 
     // Importação do dump SQL (INSERT INTO waste_manifests …)
@@ -304,6 +385,11 @@ function ManifestoMTRView({ onBack }) {
         return { total, recic, aterro, outros, taxaRecic, destinadores: destCount };
     }, [items]);
 
+    // Cálculo do total geral de reembolsos
+    const totalReembolsos = useMemo(() => {
+        return allRefunds.reduce((acc, curr) => acc + Number(curr.total_price || 0), 0);
+    }, [allRefunds]);
+
     const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
 
     const exportar = () => {
@@ -319,29 +405,75 @@ function ManifestoMTRView({ onBack }) {
     };
 
     const columns = [
-        { key: 'data', label: 'Data', align: 'center', render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{brData(r.data)}{r.hora ? <span style={{ color: 'var(--color-text-subtle)' }}> {r.hora}</span> : ''}</span> },
-        { key: 'numeroMTR', label: 'Manifesto', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.74rem' }}>{r.numeroMTR || '—'}{r.manifestoSupertrans ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.66rem' }}>ST {r.manifestoSupertrans}</div> : null}</span> },
-        { key: 'residuo', label: 'Resíduo', align: 'center', wrap: true, render: (r) => <span title={r.residuo} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span style={{ fontSize: '0.95rem' }}>{iconeResiduo(r.residuo)}</span>{(r.residuo || '').length > 26 ? r.residuo.slice(0, 26) + '…' : (r.residuo || '—')}</span> },
+        { key: 'data', label: 'Data', align: 'center', render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{brData(r.data)}{r.hora ? <span style={{ color: 'var(--color-text-subtle)', display: 'block', fontSize: '0.62rem' }}>{r.hora}</span> : ''}</span> },
+        { key: 'numeroMTR', label: 'Manifesto', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{r.numeroMTR || '—'}{r.manifestoSupertrans ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem' }}>ST {r.manifestoSupertrans}</div> : null}</span> },
+        {
+            key: 'residuo',
+            label: 'Resíduo',
+            align: 'left',
+            wrap: true,
+            render: (r) => {
+                const partes = (r.residuo || '').split(/\s*\|\s*/).filter(Boolean);
+                if (partes.length === 0) return '—';
+                const primeiro = partes[0];
+                const temMais = partes.length > 1;
+                
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }} title={r.residuo}>
+                        <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{iconeResiduo(r.residuo)}</span>
+                        <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{primeiro}</span>
+                        {temMais && (
+                            <span style={{
+                                fontSize: '0.6rem',
+                                fontWeight: 700,
+                                background: 'rgba(0, 204, 255, 0.12)',
+                                color: '#00ccff',
+                                padding: '1px 5px',
+                                borderRadius: '10px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                border: '1px solid rgba(0, 204, 255, 0.25)',
+                                flexShrink: 0,
+                                whiteSpace: 'nowrap'
+                            }}>
+                                +{partes.length - 1} resíduo{partes.length - 1 > 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
+                );
+            }
+        },
         { key: 'notaFiscal', label: 'Nota Fiscal', align: 'center', render: (r) => r.notaFiscal || '—' },
         { key: 'solicitante', label: 'Solicitante', align: 'center', wrap: true, render: (r) => r.solicitante || '—' },
-        { key: 'motorista', label: 'Motorista / Placa', align: 'center', wrap: true, render: (r) => <span>{r.motorista || '—'}{r.placa ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.66rem', fontFamily: 'ui-monospace, monospace' }}>{r.placa}</div> : null}</span> },
+        { key: 'motorista', label: 'Motorista / Placa', align: 'center', wrap: true, render: (r) => <span>{r.motorista || '—'}{r.placa ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', fontFamily: 'ui-monospace, monospace' }}>{r.placa}</div> : null}</span> },
         { key: 'setorColeta', label: 'Setor de Coleta', align: 'center', render: (r) => r.setorColeta || '—' },
         { key: 'destinador', label: 'Destinador', align: 'center', wrap: true, render: (r) => r.destinador || '—' },
         { key: 'responsavelSGI', label: 'SGI', align: 'center', wrap: true, render: (r) => r.responsavelSGI || '—' },
         {
+            key: 'reembolso', label: 'Reembolso', align: 'center', render: (r) => {
+                const refundItems = allRefunds.filter(x => String(x.manifest_id) === String(r.id));
+                const total = refundItems.reduce((acc, curr) => acc + Number(curr.total_price || 0), 0);
+                if (total === 0) return <span style={{ color: 'var(--color-text-subtle)' }}>—</span>;
+                return <span style={{ color: '#ff9f43', fontWeight: 600 }}>R$ {total.toFixed(2)}</span>;
+            }
+        },
+        {
             key: 'status', label: 'Status', align: 'center', render: (r) => {
                 const cor = r.status === 'Emitido' ? '#10b981' : '#ffb700';
                 return (
-                    <Select value={r.status} onChange={(e) => update(r.id, { status: e.target.value })}
-                        style={{ padding: '0.22rem 0.7rem', fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.3px', width: 'auto', minWidth: 132, margin: '0 auto', color: cor, background: cor + '1a', borderColor: cor + '55', borderRadius: 20 }}>
-                        {STATUS_MANIFESTO.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </Select>
+                    <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                        <Select value={r.status} onChange={(e) => update(r.id, { status: e.target.value })}
+                            style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', width: '120px', minWidth: '120px', color: cor, background: cor + '12', borderColor: cor + '40', borderRadius: 20, justifyContent: 'center', textAlign: 'center', gap: '6px' }}>
+                            {STATUS_MANIFESTO.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </Select>
+                    </div>
                 );
             },
         },
         {
             key: 'acoes', label: '', align: 'center', render: (r) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                    <RowAction icon={<FaDollarSign size={13} />} color="#ff9f43" title="Reembolsos" onClick={() => setRefundModalItem(r)} />
                     <RowAction icon={<FaPrint size={13} />} color="#54a0ff" title="Imprimir FR 231" onClick={() => setPrintItem(r)} />
                     <RowAction icon={<FaEdit size={13} />} color="#10b981" title="Editar manifesto" onClick={() => editarManifesto(r)} />
                     <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => setConfirmDel(r)} />
@@ -358,6 +490,9 @@ function ManifestoMTRView({ onBack }) {
             onBack={onBack}
             maxWidth="100%"
             actions={<>
+                <Btn variant="outline" color="#ff9f43" onClick={() => setShowCashFlowModal(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                    <FaDollarSign size={10} /> Fluxo de Caixa
+                </Btn>
                 <Btn variant="outline" color="#8b9bb4" onClick={() => window.open(SINIR_URL, '_blank')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaExternalLinkAlt size={10} /> Abrir SINIR
                 </Btn>
@@ -385,12 +520,13 @@ function ManifestoMTRView({ onBack }) {
             )}
 
             {/* KPIs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(125px, 1fr))', gap: '0.55rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.55rem', marginBottom: '1rem' }}>
                 <Kpi icon={<FaTruckMoving size={12} />} label="Manifestos" value={kpis.total} sub="total registrados" color="#54a0ff" onClick={() => setFCard('todos')} active={fCard === 'todos'} />
                 <Kpi icon={<FaFileExcel size={12} />} label="Reciclagem" value={kpis.recic} sub={`${kpis.taxaRecic}% do total`} color="#10b981" onClick={() => setFCard('reciclagem')} active={fCard === 'reciclagem'} />
                 <Kpi icon={<FaTrash size={12} />} label="Aterro" value={kpis.aterro} sub={`${kpis.total ? Math.round((kpis.aterro / kpis.total) * 100) : 0}% do total`} color={kpis.aterro ? '#ffb700' : '#10b981'} onClick={() => setFCard('aterro')} active={fCard === 'aterro'} />
                 <Kpi icon={<FaForward size={12} />} label="Outros destinos" value={kpis.outros} sub="copro · incin · trat" color="#a78bfa" onClick={() => setFCard('outros')} active={fCard === 'outros'} />
                 <Kpi icon={<FaForward size={12} />} label="Destinadores" value={kpis.destinadores} sub="parceiros distintos" color="#00ccff" onClick={() => setFCard('todos')} />
+                <Kpi icon={<FaDollarSign size={12} />} label="Total Reembolsos" value={`R$ ${totalReembolsos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} sub="acumulado" color="#ff9f43" onClick={() => {}} />
             </div>
 
             <Card style={{ marginBottom: '1rem', borderLeft: '3px solid #54a0ff', padding: '0.6rem 0.9rem' }}>
@@ -406,7 +542,7 @@ function ManifestoMTRView({ onBack }) {
                     }}
                 >
                     <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                        📝 {editId ? 'Editar Manifesto' : 'Registrar Novo Manifesto'}
+                        📝 Registrar Novo Manifesto
                     </span>
                     <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
                         {showForm ? '▲ Recolher formulário' : '▼ Expandir formulário'}
@@ -434,12 +570,14 @@ function ManifestoMTRView({ onBack }) {
                                 </Field>
                                 <Field label="Data" required><Input type="date" value={form.data} onChange={(e) => set('data', e.target.value)} required /></Field>
                                 <Field label="Hora"><Input type="time" value={form.hora} onChange={(e) => set('hora', e.target.value)} /></Field>
-                                <Field label="Resíduo" required span={2}>
-                                    <Select value={form.residuo} onChange={(e) => onResiduo(e.target.value)} placeholder="Selecione o resíduo…">
-                                        <option value="">Selecione o resíduo…</option>
-                                        {form.residuo && !residuosUnicos.includes(form.residuo) && <option value={form.residuo}>{form.residuo}</option>}
-                                        {residuosUnicos.map((nome, idx) => <option key={idx} value={nome}>{nome}</option>)}
-                                    </Select>
+                                <Field label="Resíduos Selecionados" required span={2}>
+                                    <MultiWasteSelector
+                                        value={form.residuo}
+                                        onChange={(val) => set('residuo', val)}
+                                        residuosUnicos={residuosUnicos}
+                                        fichas={fichas}
+                                        onAddWasteDetails={onAddWasteDetails}
+                                    />
                                 </Field>
                                 <Field label="Destinação">
                                     <Select value={form.destinacao} onChange={(e) => set('destinacao', e.target.value)} placeholder="Selecione…">
@@ -522,14 +660,13 @@ function ManifestoMTRView({ onBack }) {
                                 <Field label="Ticket Sustentare"><Input value={form.ticketSustentare} onChange={(e) => set('ticketSustentare', e.target.value)} /></Field>
                                 <Field label="Manifesto Supertrans"><Input value={form.manifestoSupertrans} onChange={(e) => set('manifestoSupertrans', e.target.value)} /></Field>
                             </FormGrid>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
-                                    <input type="checkbox" checked={form.sinir} onChange={(e) => set('sinir', e.target.checked)} />
-                                    Emitido no SINIR
-                                </label>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    {editId && <Btn type="button" variant="outline" color="#8b9bb4" onClick={cancelarEdicao}>Cancelar edição</Btn>}
-                                    <Btn type="submit" color={editId ? '#10b981' : '#54a0ff'}><FaPlus size={12} /> {editId ? 'Salvar alterações' : 'Registrar Manifesto'}</Btn>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '1rem' }}>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', color: 'var(--color-text-muted)', cursor: 'pointer', marginRight: '0.6rem' }}>
+                                        <input type="checkbox" checked={form.sinir} onChange={(e) => set('sinir', e.target.checked)} />
+                                        Emitido no SINIR
+                                    </label>
+                                    <Btn type="submit" color="#54a0ff"><FaPlus size={12} /> Registrar Manifesto</Btn>
                                 </div>
                             </div>
                         </form>
@@ -576,15 +713,18 @@ function ManifestoMTRView({ onBack }) {
             <div className="mtr-tbl">
                 <style>{`
                     .mtr-tbl > div { border: none !important; border-radius: 0 !important; border-top: 1px solid var(--border-color-soft) !important; }
-                    .mtr-tbl table { font-size: 0.76rem !important; font-variant-numeric: tabular-nums; }
+                    .mtr-tbl table { font-size: 0.7rem !important; font-variant-numeric: tabular-nums; }
                     .mtr-tbl thead tr { background: transparent !important; }
-                    .mtr-tbl thead th { font-size: 0.6rem !important; font-weight: 600 !important; letter-spacing: 0.7px; padding: 0.55rem 0.7rem !important; color: var(--color-text-subtle) !important; border-bottom: 1px solid var(--border-color) !important; }
-                    .mtr-tbl tbody td { padding: 0.6rem 0.7rem !important; border-bottom: 1px solid var(--border-color-soft) !important; line-height: 1.4; font-weight: 400; }
-                    .mtr-tbl tbody tr:hover { background: var(--bg-surface-2) !important; }
-                    .mtr-tbl tbody td span, .mtr-tbl tbody td div { font-size: 0.76rem !important; }
-                    .mtr-tbl tbody td div { font-size: 0.66rem !important; color: var(--color-text-subtle); }
+                    .mtr-tbl thead th { font-size: 0.58rem !important; font-weight: 600 !important; letter-spacing: 0.7px; padding: 0.45rem 0.6rem !important; color: var(--color-text-subtle) !important; border-bottom: 1px solid var(--border-color) !important; }
+                    .mtr-tbl thead th:not(:last-child) { border-right: 1px solid rgba(255, 255, 255, 0.04) !important; }
+                    .mtr-tbl tbody td { padding: 0.42rem 0.6rem !important; border-bottom: 1px solid var(--border-color-soft) !important; line-height: 1.35; font-weight: 400; }
+                    .mtr-tbl tbody td:not(:last-child) { border-right: 1px solid rgba(255, 255, 255, 0.03) !important; }
+                    .mtr-tbl tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+                    .mtr-tbl tbody tr:hover { background: var(--bg-surface-2) !important; transition: background 0.15s ease; }
+                    .mtr-tbl tbody td span, .mtr-tbl tbody td div { font-size: 0.7rem !important; }
+                    .mtr-tbl tbody td div { font-size: 0.62rem !important; color: var(--color-text-subtle); }
                 `}</style>
-                <DataTable dense columns={columns} rows={paginados} empty={loading ? 'Carregando manifestos do Supabase…' : 'Nenhum manifesto. Registre acima ou use Importar dados.'} />
+                <DataTable dense columns={columns} rows={paginados} empty={loading ? 'Carregando manifestos do Supabase…' : 'Nenhum manifesto. Registre acima ou use Importar dados.'} onRowClick={(r) => setViewModalItem(r)} />
             </div>
 
             {filtrados.length > 0 && (
@@ -600,6 +740,44 @@ function ManifestoMTRView({ onBack }) {
 
             {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={importar} />}
             {printItem && <FR231Print data={printItem} onClose={() => setPrintItem(null)} />}
+
+            {/* Modal de Edição */}
+            {editModal && (
+                <EditManifestoModal
+                    manifesto={editModal}
+                    fichas={fichas}
+                    residuosUnicos={residuosUnicos}
+                    setoresUnicos={setoresUnicos}
+                    currentUser={currentUser}
+                    onSave={(id, data) => { update(id, data); setEditModal(null); }}
+                    onClose={() => setEditModal(null)}
+                />
+            )}
+
+            {/* Modal de Reembolsos */}
+            {refundModalItem && (
+                <RefundsManagerModal
+                    manifesto={refundModalItem}
+                    onClose={() => { setRefundModalItem(null); reloadAllRefunds(); }}
+                />
+            )}
+
+            {/* Modal de Detalhes do Manifesto */}
+            {viewModalItem && (
+                <ViewManifestoModal
+                    manifesto={viewModalItem}
+                    onClose={() => setViewModalItem(null)}
+                />
+            )}
+
+            {/* Modal de Fluxo de Caixa */}
+            {showCashFlowModal && (
+                <CashFlowAuditModal
+                    manifestos={items}
+                    allRefunds={allRefunds}
+                    onClose={() => { setShowCashFlowModal(false); reloadAllRefunds(); }}
+                />
+            )}
 
             {confirmDel && (
                 <div
@@ -627,6 +805,822 @@ function ManifestoMTRView({ onBack }) {
                 </div>
             )}
         </PageShell>
+    );
+}
+
+// ── Modal de Visualização de Detalhes do Manifesto ──
+function ViewManifestoModal({ manifesto, onClose }) {
+    const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
+    const partesResiduos = (manifesto.residuo || '').split(/\s*\|\s*/).filter(Boolean);
+    const corStatus = manifesto.status === 'Emitido' ? '#10b981' : '#ffb700';
+
+    return (
+        <Modal title="Detalhes do Manifesto" onClose={onClose} width={820}>
+            {/* Header resumo */}
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1.2rem',
+                borderRadius: 12, background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-color-soft)',
+                marginBottom: '1.5rem', flexWrap: 'wrap'
+            }}>
+                <div style={{ minWidth: 36, width: 'auto', padding: '0 0.55rem', height: 36, borderRadius: 10, background: '#10b98118', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0, gap: '4px' }}>
+                    {iconeResiduo(manifesto.residuo)}
+                </div>
+                <div style={{ flex: '1 1 200px' }}>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Manifesto MTR</div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
+                        {manifesto.numeroMTR || 'Sem número'}
+                    </div>
+                </div>
+                <div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600, textAlign: 'right' }}>Status</div>
+                    <div style={{
+                        display: 'inline-block', padding: '0.2rem 0.7rem', fontSize: '0.66rem', fontWeight: 700,
+                        color: corStatus, background: corStatus + '15', border: `1px solid ${corStatus}35`, borderRadius: 20, textAlign: 'right', marginTop: '2px'
+                    }}>
+                        {manifesto.status}
+                    </div>
+                </div>
+            </div>
+
+            {/* Grid de Informações */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                
+                {/* Bloco 1: Informações Gerais */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#54a0ff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        📋 Informações Gerais
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        <DetailField label="Data de Saída" value={`${brData(manifesto.data)} ${manifesto.hora ? `às ${manifesto.hora}` : ''}`} />
+                        <DetailField label="Setor de Coleta" value={manifesto.setorColeta} />
+                        <DetailField label="Solicitante" value={manifesto.solicitante} />
+                        <DetailField label="Responsável SGI" value={manifesto.responsavelSGI} />
+                    </div>
+                </div>
+
+                {/* Bloco 2: Logística e Transporte */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        🚚 Transporte e Destino
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        <DetailField label="Motorista" value={manifesto.motorista} />
+                        <DetailField label="Placa do Veículo" value={manifesto.placa} />
+                        <DetailField label="Destinador (Recebedor)" value={manifesto.destinador} />
+                        <DetailField label="Tipo de Destinação" value={manifesto.destinacao} />
+                    </div>
+                </div>
+
+                {/* Bloco 3: Documentação e Emissão */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem', gridColumn: 'span 1' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#ffb700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        📑 Documentos e Controle
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        <DetailField label="Nota Fiscal" value={manifesto.notaFiscal} />
+                        <DetailField label="Ticket Sustentare" value={manifesto.ticketSustentare} />
+                        <DetailField label="Manifesto Supertrans" value={manifesto.manifestoSupertrans} />
+                        <DetailField label="Emitido no SINIR" value={manifesto.sinir ? 'Sim' : 'Não'} />
+                        <DetailField label="Tipo Recebedor" value={manifesto.tipoRecebedor} />
+                    </div>
+                </div>
+
+                {/* Bloco 4: Resíduos Transportados */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        ♻️ Resíduos Vinculados ({partesResiduos.length})
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {partesResiduos.map((res, idx) => (
+                            <div key={idx} style={{
+                                display: 'flex', alignItems: 'center', gap: '0.45rem',
+                                padding: '0.4rem 0.6rem', background: 'var(--bg-surface-3)',
+                                borderRadius: '8px', border: '1px solid var(--border-color)',
+                                fontSize: '0.76rem', color: 'var(--color-text-main)',
+                                whiteSpace: 'normal', wordBreak: 'break-all'
+                            }}>
+                                <span style={{ fontSize: '0.9rem' }}>{iconeResiduo(res)}</span>
+                                <span style={{ fontWeight: 500 }}>{res}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem' }}>
+                <Btn onClick={onClose} color="#8b9bb4" variant="outline"><FaTimes size={11} /> Fechar</Btn>
+            </div>
+        </Modal>
+    );
+}
+
+// Componente simples para renderizar campo e valor formatados
+function DetailField({ label, value }) {
+    return (
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed var(--border-color-soft)', paddingBottom: '0.35rem', gap: '1rem' }}>
+            <span style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', fontWeight: 500 }}>{label}:</span>
+            <span style={{ fontSize: '0.74rem', color: 'var(--color-text-main)', fontWeight: 600, textAlign: 'right', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                {value || '—'}
+            </span>
+        </div>
+    );
+}
+
+// ── Modal de Auditoria de Fluxo de Caixa (Entradas & Saídas) ──
+function CashFlowAuditModal({ manifestos, allRefunds, onClose }) {
+    const { items: manualFlow, add: addFlowItem, remove: removeFlowItem, loading: flowLoading, isLocal } = useCashFlow();
+
+    const [form, setForm] = useState({
+        manifest_id: '',
+        type: 'saida',
+        description: '',
+        amount: '',
+        date: new Date().toISOString().slice(0, 10),
+    });
+
+    const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
+
+    // Converte os reembolsos cadastrados em Entradas Automáticas do fluxo de caixa
+    const autoFlow = useMemo(() => {
+        return allRefunds.map((ref) => {
+            const mtr = manifestos.find(m => String(m.id) === String(ref.manifest_id));
+            return {
+                id: `auto-${ref.id}`,
+                isAuto: true,
+                manifest_id: ref.manifest_id,
+                manifest_number: mtr?.numeroMTR || 'Sem MTR',
+                residuo: mtr?.residuo || '',
+                type: 'entrada',
+                description: `Reembolso: ${ref.description}`,
+                amount: Number(ref.total_price || 0),
+                date: mtr?.data || ref.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+            };
+        });
+    }, [allRefunds, manifestos]);
+
+    // Consolida reembolsos com os lançamentos manuais do caixa
+    const consolidados = useMemo(() => {
+        const manualMapped = manualFlow.map((f) => {
+            const mtr = manifestos.find(m => String(m.id) === String(f.manifest_id));
+            return {
+                id: String(f.id),
+                isAuto: false,
+                manifest_id: f.manifest_id,
+                manifest_number: mtr?.numeroMTR || '—',
+                residuo: mtr?.residuo || '',
+                type: f.type,
+                description: f.description,
+                amount: Number(f.amount || 0),
+                date: f.date,
+            };
+        });
+        return [...autoFlow, ...manualMapped].sort((a, b) => b.date.localeCompare(a.date));
+    }, [autoFlow, manualFlow, manifestos]);
+
+    // Totais Consolidados
+    const totais = useMemo(() => {
+        let entradas = 0;
+        let saidas = 0;
+        consolidados.forEach((c) => {
+            if (c.type === 'entrada') entradas += c.amount;
+            else saidas += c.amount;
+        });
+        return { entradas, saidas, saldo: entradas - saidas };
+    }, [consolidados]);
+
+    const handleAddFlow = async (e) => {
+        e.preventDefault();
+        if (!form.description || Number(form.amount || 0) <= 0) {
+            alert('Preencha os campos com valores válidos.');
+            return;
+        }
+        await addFlowItem(form);
+        setForm({
+            manifest_id: '',
+            type: 'saida',
+            description: '',
+            amount: '',
+            date: new Date().toISOString().slice(0, 10),
+        });
+    };
+
+    const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
+
+    return (
+        <Modal title="Auditoria de Fluxo de Caixa (MTR)" onClose={onClose} width={940}>
+            {isLocal && (
+                <div style={{
+                    padding: '0.6rem 0.8rem', borderRadius: 8, background: 'rgba(255, 183, 0, 0.08)',
+                    border: '1px solid rgba(255, 183, 0, 0.3)', fontSize: '0.74rem',
+                    color: 'var(--color-warning)', marginBottom: '0.8rem', lineHeight: 1.4
+                }}>
+                    ⚠️ <strong>Modo Local Ativo:</strong> A tabela <code>waste_cash_flow</code> ainda não foi criada no Supabase. Os dados estão sendo salvos localmente.
+                </div>
+            )}
+
+            {/* Painel de Lançamento e KPIs */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.2rem' }}>
+                <div style={{ padding: '0.8rem 1rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 12 }}>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Entradas (Receitas)</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981', marginTop: '4px' }}>
+                        R$ {totais.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                </div>
+                <div style={{ padding: '0.8rem 1rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: 12 }}>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Saídas (Custo/Despesas)</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ef4444', marginTop: '4px' }}>
+                        R$ {totais.saidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                </div>
+                <div style={{ padding: '0.8rem 1rem', background: totais.saldo >= 0 ? 'rgba(84, 160, 255, 0.08)' : 'rgba(239, 68, 68, 0.08)', border: `1px solid ${totais.saldo >= 0 ? 'rgba(84, 160, 255, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`, borderRadius: 12 }}>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Saldo Líquido</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: totais.saldo >= 0 ? '#54a0ff' : '#ef4444', marginTop: '4px' }}>
+                        R$ {totais.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                </div>
+            </div>
+
+            {/* Novo Lançamento Manual */}
+            <Card style={{ marginBottom: '1.5rem', padding: '0.9rem' }}>
+                <h4 style={{ margin: '0 0 0.6rem', fontSize: '0.78rem', color: 'var(--color-text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    🆕 Registrar Lançamento Manual (Despesas / Receitas extras)
+                </h4>
+                <form onSubmit={handleAddFlow} className="mtr-cashflow-form">
+                    <style>{`
+                        .mtr-cashflow-form .input-dark { padding: 0.35rem 0.55rem !important; font-size: 0.76rem !important; }
+                        .mtr-cashflow-form .label-muted { font-size: 0.58rem !important; display: block; margin-bottom: 0.12rem; }
+                    `}</style>
+                    <FormGrid cols={4}>
+                        <Field label="Tipo" required>
+                            <Select value={form.type} onChange={(e) => set('type', e.target.value)}>
+                                <option value="saida">Saída (-) Despesa</option>
+                                <option value="entrada">Entrada (+) Receita</option>
+                            </Select>
+                        </Field>
+                        <Field label="MTR Vinculado (Opcional)">
+                            <Select value={form.manifest_id} onChange={(e) => set('manifest_id', e.target.value)}>
+                                <option value="">Sem manifesto vinculado</option>
+                                {manifestos.map((m) => {
+                                    const res = m.residuo.split(/\s*\|\s*/)[0];
+                                    return (
+                                        <option key={m.id} value={m.id}>
+                                            {m.numeroMTR || 'S/N'} · {res}
+                                        </option>
+                                    );
+                                })}
+                            </Select>
+                        </Field>
+                        <Field label="Descrição / Destinação" required>
+                            <Input
+                                value={form.description}
+                                onChange={(e) => set('description', e.target.value)}
+                                placeholder="Ex: Pagamento Frete Mondial, Taxa Aterro"
+                                required
+                            />
+                        </Field>
+                        <Field label="Valor (R$)" required>
+                            <Input
+                                type="number"
+                                step="any"
+                                value={form.amount}
+                                onChange={(e) => set('amount', e.target.value)}
+                                placeholder="0.00"
+                                required
+                            />
+                        </Field>
+                        <Field label="Data Lançamento" required>
+                            <Input
+                                type="date"
+                                value={form.date}
+                                onChange={(e) => set('date', e.target.value)}
+                                required
+                            />
+                        </Field>
+                        <div style={{ gridColumn: 'span 2' }}></div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                            <Btn type="submit" color="#ff9f43" style={{ padding: '0.45rem 1rem' }}>
+                                <FaPlus size={10} /> Registrar Lançamento
+                            </Btn>
+                        </div>
+                    </FormGrid>
+                </form>
+            </Card>
+
+            {/* Listagem de Auditoria */}
+            <h3 style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)' }}>Demonstrativo de Auditoria Caixa</h3>
+            {flowLoading ? (
+                <div style={{ padding: '1.5rem', textAlign: 'center', fontSize: '0.78rem', color: 'var(--color-text-subtle)' }}>
+                    Processando auditoria...
+                </div>
+            ) : consolidados.length === 0 ? (
+                <div style={{ padding: '2rem 1rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border-color)', borderRadius: '10px', fontSize: '0.78rem', color: 'var(--color-text-subtle)', marginBottom: '1.5rem' }}>
+                    Nenhum lançamento no fluxo de caixa cadastrado.
+                </div>
+            ) : (
+                <div style={{ overflowX: 'auto', border: '1px solid var(--border-color-soft)', borderRadius: '10px', marginBottom: '1.5rem' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.74rem', textAlign: 'left' }}>
+                        <thead>
+                            <tr style={{ background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color-soft)' }}>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Data</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 100 }}>Tipo</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Manifesto (MTR)</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Descrição / Origem</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Valor</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 60 }}>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {consolidados.map((it) => {
+                                const corTipo = it.type === 'entrada' ? '#10b981' : '#ef4444';
+                                return (
+                                    <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
+                                        <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-muted)' }}>{brData(it.date)}</td>
+                                        <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
+                                            <span style={{
+                                                display: 'inline-block', padding: '0.1rem 0.45rem', fontSize: '0.58rem', fontWeight: 800,
+                                                color: corTipo, background: corTipo + '12', border: `1px solid ${corTipo}25`, borderRadius: 10, textTransform: 'uppercase'
+                                            }}>
+                                                {it.type === 'entrada' ? 'Receita' : 'Custo'}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)', fontWeight: 500 }}>
+                                            {it.manifest_number !== '—' ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                                                    <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}>{it.manifest_number}</span>
+                                                    {it.residuo && (
+                                                        <span style={{ fontSize: '0.62rem', color: 'var(--color-text-subtle)', background: 'rgba(255,255,255,0.03)', padding: '1px 4px', borderRadius: 4, whiteSpace: 'nowrap' }}>
+                                                            {iconeResiduo(it.residuo)} {it.residuo.split(/\s*\|\s*/)[0]}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ) : '—'}
+                                        </td>
+                                        <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                                            {it.description}
+                                        </td>
+                                        <td style={{ padding: '0.5rem 0.7rem', color: corTipo, fontWeight: 700, textAlign: 'right' }}>
+                                            {it.type === 'entrada' ? '+' : '-'} R$ {Number(it.amount).toFixed(2)}
+                                        </td>
+                                        <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
+                                            {it.isAuto ? (
+                                                <span title="Lançamento automático via Reembolso MTR" style={{ color: 'var(--color-text-subtle)', cursor: 'help' }}>
+                                                    🔒
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeFlowItem(Number(it.id))}
+                                                    style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer' }}
+                                                    title="Excluir lançamento"
+                                                >
+                                                    <FaTrash size={12} />
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Btn onClick={onClose} color="#8b9bb4" variant="outline"><FaTimes size={11} /> Fechar</Btn>
+            </div>
+        </Modal>
+    );
+}
+
+// ── Modal de Gerenciamento de Reembolsos ──
+function RefundsManagerModal({ manifesto, onClose }) {
+    const { items, add, remove, loading, isLocal } = useRefunds(manifesto.id);
+    const { items: catalog, add: addCatalogItem } = useRefundCatalog();
+    
+    const [form, setForm] = useState({
+        description: '',
+        quantity: '',
+        unit: 'kg',
+        unit_price: '',
+    });
+
+    const [descLivre, setDescLivre] = useState(false);
+    const [descDigitada, setDescDigitada] = useState('');
+
+    const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
+
+    const handleAddItem = async (e) => {
+        e.preventDefault();
+        
+        let finalDescription = form.description;
+        
+        if (descLivre) {
+            const trimmedDigitado = descDigitada.trim();
+            if (!trimmedDigitado) {
+                alert('Preencha o nome do novo item para cadastrar.');
+                return;
+            }
+            const catalogRecord = await addCatalogItem(trimmedDigitado);
+            if (catalogRecord) {
+                finalDescription = catalogRecord.name;
+            } else {
+                finalDescription = trimmedDigitado;
+            }
+        }
+
+        if (!finalDescription || Number(form.quantity || 0) <= 0 || Number(form.unit_price || 0) <= 0) {
+            alert('Preencha todos os campos com valores válidos.');
+            return;
+        }
+
+        await add({ ...form, description: finalDescription });
+        
+        setForm({
+            description: '',
+            quantity: '',
+            unit: 'kg',
+            unit_price: '',
+        });
+        setDescDigitada('');
+        setDescLivre(false);
+    };
+
+    const modalTotal = useMemo(() => {
+        return items.reduce((acc, curr) => acc + Number(curr.total_price || 0), 0);
+    }, [items]);
+
+    const itemTotal = Number(form.quantity || 0) * Number(form.unit_price || 0);
+
+    const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
+
+    return (
+        <Modal title="Gerenciar Reembolsos" onClose={onClose} width={940}>
+            {isLocal && (
+                <div style={{
+                    padding: '0.6rem 0.8rem', borderRadius: 8, background: 'rgba(255, 183, 0, 0.08)',
+                    border: '1px solid rgba(255, 183, 0, 0.3)', fontSize: '0.74rem',
+                    color: 'var(--color-warning)', marginBottom: '0.8rem', lineHeight: 1.4
+                }}>
+                    ⚠️ <strong>Modo Local Ativo:</strong> A tabela <code>waste_refund_items</code> e <code>waste_refund_catalog</code> ainda não foram criadas no Supabase. Os dados estão sendo salvos localmente.
+                </div>
+            )}
+
+            {/* Cabeçalho Resumo do Manifesto (sem cortes no nome completo) */}
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.8rem 1rem',
+                borderRadius: 12, background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-color-soft)',
+                marginBottom: '1.2rem', flexWrap: 'wrap'
+            }}>
+                <div style={{ flex: '1 1 180px', minWidth: 180 }}>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Manifesto MTR</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
+                        {manifesto.numeroMTR || 'Sem número'}
+                    </div>
+                </div>
+                <div style={{ flex: '1 1 120px', minWidth: 120 }}>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Data</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--color-text-main)', fontWeight: 500 }}>
+                        {brData(manifesto.data)} {manifesto.hora ? `às ${manifesto.hora}` : ''}
+                    </div>
+                </div>
+                <div style={{ flex: '2 1 300px', minWidth: 300 }}>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Resíduos</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--color-text-main)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{iconeResiduo(manifesto.residuo)}</span>
+                        <span style={{ whiteSpace: 'normal', wordBreak: 'break-all', display: 'inline-block' }}>
+                            {manifesto.residuo || '—'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Formulário de Adicionar Item com seletor de cadastro */}
+            <Card style={{ marginBottom: '1.2rem', padding: '0.9rem' }}>
+                <form onSubmit={handleAddItem} className="mtr-refund-form">
+                    <style>{`
+                        .mtr-refund-form .input-dark { padding: 0.35rem 0.55rem !important; font-size: 0.76rem !important; }
+                        .mtr-refund-form .label-muted { font-size: 0.58rem !important; display: block; margin-bottom: 0.12rem; }
+                    `}</style>
+                    <FormGrid cols={4}>
+                        <Field label="Item Reembolso (Cadastro)" required span={2}>
+                            {descLivre ? (
+                                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                    <Input
+                                        value={descDigitada}
+                                        onChange={(e) => setDescDigitada(e.target.value)}
+                                        placeholder="Nome do novo item a cadastrar…"
+                                        autoFocus
+                                        required
+                                    />
+                                    <Btn variant="outline" color="#8b9bb4" onClick={() => { setDescLivre(false); setDescDigitada(''); }} style={{ padding: '0.35rem 0.6rem' }}>
+                                        Voltar
+                                    </Btn>
+                                </div>
+                            ) : (
+                                <Select
+                                    value={form.description}
+                                    onChange={(e) => {
+                                        if (e.target.value === '__OUTRO__') {
+                                            setDescLivre(true);
+                                        } else {
+                                            set('description', e.target.value);
+                                        }
+                                    }}
+                                    placeholder="Selecione o item…"
+                                >
+                                    <option value="">Selecione o item do reembolso…</option>
+                                    {catalog.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                    <option value="__OUTRO__">✏️ Cadastrar novo item…</option>
+                                </Select>
+                            )}
+                        </Field>
+                        <Field label="Quantidade" required>
+                            <Input
+                                type="number"
+                                step="any"
+                                value={form.quantity}
+                                onChange={(e) => set('quantity', e.target.value)}
+                                placeholder="0.00"
+                                required
+                            />
+                        </Field>
+                        <Field label="Unidade" required>
+                            <Select value={form.unit} onChange={(e) => set('unit', e.target.value)}>
+                                <option value="kg">kg (Quilograma)</option>
+                                <option value="t">t (Tonelada)</option>
+                                <option value="un">un (Unidade)</option>
+                                <option value="m3">m³ (Metro cúbico)</option>
+                                <option value="l">L (Litro)</option>
+                                <option value="viagem">viagem (Viagem)</option>
+                            </Select>
+                        </Field>
+                        <Field label="Preço Unitário (R$)" required>
+                            <Input
+                                type="number"
+                                step="any"
+                                value={form.unit_price}
+                                onChange={(e) => set('unit_price', e.target.value)}
+                                placeholder="0.00"
+                                required
+                            />
+                        </Field>
+                        <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                            {itemTotal > 0 && (
+                                <span>
+                                    Cálculo da prévia: {Number(form.quantity).toLocaleString('pt-BR')} {form.unit} × R$ {Number(form.unit_price).toFixed(2)} = <strong style={{ color: '#ff9f43' }}>R$ {itemTotal.toFixed(2)}</strong>
+                                </span>
+                            )}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                            <Btn type="submit" color="#ff9f43" style={{ padding: '0.45rem 1rem' }}>
+                                <FaPlus size={10} /> Adicionar Item
+                            </Btn>
+                        </div>
+                    </FormGrid>
+                </form>
+            </Card>
+
+            {/* Listagem de Itens Cadastrados */}
+            <h3 style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)' }}>Itens do Reembolso</h3>
+            {loading ? (
+                <div style={{ padding: '1.5rem', textAlign: 'center', fontSize: '0.78rem', color: 'var(--color-text-subtle)' }}>
+                    Carregando itens…
+                </div>
+            ) : items.length === 0 ? (
+                <div style={{ padding: '2rem 1rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border-color)', borderRadius: '10px', fontSize: '0.78rem', color: 'var(--color-text-subtle)', marginBottom: '1.5rem' }}>
+                    Nenhum item de reembolso cadastrado para este manifesto.
+                </div>
+            ) : (
+                <div style={{ overflowX: 'auto', border: '1px solid var(--border-color-soft)', borderRadius: '10px', marginBottom: '1.5rem' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.76rem', textAlign: 'left' }}>
+                        <thead>
+                            <tr style={{ background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color-soft)' }}>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Descrição</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Qtd.</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center' }}>Un.</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Preço Unit.</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Total</th>
+                                <th style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 50 }}></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((it) => (
+                                <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
+                                    <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)', fontWeight: 500, whiteSpace: 'normal', wordBreak: 'break-word' }}>{it.description}</td>
+                                    <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)', textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
+                                    <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>{it.unit}</td>
+                                    <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)', textAlign: 'right' }}>R$ {Number(it.unit_price).toFixed(2)}</td>
+                                    <td style={{ padding: '0.5rem 0.7rem', color: '#ff9f43', fontWeight: 600, textAlign: 'right' }}>R$ {Number(it.total_price).toFixed(2)}</td>
+                                    <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => remove(it.id)}
+                                            style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer' }}
+                                            title="Excluir item"
+                                        >
+                                            <FaTrash size={12} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            <tr style={{ background: 'rgba(255,255,255,0.015)' }}>
+                                <td colSpan={4} style={{ padding: '0.6rem 0.7rem', fontWeight: 700, color: 'var(--color-text-main)', textAlign: 'right' }}>TOTAL REEMBOLSADO:</td>
+                                <td style={{ padding: '0.6rem 0.7rem', fontWeight: 800, color: '#ff9f43', textAlign: 'right', fontSize: '0.82rem' }}>R$ {modalTotal.toFixed(2)}</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <Btn onClick={onClose} color="#8b9bb4" variant="outline"><FaTimes size={11} /> Fechar</Btn>
+            </div>
+        </Modal>
+    );
+}
+
+// ── Modal de Edição de Manifesto ──
+function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, currentUser, onSave, onClose }) {
+    const [f, setF] = useState({ ...manifesto });
+    const s = (k, v) => setF((prev) => ({ ...prev, [k]: v }));
+    const [destLivre, setDestLivre] = useState(false);
+    const [setorLivre, setSetorLivre] = useState(false);
+
+    // Destinadores sugeridos (mesma lógica do componente pai)
+    const norm = (str) => (str || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase();
+    const tokens = (str) => norm(str).split(/[^A-Z0-9]+/).filter((t) => t.length >= 3);
+    const destinadoresSugeridos = useMemo(() => {
+        const rTokens = tokens(f.residuo);
+        let base = fichas;
+        if (rTokens.length) {
+            const casa = (a, b) => a === b || (a.length >= 4 && b.length >= 4 && (a.includes(b) || b.includes(a)));
+            const m = fichas.filter((fi) => {
+                const fTokens = tokens(`${fi.waste_type || ''} ${fi.category || ''}`);
+                return rTokens.some((a) => fTokens.some((b) => casa(a, b)));
+            });
+            if (m.length) base = m;
+        }
+        return [...new Set(base.map((fi) => fi.destinator_name).filter(Boolean))].sort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fichas, f.residuo]);
+
+    const onAddWasteDetails = (nome) => {
+        const fi = fichas.find((x) => x.waste_type === nome);
+        setF((prev) => ({
+            ...prev,
+            destinador: fi?.destinator_name || prev.destinador,
+            destinacao: fi ? destinacaoDeTratamento(fi.treatment) || prev.destinacao : prev.destinacao
+        }));
+    };
+
+    const handleSave = (e) => {
+        e.preventDefault();
+        onSave(f.id, { ...f });
+    };
+
+    const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
+
+    return (
+        <Modal title="Editar Manifesto" onClose={onClose} width={820}>
+            {/* Resumo do manifesto em edição */}
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.7rem 0.9rem',
+                borderRadius: 12, background: '#10b9810d', border: '1px solid #10b98122',
+                marginBottom: '1.2rem', flexWrap: 'wrap'
+            }}>
+                <div style={{ minWidth: 36, width: 'auto', padding: '0 0.55rem', height: 36, borderRadius: 10, background: '#10b98118', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0, gap: '4px' }}>
+                    {iconeResiduo(f.residuo)}
+                </div>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
+                        {f.numeroMTR || 'Sem número'}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                        {f.residuo || 'Resíduo não informado'} · {brData(f.data)}
+                    </div>
+                </div>
+                <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textAlign: 'right' }}>
+                    <FaEdit size={10} style={{ marginRight: 4 }} />
+                    Editando registro
+                </div>
+            </div>
+
+            <form onSubmit={handleSave} className="mtr-edit-modal-form">
+                <style>{`
+                    .mtr-edit-modal-form .input-dark { padding: 0.38rem 0.6rem !important; font-size: 0.78rem !important; }
+                    .mtr-edit-modal-form .label-muted { font-size: 0.6rem !important; display: block; margin-bottom: 0.15rem; }
+                `}</style>
+                <FormGrid cols={3}>
+                    <Field label="Nº manifesto (Mondial/SINIR)" required>
+                        <Input value={f.numeroMTR} onChange={(e) => s('numeroMTR', e.target.value)} placeholder="291028890965" required />
+                    </Field>
+                    <Field label="Data" required><Input type="date" value={f.data} onChange={(e) => s('data', e.target.value)} required /></Field>
+                    <Field label="Hora"><Input type="time" value={f.hora} onChange={(e) => s('hora', e.target.value)} /></Field>
+                    <Field label="Resíduos Selecionados" required span={2}>
+                        <MultiWasteSelector
+                            value={f.residuo}
+                            onChange={(val) => s('residuo', val)}
+                            residuosUnicos={residuosUnicos}
+                            fichas={fichas}
+                            onAddWasteDetails={onAddWasteDetails}
+                        />
+                    </Field>
+                    <Field label="Destinação">
+                        <Select value={f.destinacao} onChange={(e) => s('destinacao', e.target.value)} placeholder="Selecione…">
+                            {TIPOS_DESTINACAO.map((d) => <option key={d} value={d}>{d}</option>)}
+                        </Select>
+                    </Field>
+                    <Field label="Solicitante">
+                        <div className="input-dark" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>{currentUser?.avatar || '👤'}</span>
+                            <input
+                                value={f.solicitante}
+                                onChange={(e) => s('solicitante', e.target.value)}
+                                placeholder="Quem está solicitando…"
+                                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text-main)', fontSize: 'inherit', minWidth: 0 }}
+                            />
+                        </div>
+                    </Field>
+                    <Field label="Motorista" required><Input value={f.motorista} onChange={(e) => s('motorista', e.target.value)} required /></Field>
+                    <Field label="Placa" required><Input value={f.placa} onChange={(e) => s('placa', e.target.value)} placeholder="ABC1D23" required /></Field>
+                    <Field label="Responsável SGI"><Input value={f.responsavelSGI} onChange={(e) => s('responsavelSGI', e.target.value)} /></Field>
+                    <Field label="Setor de coleta">
+                        {(setorLivre || setoresUnicos.length === 0) ? (
+                            <Input
+                                value={f.setorColeta}
+                                onChange={(e) => s('setorColeta', e.target.value)}
+                                placeholder="FAB'1, G100…"
+                                onBlur={() => { if (setoresUnicos.length) setSetorLivre(false); }}
+                                autoFocus={setorLivre}
+                            />
+                        ) : (
+                            <Select
+                                value={setoresUnicos.includes(f.setorColeta) ? f.setorColeta : (f.setorColeta ? '__ATUAL__' : '')}
+                                onChange={(e) => {
+                                    if (e.target.value === '__OUTRO__') { setSetorLivre(true); s('setorColeta', ''); }
+                                    else if (e.target.value !== '__ATUAL__') s('setorColeta', e.target.value);
+                                }}
+                            >
+                                <option value="">Selecione o setor…</option>
+                                {f.setorColeta && !setoresUnicos.includes(f.setorColeta) && (
+                                    <option value="__ATUAL__">{f.setorColeta}</option>
+                                )}
+                                {setoresUnicos.map((setor, idx) => <option key={idx} value={setor}>{setor}</option>)}
+                                <option value="__OUTRO__">✏️ Digitar outro…</option>
+                            </Select>
+                        )}
+                    </Field>
+                    <Field label="Destinador (recebedor)">
+                        {(destLivre || destinadoresSugeridos.length === 0) ? (
+                            <Input
+                                value={f.destinador}
+                                onChange={(e) => s('destinador', e.target.value)}
+                                placeholder="SUSTENTARE, PENHA…"
+                                onBlur={() => { if (destinadoresSugeridos.length) setDestLivre(false); }}
+                                autoFocus={destLivre}
+                            />
+                        ) : (
+                            <Select
+                                value={destinadoresSugeridos.includes(f.destinador) ? f.destinador : (f.destinador ? '__ATUAL__' : '')}
+                                onChange={(e) => {
+                                    if (e.target.value === '__OUTRO__') { setDestLivre(true); s('destinador', ''); }
+                                    else if (e.target.value !== '__ATUAL__') s('destinador', e.target.value);
+                                }}
+                            >
+                                <option value="">Selecione o destinador…</option>
+                                {f.destinador && !destinadoresSugeridos.includes(f.destinador) && (
+                                    <option value="__ATUAL__">{f.destinador}</option>
+                                )}
+                                {destinadoresSugeridos.map((nome, idx) => <option key={idx} value={nome}>{nome}</option>)}
+                                <option value="__OUTRO__">✏️ Digitar outro…</option>
+                            </Select>
+                        )}
+                    </Field>
+                    <Field label="Recebedor da doação">
+                        <Select value={f.tipoRecebedor} onChange={(e) => s('tipoRecebedor', e.target.value)}>
+                            <option value="Fornecedor">Fornecedor (sem matrícula)</option>
+                            <option value="Colaborador">Colaborador (com matrícula)</option>
+                        </Select>
+                    </Field>
+                    <Field label="Nota Fiscal"><Input value={f.notaFiscal} onChange={(e) => s('notaFiscal', e.target.value)} /></Field>
+                    <Field label="Ticket Sustentare"><Input value={f.ticketSustentare} onChange={(e) => s('ticketSustentare', e.target.value)} /></Field>
+                    <Field label="Manifesto Supertrans"><Input value={f.manifestoSupertrans} onChange={(e) => s('manifestoSupertrans', e.target.value)} /></Field>
+                </FormGrid>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.3rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color-soft)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={f.sinir} onChange={(e) => s('sinir', e.target.checked)} />
+                        Emitido no SINIR
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                        <Btn type="button" variant="outline" color="#8b9bb4" onClick={onClose}><FaTimes size={11} /> Cancelar</Btn>
+                        <Btn type="submit" color="#10b981"><FaSave size={12} /> Salvar alterações</Btn>
+                    </div>
+                </div>
+            </form>
+        </Modal>
     );
 }
 

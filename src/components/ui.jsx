@@ -221,7 +221,7 @@ export function StatusBadge({ status, map }) {
 }
 
 // ─── Tabela de dados ───
-export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = false }) {
+export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = false, onRowClick }) {
     if (!rows || rows.length === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-subtle)', fontSize: '0.9rem' }}>
@@ -245,7 +245,17 @@ export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = f
                 </thead>
                 <tbody>
                     {rows.map((row, i) => (
-                        <tr key={row.id || i} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
+                        <tr 
+                            key={row.id || i} 
+                            onClick={(e) => {
+                                if (e.target.closest('button, select, input, a, svg')) return;
+                                onRowClick?.(row);
+                            }}
+                            style={{ 
+                                borderBottom: '1px solid var(--border-color-soft)',
+                                cursor: onRowClick ? 'pointer' : 'default'
+                            }}
+                        >
                             {columns.map((c) => (
                                 <td key={c.key} style={{
                                     textAlign: c.align || 'left', padding: dense ? '0.4rem 0.6rem' : '0.55rem 0.8rem',
