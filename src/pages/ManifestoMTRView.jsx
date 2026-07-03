@@ -218,6 +218,7 @@ function ManifestoMTRView({ onBack }) {
     const { items: fichas } = useWasteRegistry();
     const { currentUser } = useAuth();
     const nomeUsuario = currentUser?.name || currentUser?.username || '';
+    const isGestorOuAnalista = currentUser?.role === 'gestor' || currentUser?.role === 'analista';
     const [form, setForm] = useState(emptyForm());
     const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -469,7 +470,9 @@ function ManifestoMTRView({ onBack }) {
         {
             key: 'acoes', label: '', align: 'center', render: (r) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                    <RowAction icon={<FaDollarSign size={13} />} color="#ff9f43" title="Reembolsos" onClick={() => setRefundModalItem(r)} />
+                    {isGestorOuAnalista && (
+                        <RowAction icon={<FaDollarSign size={13} />} color="#ff9f43" title="Reembolsos" onClick={() => setRefundModalItem(r)} />
+                    )}
                     <RowAction icon={<FaPrint size={13} />} color="#54a0ff" title="Imprimir FR 231" onClick={() => setPrintItem(r)} />
                     <RowAction icon={<FaEdit size={13} />} color="#10b981" title="Editar manifesto" onClick={() => editarManifesto(r)} />
                     <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => setConfirmDel(r)} />
@@ -477,6 +480,10 @@ function ManifestoMTRView({ onBack }) {
             ),
         },
     ];
+
+    const colunasExibidas = useMemo(() => {
+        return columns.filter(col => col.key !== 'reembolso' || isGestorOuAnalista);
+    }, [columns, isGestorOuAnalista]);
 
     return (
         <PageShell
@@ -486,9 +493,11 @@ function ManifestoMTRView({ onBack }) {
             onBack={onBack}
             maxWidth="100%"
             actions={<>
-                <Btn variant="outline" color="#ff9f43" onClick={() => setShowCashFlowModal(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
-                    <FaDollarSign size={10} /> Fluxo de Caixa
-                </Btn>
+                {isGestorOuAnalista && (
+                    <Btn variant="outline" color="#ff9f43" onClick={() => setShowCashFlowModal(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                        <FaDollarSign size={10} /> Fluxo de Caixa
+                    </Btn>
+                )}
                 <Btn variant="outline" color="#8b9bb4" onClick={() => window.open(SINIR_URL, '_blank')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaExternalLinkAlt size={10} /> Abrir SINIR
                 </Btn>
@@ -522,7 +531,9 @@ function ManifestoMTRView({ onBack }) {
                 <Kpi icon={<FaTrash size={12} />} label="Aterro" value={kpis.aterro} sub={`${kpis.total ? Math.round((kpis.aterro / kpis.total) * 100) : 0}% do total`} color={kpis.aterro ? '#ffb700' : '#10b981'} onClick={() => setFCard('aterro')} active={fCard === 'aterro'} />
                 <Kpi icon={<FaForward size={12} />} label="Outros destinos" value={kpis.outros} sub="copro · incin · trat" color="#a78bfa" onClick={() => setFCard('outros')} active={fCard === 'outros'} />
                 <Kpi icon={<FaForward size={12} />} label="Destinadores" value={kpis.destinadores} sub="parceiros distintos" color="#00ccff" onClick={() => setFCard('todos')} />
-                <Kpi icon={<FaDollarSign size={12} />} label="Total Reembolsos" value={`R$ ${totalReembolsos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} sub="acumulado" color="#ff9f43" onClick={() => {}} />
+                {isGestorOuAnalista && (
+                    <Kpi icon={<FaDollarSign size={12} />} label="Total Reembolsos" value={`R$ ${totalReembolsos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} sub="acumulado" color="#ff9f43" onClick={() => {}} />
+                )}
             </div>
 
             <Card style={{ marginBottom: '1rem', borderLeft: '3px solid #54a0ff', padding: '0.6rem 0.9rem' }}>
@@ -720,7 +731,7 @@ function ManifestoMTRView({ onBack }) {
                     .mtr-tbl tbody td span, .mtr-tbl tbody td div { font-size: 0.7rem !important; }
                     .mtr-tbl tbody td div { font-size: 0.62rem !important; color: var(--color-text-subtle); }
                 `}</style>
-                <DataTable dense columns={columns} rows={paginados} empty={loading ? 'Carregando manifestos do Supabase…' : 'Nenhum manifesto. Registre acima ou use Importar dados.'} onRowClick={(r) => setViewModalItem(r)} />
+                <DataTable dense columns={colunasExibidas} rows={paginados} empty={loading ? 'Carregando manifestos do Supabase…' : 'Nenhum manifesto. Registre acima ou use Importar dados.'} onRowClick={(r) => setViewModalItem(r)} />
             </div>
 
             {filtrados.length > 0 && (
@@ -763,6 +774,7 @@ function ManifestoMTRView({ onBack }) {
             {viewModalItem && (
                 <ViewManifestoModal
                     manifesto={viewModalItem}
+                    isGestorOuAnalista={isGestorOuAnalista}
                     onClose={() => setViewModalItem(null)}
                 />
             )}
@@ -807,7 +819,7 @@ function ManifestoMTRView({ onBack }) {
 }
 
 // ── Modal de Visualização de Detalhes do Manifesto ──
-function ViewManifestoModal({ manifesto, onClose }) {
+function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
     const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
     const partesResiduos = (manifesto.residuo || '').split(/\s*\|\s*/).filter(Boolean);
     const corStatus = manifesto.status === 'Emitido' ? '#10b981' : '#ffb700';
@@ -911,53 +923,60 @@ function ViewManifestoModal({ manifesto, onClose }) {
                 </div>
 
                 {/* Bloco 5: Demonstrativo de Reembolsos do Manifesto */}
-                <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem', gridColumn: 'span 2' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                        <h3 style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#ff9f43', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            💰 Demonstrativo de Reembolso
-                        </h3>
-                        {totalReembolso > 0 && (
-                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ff9f43' }}>
-                                Total: R$ {totalReembolso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </span>
+                {isGestorOuAnalista && (
+                    <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem', gridColumn: 'span 2' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                            <h3 style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#ff9f43', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                💰 Demonstrativo de Reembolso
+                            </h3>
+                            {totalReembolso > 0 && (
+                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ff9f43' }}>
+                                    Total: R$ {totalReembolso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </span>
+                            )}
+                        </div>
+
+                        {refundLoading ? (
+                            <div style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', padding: '0.5rem 0' }}>Carregando reembolsos...</div>
+                        ) : refundItems.length === 0 ? (
+                            <div style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', fontStyle: 'italic', padding: '0.5rem 0' }}>
+                                Nenhum reembolso cadastrado para este manifesto.
+                            </div>
+                        ) : (
+                            <div style={{ overflowX: 'auto', border: '1px solid var(--border-color-soft)', borderRadius: '8px' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.7rem', textAlign: 'left' }}>
+                                    <thead>
+                                        <tr style={{ background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color-soft)' }}>
+                                            <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Item / Descrição</th>
+                                            <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Qtd</th>
+                                            <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 60 }}>Unidade</th>
+                                            <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Preço Unit.</th>
+                                            <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Valor Total</th>
+                                            <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center' }}>Operador</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {refundItems.map((it) => (
+                                            <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
+                                                <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', fontWeight: 500, whiteSpace: 'normal', wordBreak: 'break-word' }}>{it.description}</td>
+                                                <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
+                                                <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>{it.unit}</td>
+                                                <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', textAlign: 'right' }}>R$ {Number(it.unit_price).toFixed(2)}</td>
+                                                <td style={{ padding: '0.4rem 0.6rem', color: '#ff9f43', fontWeight: 600, textAlign: 'right' }}>R$ {Number(it.total_price).toFixed(2)}</td>
+                                                <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.62rem' }}>
+                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
+                                                        <span>👤</span>
+                                                        <span>{it.created_by || '—'}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
-
-                    {refundLoading ? (
-                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', padding: '0.5rem 0' }}>Carregando reembolsos...</div>
-                    ) : refundItems.length === 0 ? (
-                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', fontStyle: 'italic', padding: '0.5rem 0' }}>
-                            Nenhum reembolso cadastrado para este manifesto.
-                        </div>
-                    ) : (
-                        <div style={{ overflowX: 'auto', border: '1px solid var(--border-color-soft)', borderRadius: '8px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.7rem', textAlign: 'left' }}>
-                                <thead>
-                                    <tr style={{ background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color-soft)' }}>
-                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>Item / Descrição</th>
-                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Qtd</th>
-                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center', width: 60 }}>Unidade</th>
-                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Preço Unit.</th>
-                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>Valor Total</th>
-                                        <th style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'center' }}>Operador</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {refundItems.map((it) => (
-                                        <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
-                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', fontWeight: 500, whiteSpace: 'normal', wordBreak: 'break-word' }}>{it.description}</td>
-                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
-                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>{it.unit}</td>
-                                            <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', textAlign: 'right' }}>R$ {Number(it.unit_price).toFixed(2)}</td>
-                                            <td style={{ padding: '0.4rem 0.6rem', color: '#ff9f43', fontWeight: 600, textAlign: 'right' }}>R$ {Number(it.total_price).toFixed(2)}</td>
-                                            <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.62rem' }}>👤 {it.created_by || '—'}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                )}
 
             </div>
 
