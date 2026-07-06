@@ -19,6 +19,7 @@ import CadastrosView from './pages/CadastrosView';
 import CalendarioAmbientalView from './pages/CalendarioAmbientalView';
 import FichaResiduosView from './pages/FichaResiduosView';
 import UsuariosView from './pages/UsuariosView';
+import LiraView from './pages/LiraView';
 
 
 function App() {
@@ -78,6 +79,7 @@ function App() {
                 {view === 'manifestos' && guardedView('manifestos', ManifestoMTRView, { onBack: back })}
                 {view === 'tickets' && guardedView('tickets', TicketsColetaView, { onBack: back })}
                 {view === 'fumaca' && guardedView('fumaca', FumacaPretaView, { onBack: back })}
+                {view === 'lira' && guardedView('lira', LiraView, { onBack: back })}
                 {view === 'esg-carbono' && guardedView('esg-carbono', ESGCarbonoView, { onBack: back })}
                 {view === 'nf-sucata' && guardedView('nf-sucata', NFSucataView, { onBack: back })}
                 {view === 'motoristas' && guardedView('motoristas', MotoristasView, { onBack: back })}

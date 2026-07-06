@@ -18,6 +18,7 @@ const ALL_PAGES = [
     { id: 'controle-residuos', label: 'Controle de Saída', cat: 'Operação de Resíduos', color: '#10b981' },
     { id: 'esg-carbono', label: 'ESG & Carbono', cat: 'Monitoramento', color: '#10b981' },
     { id: 'fumaca', label: 'Fumaça Preta', cat: 'Monitoramento', color: '#a78bfa' },
+    { id: 'lira', label: 'LIRA · Requisitos Legais', cat: 'Monitoramento', color: '#00ccff' },
     { id: 'nf-sucata', label: 'NF Sucata Plástica', cat: 'Comercial & Logística', color: '#ffb700' },
     { id: 'motoristas', label: 'Motoristas & Logística', cat: 'Comercial & Logística', color: '#06b6d4' },
     { id: 'cadastros', label: 'Cadastros', cat: 'Cadastros', color: '#9d4edd' },
