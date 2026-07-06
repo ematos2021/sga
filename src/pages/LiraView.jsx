@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { FaBalanceScale, FaClipboardCheck, FaEdit, FaFileExcel, FaHourglassHalf, FaCheckCircle, FaCalendarCheck, FaBullseye, FaForward } from 'react-icons/fa';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FaBalanceScale, FaClipboardCheck, FaEdit, FaFileExcel, FaHourglassHalf, FaCheckCircle, FaCalendarCheck, FaBullseye, FaForward, FaChartBar, FaPrint, FaTimes } from 'react-icons/fa';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import { PageShell, Btn, Card, Field, Input, Select, Textarea, FormGrid, DataTable, RowAction, Modal, Kpi } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,12 @@ import { exportToExcel } from '../lib/excel';
 const META_DIA = 5;
 
 const CONF_OPCOES = ['Conforme', 'Não Conforme', 'Parcialmente Conforme', 'Não Aplicável', 'Em Adequação'];
+
+const MESES_OPCOES = [
+    { v: '01', l: 'Janeiro' }, { v: '02', l: 'Fevereiro' }, { v: '03', l: 'Março' }, { v: '04', l: 'Abril' },
+    { v: '05', l: 'Maio' }, { v: '06', l: 'Junho' }, { v: '07', l: 'Julho' }, { v: '08', l: 'Agosto' },
+    { v: '09', l: 'Setembro' }, { v: '10', l: 'Outubro' }, { v: '11', l: 'Novembro' }, { v: '12', l: 'Dezembro' },
+];
 
 // ── Helpers de data ──
 const hojeISO = () => new Date().toISOString().slice(0, 10);
@@ -42,6 +48,15 @@ function LiraView({ onBack }) {
     const [pageSize, setPageSize] = useState(25);
     const [page, setPage] = useState(1);
 
+    // Filtro por data da análise (dia exato, mês e/ou ano)
+    const [fDia, setFDia] = useState('');
+    const [fMes, setFMes] = useState('todos');
+    const [fAno, setFAno] = useState('todos');
+    const temFiltroData = !!fDia || fMes !== 'todos' || fAno !== 'todos';
+
+    // Relatório de desempenho
+    const [showReport, setShowReport] = useState(false);
+
     // Modal de análise: { row, full, observacoes, conformidade }
     const [modal, setModal] = useState(null);
     const [salvando, setSalvando] = useState(false);
@@ -49,20 +64,33 @@ function LiraView({ onBack }) {
     // ── Derivados ──
     const origens = useMemo(() => [...new Set(items.map((r) => r.origem).filter(Boolean))].sort(), [items]);
     const prioridades = useMemo(() => [...new Set(items.map((r) => r.prioridade).filter(Boolean))].sort(), [items]);
+    const anos = useMemo(() => [...new Set(items.map((r) => diaDe(r.analisado_em)).filter(Boolean).map((d) => d.slice(0, 4)))].sort().reverse(), [items]);
+
+    // Registro dentro do período selecionado (compara a DATA DA ANÁLISE)
+    const dentroPeriodo = useCallback((r) => {
+        if (!temFiltroData) return true;
+        const d = diaDe(r.analisado_em); // yyyy-mm-dd local
+        if (!d) return false;
+        if (fDia && d !== fDia) return false;
+        if (fAno !== 'todos' && d.slice(0, 4) !== fAno) return false;
+        if (fMes !== 'todos' && d.slice(5, 7) !== fMes) return false;
+        return true;
+    }, [temFiltroData, fDia, fMes, fAno]);
 
     const filtrados = useMemo(() => items.filter((r) => {
         if (fStatus === 'pendentes' && foiAnalisado(r)) return false;
         if (fStatus === 'analisados' && !foiAnalisado(r)) return false;
         if (fOrigem !== 'todos' && r.origem !== fOrigem) return false;
         if (fPrioridade !== 'todos' && r.prioridade !== fPrioridade) return false;
+        if (!dentroPeriodo(r)) return false;
         if (busca) {
             const alvo = `${r.codigo} ${r.requisito} ${r.obrigacao} ${r.origem} ${r.observacoes || ''}`.toLowerCase();
             if (!alvo.includes(busca.toLowerCase())) return false;
         }
         return true;
-    }), [items, fStatus, fOrigem, fPrioridade, busca]);
+    }), [items, fStatus, fOrigem, fPrioridade, busca, dentroPeriodo]);
 
-    useEffect(() => { setPage(1); }, [busca, fStatus, fOrigem, fPrioridade, pageSize]);
+    useEffect(() => { setPage(1); }, [busca, fStatus, fOrigem, fPrioridade, pageSize, fDia, fMes, fAno]);
     const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));
     const pageSafe = Math.min(page, totalPages);
     const paginados = filtrados.slice((pageSafe - 1) * pageSize, pageSafe * pageSize);
@@ -90,6 +118,45 @@ function LiraView({ onBack }) {
         const pct = total ? Math.round((analisados / total) * 100) : 0;
         return { total, analisados, pendentes, hoje, serie, diasComMeta, pct };
     }, [items]);
+
+    // ── Relatório de desempenho (segue o período filtrado) ──
+    const periodoLabel = useMemo(() => {
+        if (fDia) return `Dia ${fDia.split('-').reverse().join('/')}`;
+        const mesL = MESES_OPCOES.find((m) => m.v === fMes)?.l;
+        if (fMes !== 'todos' && fAno !== 'todos') return `${mesL} de ${fAno}`;
+        if (fAno !== 'todos') return `Ano de ${fAno}`;
+        if (fMes !== 'todos') return `${mesL} (todos os anos)`;
+        return 'Todo o período';
+    }, [fDia, fMes, fAno]);
+
+    const relatorio = useMemo(() => {
+        const noPeriodo = items.filter((r) => r.analisado_em && dentroPeriodo(r));
+        const porDia = {};
+        noPeriodo.forEach((r) => {
+            const d = diaDe(r.analisado_em);
+            if (!porDia[d]) porDia[d] = { count: 0, analistas: new Set() };
+            porDia[d].count++;
+            if (r.analisado_por) porDia[d].analistas.add(r.analisado_por);
+        });
+        const dias = Object.entries(porDia)
+            .map(([iso, v]) => ({ iso, data: iso.split('-').reverse().join('/'), count: v.count, analistas: [...v.analistas].join(', ') || '—', metaOk: v.count >= META_DIA }))
+            .sort((a, b) => b.iso.localeCompare(a.iso));
+        const totalPeriodo = noPeriodo.length;
+        const diasAtivos = dias.length;
+        const diasMeta = dias.filter((d) => d.metaOk).length;
+        const media = diasAtivos ? totalPeriodo / diasAtivos : 0;
+        const semData = items.filter((r) => foiAnalisado(r) && !r.analisado_em).length;
+        return { dias, totalPeriodo, diasAtivos, diasMeta, media, semData };
+    }, [items, dentroPeriodo]);
+
+    const exportarRelatorio = () => {
+        exportToExcel([
+            ...relatorio.dias.map((d) => ({
+                'Data': d.data, 'Análises': d.count, 'Meta (≥5)': d.metaOk ? 'Atingida' : 'Não atingida', 'Analista(s)': d.analistas,
+            })),
+            { 'Data': 'TOTAL', 'Análises': relatorio.totalPeriodo, 'Meta (≥5)': `${relatorio.diasMeta} de ${relatorio.diasAtivos} dias`, 'Analista(s)': '' },
+        ], 'relatorio_desempenho_lira', 'Desempenho');
+    };
 
     // ── Abrir análise (carrega registro completo) ──
     const abrirAnalise = async (row) => {
@@ -167,6 +234,7 @@ function LiraView({ onBack }) {
             onBack={onBack}
             maxWidth="100%"
             actions={<>
+                <Btn variant="outline" color="#8b9bb4" onClick={() => setShowReport(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaChartBar size={11} /> Relatório de desempenho</Btn>
                 <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={11} /> Exportar Excel</Btn>
                 <Btn color="#00ccff" onClick={() => { const p = proximaPendente(); if (p) abrirAnalise(p); }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.72rem' }}>
                     <FaForward size={11} /> Analisar próxima pendente
@@ -249,9 +317,23 @@ function LiraView({ onBack }) {
                     <option value="todos">Prioridade</option>
                     {prioridades.map((p) => <option key={p} value={p}>{p}</option>)}
                 </Select>
+                <Select value={fAno} onChange={(e) => setFAno(e.target.value)} style={{ width: 92, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                    <option value="todos">Ano</option>
+                    {anos.map((a) => <option key={a} value={a}>{a}</option>)}
+                </Select>
+                <Select value={fMes} onChange={(e) => setFMes(e.target.value)} style={{ width: 110, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                    <option value="todos">Mês</option>
+                    {MESES_OPCOES.map((m) => <option key={m.v} value={m.v}>{m.l}</option>)}
+                </Select>
+                <Input type="date" value={fDia} onChange={(e) => setFDia(e.target.value)} title="Dia exato da análise" style={{ width: 128, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }} />
                 <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n}/pág</option>)}
                 </Select>
+                {(temFiltroData || busca || fStatus !== 'todos' || fOrigem !== 'todos' || fPrioridade !== 'todos') && (
+                    <Btn variant="outline" color="#ff4757" onClick={() => { setBusca(''); setFStatus('todos'); setFOrigem('todos'); setFPrioridade('todos'); setFDia(''); setFMes('todos'); setFAno('todos'); }} style={{ padding: '0.3rem 0.6rem', fontSize: '0.66rem' }}>
+                        Limpar
+                    </Btn>
+                )}
             </div>
 
             <div className="lira-tbl">
@@ -271,6 +353,18 @@ function LiraView({ onBack }) {
                     <span>Página {pageSafe} de {totalPages}</span>
                     <Btn variant="outline" color="#00ccff" onClick={() => setPage(Math.min(totalPages, pageSafe + 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe >= totalPages ? 0.4 : 1, pointerEvents: pageSafe >= totalPages ? 'none' : 'auto' }}>Próxima</Btn>
                 </div>
+            )}
+
+            {/* Relatório de desempenho (imprimível) */}
+            {showReport && (
+                <RelatorioDesempenho
+                    onClose={() => setShowReport(false)}
+                    periodo={periodoLabel}
+                    rel={relatorio}
+                    stats={stats}
+                    emissor={nomeUsuario}
+                    onExcel={exportarRelatorio}
+                />
             )}
 
             {/* Modal de análise */}
@@ -340,6 +434,91 @@ function BlocoLeitura({ titulo, texto, destaque }) {
                 border: `1px solid ${destaque ? 'rgba(0,204,255,0.25)' : 'var(--border-color-soft)'}`,
                 borderRadius: 8, padding: '0.6rem 0.75rem', maxHeight: 150, overflowY: 'auto',
             }}>{texto}</div>
+        </div>
+    );
+}
+
+// ── Relatório de Desempenho — modal imprimível (A4) ──
+function RelatorioDesempenho({ onClose, periodo, rel, stats, emissor, onExcel }) {
+    const agora = new Date();
+    const kpiBox = { border: '1px solid var(--border-color)', borderRadius: 10, padding: '0.6rem 0.8rem', textAlign: 'center' };
+    const kpiVal = { fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text-main)', lineHeight: 1.2 };
+    const kpiLbl = { fontSize: '0.58rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-subtle)' };
+    const th = { textAlign: 'left', padding: '0.45rem 0.6rem', fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--color-text-subtle)', borderBottom: '1px solid var(--border-color)' };
+    const td = { padding: '0.45rem 0.6rem', fontSize: '0.76rem', borderBottom: '1px solid var(--border-color-soft)', color: 'var(--color-text-main)' };
+
+    return (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6000, padding: '1rem' }}>
+            <style>{`
+                @media print {
+                    @page { size: A4 portrait; margin: 12mm; }
+                    body * { visibility: hidden !important; }
+                    .lira-report, .lira-report * { visibility: visible !important; }
+                    .lira-report { position: absolute !important; left: 0; top: 0; width: 100% !important; max-height: none !important; background: #fff !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; }
+                    .lira-report * { color: #000 !important; background: transparent !important; border-color: #999 !important; }
+                    .lira-report .no-print { display: none !important; }
+                }
+            `}</style>
+            <div className="lira-report" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 14, maxWidth: 760, width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.55)', padding: '1.4rem 1.6rem' }}>
+                {/* Toolbar (não imprime) */}
+                <div className="no-print" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.8rem' }}>
+                    <Btn variant="outline" color="#10b981" onClick={onExcel} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={11} /> Excel</Btn>
+                    <Btn color="#00ccff" onClick={() => window.print()} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaPrint size={11} /> Imprimir</Btn>
+                    <Btn variant="outline" color="#8b9bb4" onClick={onClose} style={{ padding: '0.35rem 0.55rem', fontSize: '0.7rem' }}><FaTimes size={12} /></Btn>
+                </div>
+
+                {/* Cabeçalho */}
+                <div style={{ borderBottom: '2px solid var(--border-color)', paddingBottom: '0.7rem', marginBottom: '0.9rem' }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-text-main)' }}>Relatório de Desempenho — LIRA · Requisitos Legais</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', marginTop: 3 }}>
+                        Período: <strong>{periodo}</strong> · Emitido em {agora.toLocaleDateString('pt-BR')} às {agora.toTimeString().slice(0, 5)}{emissor ? ` por ${emissor}` : ''} · SGA — Sistema de Gestão Ambiental
+                    </div>
+                </div>
+
+                {/* Resumo */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <div style={kpiBox}><div style={kpiVal}>{rel.totalPeriodo}</div><div style={kpiLbl}>Análises no período</div></div>
+                    <div style={kpiBox}><div style={kpiVal}>{rel.diasAtivos}</div><div style={kpiLbl}>Dias com atividade</div></div>
+                    <div style={kpiBox}><div style={kpiVal}>{rel.media.toFixed(1)}</div><div style={kpiLbl}>Média / dia ativo</div></div>
+                    <div style={kpiBox}><div style={kpiVal}>{rel.diasMeta}/{rel.diasAtivos}</div><div style={kpiLbl}>Dias com meta (≥{META_DIA})</div></div>
+                    <div style={kpiBox}><div style={kpiVal}>{stats.pct}%</div><div style={kpiLbl}>Progresso geral ({stats.analisados}/{stats.total})</div></div>
+                </div>
+
+                {rel.semData > 0 && (
+                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', marginBottom: '0.8rem' }}>
+                        Obs.: {rel.semData} análise(s) concluída(s) sem data registrada (anteriores ao rastreio) não entram na contagem diária.
+                    </div>
+                )}
+
+                {/* Detalhamento por dia */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontVariantNumeric: 'tabular-nums' }}>
+                    <thead>
+                        <tr>
+                            <th style={th}>Data</th>
+                            <th style={{ ...th, textAlign: 'center' }}>Análises</th>
+                            <th style={{ ...th, textAlign: 'center' }}>Meta diária (≥{META_DIA})</th>
+                            <th style={th}>Analista(s)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rel.dias.length === 0 && (
+                            <tr><td colSpan={4} style={{ ...td, textAlign: 'center', color: 'var(--color-text-subtle)', padding: '1.4rem' }}>Nenhuma análise com data registrada no período selecionado.</td></tr>
+                        )}
+                        {rel.dias.map((d) => (
+                            <tr key={d.iso}>
+                                <td style={td}>{d.data}</td>
+                                <td style={{ ...td, textAlign: 'center', fontWeight: 700 }}>{d.count}</td>
+                                <td style={{ ...td, textAlign: 'center' }}>
+                                    <span style={{ color: d.metaOk ? '#10b981' : '#ffb700', fontWeight: 700, fontSize: '0.7rem' }}>
+                                        {d.metaOk ? '✔ Atingida' : '✖ Não atingida'}
+                                    </span>
+                                </td>
+                                <td style={{ ...td, fontSize: '0.72rem' }}>{d.analistas}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
