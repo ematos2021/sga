@@ -25,7 +25,15 @@ const brDataHora = (ts) => (ts ? new Date(ts).toLocaleDateString('pt-BR') : null
 
 // ── Pills ── (null-safe: colunas podem vir nulas do banco)
 const corPrioridade = (p) => { const s = String(p ?? ''); return /alta/i.test(s) ? '#ff4757' : /m[eé]dia/i.test(s) ? '#ffb700' : /baixa/i.test(s) ? '#54a0ff' : '#8b9bb4'; };
-const corConformidade = (c) => { const s = String(c ?? '').trim(); return /^conforme/i.test(s) ? '#10b981' : /n[aã]o conforme/i.test(s) ? '#ff4757' : /parcial/i.test(s) ? '#ffb700' : '#8b9bb4'; };
+const corConformidade = (c) => {
+    const s = String(c ?? '').trim().toLowerCase();
+    if (/^conforme/i.test(s)) return '#10b981'; // Green
+    if (/n[aã]o conforme/i.test(s)) return '#ff4757'; // Red
+    if (/parcial/i.test(s)) return '#ff9f43'; // Orange
+    if (/aplic[aá]vel|aplica/i.test(s)) return '#ffd32a'; // Yellow (Não Aplicável / Não se aplica)
+    if (/adequa/i.test(s)) return '#54a0ff'; // Blue (Em Adequação)
+    return '#8b9bb4'; // Default Gray
+};
 function Pill({ text, color }) {
     if (!text) return <span style={{ color: 'var(--color-text-subtle)' }}>—</span>;
     return <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color, background: color + '1a', border: `1px solid ${color}45`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{text}</span>;
@@ -84,7 +92,7 @@ function LiraView({ onBack }) {
         if (fPrioridade !== 'todos' && r.prioridade !== fPrioridade) return false;
         if (!dentroPeriodo(r)) return false;
         if (busca) {
-            const alvo = `${r.codigo} ${r.requisito} ${r.obrigacao} ${r.origem} ${r.observacoes || ''}`.toLowerCase();
+            const alvo = `${r.codigo} ${r.requisito} ${r.sumario || ''} ${r.obrigacao} ${r.origem} ${r.observacoes || ''}`.toLowerCase();
             if (!alvo.includes(busca.toLowerCase())) return false;
         }
         return true;
@@ -194,7 +202,7 @@ function LiraView({ onBack }) {
     const exportar = () => {
         const fonte = filtrados.length ? filtrados : items;
         exportToExcel(fonte.map((r) => ({
-            'ID': r.id, 'Código': r.codigo || '', 'Requisito': r.requisito || '', 'Obrigação': r.obrigacao || '',
+            'ID': r.id, 'Código': r.codigo || '', 'Requisito': r.requisito || '', 'Sumário': r.sumario || '', 'Obrigação': r.obrigacao || '',
             'Origem': r.origem || '', 'Prioridade': r.prioridade || '', 'Situação': r.situacao || '',
             'Conformidade': r.conformidade || '', 'Observações/Conclusões': r.observacoes || '',
             'Analisado em': brDataHora(r.analisado_em) || '', 'Analisado por': r.analisado_por || '',
@@ -203,8 +211,9 @@ function LiraView({ onBack }) {
 
     const columns = [
         { key: 'codigo', label: 'Cód.', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.72rem' }}>{r.codigo || '—'}</span> },
-        { key: 'requisito', label: 'Requisito legal', wrap: true, render: (r) => <span title={r.requisito}><span style={{ fontWeight: 600 }}>{trunca(r.requisito || '—', 68)}</span>{r.origem ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.64rem' }}>{r.origem}{r.situacao ? ` · ${r.situacao}` : ''}</div> : null}</span> },
-        { key: 'obrigacao', label: 'Obrigação', wrap: true, render: (r) => <span title={r.obrigacao} style={{ fontSize: '0.72rem' }}>{trunca(r.obrigacao || '—', 90)}</span> },
+        { key: 'requisito', label: 'Requisito legal', render: (r) => <span title={r.requisito} style={{ whiteSpace: 'nowrap' }}><span style={{ fontWeight: 600 }}>{trunca(r.requisito || '—', 68)}</span>{r.origem ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.64rem', whiteSpace: 'nowrap' }}>{r.origem}{r.situacao ? ` · ${r.situacao}` : ''}</div> : null}</span> },
+        { key: 'sumario', label: 'Sumário', render: (r) => <span title={r.sumario} style={{ fontSize: '0.72rem' }}>{trunca(r.sumario || '—', 80)}</span> },
+        { key: 'obrigacao', label: 'Obrigação', render: (r) => <span title={r.obrigacao} style={{ fontSize: '0.72rem' }}>{trunca(r.obrigacao || '—', 90)}</span> },
         { key: 'prioridade', label: 'Prioridade', align: 'center', render: (r) => <Pill text={r.prioridade} color={corPrioridade(r.prioridade)} /> },
         { key: 'conformidade', label: 'Conformidade', align: 'center', render: (r) => <Pill text={r.conformidade} color={corConformidade(r.conformidade)} /> },
         {

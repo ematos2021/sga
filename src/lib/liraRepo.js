@@ -15,7 +15,7 @@ import { supabase } from './supabase';
 const VIEW = 'lira_analises';
 
 // Colunas leves para a listagem (textos longos ficam para getFull)
-const COLS_LISTA = 'id,codigo,requisito,obrigacao,origem,prioridade,situacao,conformidade,observacoes,analisado_em,analisado_por';
+const COLS_LISTA = 'id,codigo,requisito,sumario,obrigacao,origem,prioridade,situacao,conformidade,observacoes,analisado_em,analisado_por';
 
 // Um registro conta como analisado quando as observações/conclusões foram preenchidas
 export const foiAnalisado = (r) => !!(r?.observacoes && String(r.observacoes).trim());
