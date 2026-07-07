@@ -211,14 +211,21 @@ function LiraView({ onBack }) {
 
     const columns = [
         { key: 'codigo', label: 'Cód.', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.72rem' }}>{r.codigo || '—'}</span> },
-        { key: 'requisito', label: 'Requisito legal', render: (r) => <span title={r.requisito} style={{ whiteSpace: 'nowrap' }}><span style={{ fontWeight: 600 }}>{trunca(r.requisito || '—', 68)}</span>{r.origem ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.64rem', whiteSpace: 'nowrap' }}>{r.origem}{r.situacao ? ` · ${r.situacao}` : ''}</div> : null}</span> },
-        { key: 'sumario', label: 'Sumário', render: (r) => <span title={r.sumario} style={{ fontSize: '0.72rem' }}>{trunca(r.sumario || '—', 80)}</span> },
-        { key: 'obrigacao', label: 'Obrigação', render: (r) => <span title={r.obrigacao} style={{ fontSize: '0.72rem' }}>{trunca(r.obrigacao || '—', 90)}</span> },
+        {
+            key: 'requisito', label: 'Requisito legal', wrap: true, render: (r) => (
+                <span title={`${r.requisito || ''}${r.sumario ? '\n\n' + r.sumario : ''}`}>
+                    <span style={{ fontWeight: 600 }}>{trunca(r.requisito || '—', 52)}</span>
+                    {r.sumario ? <div style={{ color: 'var(--color-text-muted)', fontSize: '0.66rem' }}>{trunca(r.sumario, 64)}</div> : null}
+                    <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem' }}>{[r.origem, r.situacao].filter(Boolean).join(' · ') || ''}</div>
+                </span>
+            ),
+        },
+        { key: 'obrigacao', label: 'Obrigação', wrap: true, render: (r) => <span title={r.obrigacao} style={{ fontSize: '0.72rem' }}>{trunca(r.obrigacao || '—', 110)}</span> },
         { key: 'prioridade', label: 'Prioridade', align: 'center', render: (r) => <Pill text={r.prioridade} color={corPrioridade(r.prioridade)} /> },
         { key: 'conformidade', label: 'Conformidade', align: 'center', render: (r) => <Pill text={r.conformidade} color={corConformidade(r.conformidade)} /> },
         {
             key: 'analise', label: 'Análise', align: 'center', render: (r) => foiAnalisado(r)
-                ? <Pill text={r.analisado_em ? `Analisado · ${brDataHora(r.analisado_em)}` : 'Analisado'} color="#10b981" />
+                ? <span><Pill text="Analisado" color="#10b981" />{r.analisado_em ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', marginTop: 2 }}>{brDataHora(r.analisado_em)}</div> : null}</span>
                 : <Pill text="Pendente" color="#ffb700" />,
         },
         {
@@ -348,9 +355,16 @@ function LiraView({ onBack }) {
             <div className="lira-tbl">
                 <style>{`
                     .lira-tbl > div { border: none !important; border-radius: 0 !important; border-top: 1px solid var(--border-color-soft) !important; }
-                    .lira-tbl table { font-size: 0.76rem !important; font-variant-numeric: tabular-nums; }
-                    .lira-tbl thead th { font-size: 0.6rem !important; font-weight: 600 !important; letter-spacing: 0.7px; padding: 0.55rem 0.7rem !important; }
-                    .lira-tbl tbody td { padding: 0.55rem 0.7rem !important; line-height: 1.4; }
+                    .lira-tbl table { font-size: 0.74rem !important; font-variant-numeric: tabular-nums; table-layout: fixed; width: 100%; }
+                    .lira-tbl thead th { font-size: 0.6rem !important; font-weight: 600 !important; letter-spacing: 0.7px; padding: 0.5rem 0.6rem !important; }
+                    .lira-tbl tbody td { padding: 0.5rem 0.6rem !important; line-height: 1.35; overflow: hidden; }
+                    .lira-tbl th:nth-child(1), .lira-tbl td:nth-child(1) { width: 4%; }
+                    .lira-tbl th:nth-child(2), .lira-tbl td:nth-child(2) { width: 31%; }
+                    .lira-tbl th:nth-child(3), .lira-tbl td:nth-child(3) { width: 35%; }
+                    .lira-tbl th:nth-child(4), .lira-tbl td:nth-child(4) { width: 8%; text-align: center; }
+                    .lira-tbl th:nth-child(5), .lira-tbl td:nth-child(5) { width: 9%; text-align: center; }
+                    .lira-tbl th:nth-child(6), .lira-tbl td:nth-child(6) { width: 9%; text-align: center; }
+                    .lira-tbl th:nth-child(7), .lira-tbl td:nth-child(7) { width: 4%; text-align: center; }
                 `}</style>
                 <DataTable dense columns={columns} rows={paginados} empty={loading ? 'Carregando requisitos…' : 'Nenhum requisito encontrado com esses filtros.'} />
             </div>
