@@ -6,7 +6,7 @@ import { obterEventosProximos } from '../lib/constants';
 import {
     FaLeaf, FaSignOutAlt, FaChartPie, FaFileSignature, FaFileExcel, FaTruckMoving,
     FaTicketAlt, FaSmog, FaFileInvoiceDollar, FaUsers, FaDatabase, FaRecycle,
-    FaCalendarAlt, FaBell, FaGlobeAmericas, FaUsersCog, FaBalanceScale
+    FaCalendarAlt, FaBell, FaGlobeAmericas, FaUsersCog, FaBalanceScale, FaBug
 } from 'react-icons/fa';
 
 
@@ -24,6 +24,7 @@ const MENU = [
     { id: 'esg-carbono', label: 'ESG & Carbono', icon: <FaGlobeAmericas size={22} />, color: '#10b981', description: 'Inventário de GEE e trajetória Net Zero', cat: 'monitoramento' },
     { id: 'fumaca', label: 'Fumaça Preta', icon: <FaSmog size={22} />, color: '#a78bfa', description: 'Medição Ringelmann dos geradores', cat: 'monitoramento' },
     { id: 'lira', label: 'LIRA · Requisitos Legais', icon: <FaBalanceScale size={22} />, color: '#00ccff', description: 'Análise de conformidade legal · meta diária', cat: 'monitoramento' },
+    { id: 'dedetizacao', label: 'Controle de Pragas', icon: <FaBug size={22} />, color: '#ff9f43', description: 'Dedetização FR 861 · solicitações e reincidências', cat: 'monitoramento' },
 
     // Comercial & logística
     { id: 'nf-sucata', label: 'NF Sucata Plástica', icon: <FaFileInvoiceDollar size={22} />, color: '#ffb700', description: 'Emissão e controle · VIAMED', cat: 'comercial' },
@@ -40,7 +41,7 @@ const MENU = [
 const CATEGORIES = [
     { id: 'visao', label: 'Visão Geral', color: '#00ccff', ids: ['dashboard', 'calendario'] },
     { id: 'residuos', label: 'Operação de Resíduos', color: '#00ff9d', ids: ['autorizacoes', 'manifestos', 'tickets', 'controle-residuos'] },
-    { id: 'monitoramento', label: 'Monitoramento & Conformidade', color: '#10b981', ids: ['esg-carbono', 'fumaca', 'lira'] },
+    { id: 'monitoramento', label: 'Monitoramento & Conformidade', color: '#10b981', ids: ['esg-carbono', 'fumaca', 'lira', 'dedetizacao'] },
     { id: 'comercial', label: 'Comercial & Logística', color: '#ffb700', ids: ['nf-sucata', 'motoristas'] },
     { id: 'cadastros', label: 'Cadastros', color: '#9d4edd', ids: ['cadastros', 'ficha-residuos'] },
     { id: 'admin', label: 'Administração', color: '#a78bfa', ids: ['usuarios'] },
