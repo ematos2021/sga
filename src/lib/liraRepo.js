@@ -15,7 +15,7 @@ import { supabase } from './supabase';
 const VIEW = 'lira_analises';
 
 // Colunas leves para a listagem (textos longos ficam para getFull)
-const COLS_LISTA = 'id,codigo,requisito,sumario,obrigacao,origem,prioridade,situacao,conformidade,observacoes,analisado_em,analisado_por';
+const COLS_LISTA = 'id,codigo,requisito,sumario,obrigacao,origem,prioridade,situacao,conformidade,observacoes,analisado_em,analisado_por,temas,macrotemas,setor';
 
 // Um registro conta como analisado quando as observações/conclusões foram preenchidas
 export const foiAnalisado = (r) => !!(r?.observacoes && String(r.observacoes).trim());
@@ -55,8 +55,9 @@ export function useLira() {
 
     // Salva a análise; carimba data/autor na PRIMEIRA conclusão (o dia em
     // que contou para a meta não muda em edições posteriores).
-    const salvarAnalise = useCallback(async (row, { observacoes, conformidade, autor }) => {
+    const salvarAnalise = useCallback(async (row, { observacoes, conformidade, setor, autor }) => {
         const patch = { observacoes, conformidade };
+        if (setor !== undefined) patch.setor = setor || null;
         if (!row.analisado_em && observacoes?.trim()) {
             patch.analisado_em = new Date().toISOString();
             patch.analisado_por = autor || null;
@@ -67,5 +68,20 @@ export function useLira() {
         return data;
     }, []);
 
-    return { items, loading, error, needsSetup, reload, getFull, salvarAnalise };
+    // Grava a classificação de setor em lote: { 'Manutenção': [ids…], … }
+    // Um UPDATE por setor (id=in.(…)) — eficiente para os 800 registros.
+    const classificarSetores = useCallback(async (mapa) => {
+        for (const [setor, ids] of Object.entries(mapa)) {
+            if (!ids.length) continue;
+            const { error } = await supabase.from(VIEW).update({ setor }).in('id', ids);
+            if (error) { alert(`Erro ao classificar "${setor}": ` + error.message); return false; }
+        }
+        setItems((prev) => prev.map((it) => {
+            const novo = Object.entries(mapa).find(([, ids]) => ids.includes(it.id));
+            return novo ? { ...it, setor: novo[0] } : it;
+        }));
+        return true;
+    }, []);
+
+    return { items, loading, error, needsSetup, reload, getFull, salvarAnalise, classificarSetores };
 }
