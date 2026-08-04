@@ -256,6 +256,7 @@ function ManifestoMTRView({ onBack }) {
 
     // Confirmação de cancelamento (manifesto a cancelar)
     const [confirmCancel, setConfirmCancel] = useState(null);
+    const [cancelReason, setCancelReason] = useState('');
 
     // Exibição do guia de fluxo (acionado por botão no topo)
     const [showGuide, setShowGuide] = useState(false);
@@ -464,8 +465,9 @@ function ManifestoMTRView({ onBack }) {
             key: 'status', label: 'Status', align: 'center', render: (r) => {
                 if (r.status === 'Cancelado') {
                     const brCancelDate = r.cancelledAt ? new Date(r.cancelledAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                    const titleText = `Cancelado por ${r.cancelledBy || '—'} em ${brCancelDate}${r.cancelReason ? `\nMotivo: ${r.cancelReason}` : ''}`;
                     return (
-                        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }} title={`Cancelado por ${r.cancelledBy || '—'} em ${brCancelDate}`}>
+                        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }} title={titleText}>
                             <span style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color: '#ff4757', background: '#ff475712', border: '1px solid #ff475740', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 <FaBan size={9} /> Cancelado
                             </span>
@@ -496,7 +498,7 @@ function ManifestoMTRView({ onBack }) {
                         <RowAction icon={<FaEdit size={13} />} color="#10b981" title="Editar manifesto" onClick={() => editarManifesto(r)} />
                     )}
                     {r.status !== 'Cancelado' ? (
-                        <RowAction icon={<FaBan size={13} />} color="#ff9f43" title="Cancelar manifesto" onClick={() => setConfirmCancel(r)} />
+                        <RowAction icon={<FaBan size={13} />} color="#ff9f43" title="Cancelar manifesto" onClick={() => { setConfirmCancel(r); setCancelReason(''); }} />
                     ) : (
                         <RowAction icon={<FaUndoAlt size={13} />} color="#8b9bb4" title="Desfazer cancelamento" onClick={() => update(r.id, { cancelledAt: null, cancelledBy: null, status: 'Emitido' })} />
                     )}
@@ -859,18 +861,42 @@ function ManifestoMTRView({ onBack }) {
                             <strong style={{ color: 'var(--color-text-main)' }}>{confirmCancel.numeroMTR || confirmCancel.residuo || 'selecionado'}</strong>
                             {confirmCancel.data ? ` (${brData(confirmCancel.data)})` : ''} será marcado como cancelado.
                         </p>
-                        <p style={{ margin: '0 0 1.4rem', fontSize: '0.72rem', color: 'var(--color-text-subtle)', lineHeight: 1.4 }}>
+                        <p style={{ margin: '0 0 1rem', fontSize: '0.72rem', color: 'var(--color-text-subtle)', lineHeight: 1.4 }}>
                             O registro será mantido para auditoria. Você pode desfazer o cancelamento depois.
                         </p>
+                        <div style={{ marginBottom: '1.4rem', textAlign: 'left' }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '0.4rem' }}>
+                                Motivo do Cancelamento <span style={{ color: '#ff4757' }}>*</span>
+                            </label>
+                            <textarea
+                                value={cancelReason}
+                                onChange={(e) => setCancelReason(e.target.value)}
+                                placeholder="Descreva por que este manifesto está sendo cancelado..."
+                                rows={3}
+                                style={{
+                                    width: '100%',
+                                    background: 'var(--bg-surface-2)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 8,
+                                    padding: '0.6rem',
+                                    color: 'var(--color-text-main)',
+                                    fontSize: '0.85rem',
+                                    resize: 'vertical',
+                                    outline: 'none'
+                                }}
+                            />
+                        </div>
                         <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center' }}>
                             <Btn variant="outline" color="#8b9bb4" onClick={() => setConfirmCancel(null)}>Voltar</Btn>
-                            <Btn color="#ff9f43" onClick={() => {
+                            <Btn color="#ff9f43" disabled={!cancelReason.trim()} onClick={() => {
                                 update(confirmCancel.id, {
                                     cancelledAt: new Date().toISOString(),
                                     cancelledBy: nomeUsuario,
                                     status: 'Cancelado',
+                                    cancelReason: cancelReason.trim(),
                                 });
                                 setConfirmCancel(null);
+                                setCancelReason('');
                             }}><FaBan size={12} /> Confirmar Cancelamento</Btn>
                         </div>
                     </div>
@@ -930,15 +956,22 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
             {/* Banner de cancelamento com dados de auditoria */}
             {isCancelado && (
                 <div style={{
-                    display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 0.9rem',
+                    display: 'flex', gap: '0.6rem', padding: '0.6rem 0.9rem',
                     borderRadius: 10, background: 'rgba(255, 71, 87, 0.06)', border: '1px solid rgba(255, 71, 87, 0.18)',
                     marginBottom: '1.2rem', fontSize: '0.72rem', color: 'var(--color-text-muted)'
                 }}>
-                    <FaBan size={12} color="#ff4757" style={{ flexShrink: 0 }} />
-                    <div>
-                        <span style={{ fontWeight: 600, color: '#ff4757' }}>Manifesto cancelado</span>
-                        {manifesto.cancelledBy && <> por <strong style={{ color: 'var(--color-text-main)' }}>{manifesto.cancelledBy}</strong></>}
-                        {brCancelDate && <> em <strong style={{ color: 'var(--color-text-main)' }}>{brCancelDate}</strong></>}
+                    <div style={{ marginTop: '2px' }}><FaBan size={12} color="#ff4757" style={{ flexShrink: 0 }} /></div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', width: '100%' }}>
+                        <div>
+                            <span style={{ fontWeight: 600, color: '#ff4757' }}>Manifesto cancelado</span>
+                            {manifesto.cancelledBy && <> por <strong style={{ color: 'var(--color-text-main)' }}>{manifesto.cancelledBy}</strong></>}
+                            {brCancelDate && <> em <strong style={{ color: 'var(--color-text-main)' }}>{brCancelDate}</strong></>}
+                        </div>
+                        {manifesto.cancelReason && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-main)', borderTop: '1px dashed rgba(255, 71, 87, 0.2)', paddingTop: '0.3rem', marginTop: '0.1rem' }}>
+                                <strong style={{ color: '#ff4757' }}>Motivo:</strong> {manifesto.cancelReason}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

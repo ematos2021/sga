@@ -33,6 +33,7 @@ const FIELD_TO_COL = {
     tipoRecebedor: 'recebedor_tipo',
     cancelledAt: 'cancelled_at',
     cancelledBy: 'cancelled_by',
+    cancelReason: 'cancel_reason',
 };
 
 // Linha do banco → manifesto do app
@@ -63,6 +64,7 @@ function rowToManifesto(row) {
         createdAt: row.created_at,
         cancelledAt: row.cancelled_at || null,
         cancelledBy: row.cancelled_by || null,
+        cancelReason: row.cancel_reason || null,
     };
 }
 
