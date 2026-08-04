@@ -31,6 +31,8 @@ const FIELD_TO_COL = {
     destinador: 'receiver',
     setorColeta: 'collection_sector',
     tipoRecebedor: 'recebedor_tipo',
+    cancelledAt: 'cancelled_at',
+    cancelledBy: 'cancelled_by',
 };
 
 // Linha do banco → manifesto do app
@@ -56,9 +58,11 @@ function rowToManifesto(row) {
         tipoRecebedor: limpa(row.recebedor_tipo) || 'Fornecedor',
         destinacao: classificaDestinacao(residuo),
         classe: classificaClasse(residuo),
-        status: 'Emitido',
+        status: row.cancelled_at ? 'Cancelado' : 'Emitido',
         sinir: !ehVazio(row.mondial_manifest_number),
         createdAt: row.created_at,
+        cancelledAt: row.cancelled_at || null,
+        cancelledBy: row.cancelled_by || null,
     };
 }
 

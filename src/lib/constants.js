@@ -72,7 +72,7 @@ export const FR658_DEFAULTS = {
 
 // Status dos fluxos
 export const STATUS_AUTORIZACAO = ['Pendente', 'Autorizada', 'Liberada', 'Recusada'];
-export const STATUS_MANIFESTO = ['Emitido', 'Aguardando Emissão'];
+export const STATUS_MANIFESTO = ['Emitido', 'Aguardando Emissão', 'Cancelado'];
 export const STATUS_TICKET = ['Aguardando Coleta', 'Coletado', 'Conferido'];
 export const STATUS_NF = ['Emitida', 'Enviada', 'Faturada', 'Paga'];
 

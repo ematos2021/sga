@@ -6,7 +6,7 @@ import { obterEventosProximos } from '../lib/constants';
 import {
     FaLeaf, FaSignOutAlt, FaChartPie, FaFileSignature, FaFileExcel, FaTruckMoving,
     FaTicketAlt, FaSmog, FaFileInvoiceDollar, FaUsers, FaDatabase, FaRecycle,
-    FaCalendarAlt, FaBell, FaGlobeAmericas, FaUsersCog, FaBalanceScale, FaBug
+    FaCalendarAlt, FaBell, FaGlobeAmericas, FaUsersCog, FaBalanceScale, FaBug, FaTable
 } from 'react-icons/fa';
 
 
@@ -19,6 +19,7 @@ const MENU = [
     { id: 'manifestos', label: 'Manifesto MTR / SINIR', icon: <FaTruckMoving size={22} />, color: '#54a0ff', description: 'Emissão e controle de MTR', cat: 'residuos' },
     { id: 'tickets', label: 'Tickets de Coleta', icon: <FaTicketAlt size={22} />, color: '#ff9f43', description: 'Tickets vinculados aos manifestos', cat: 'residuos' },
     { id: 'controle-residuos', label: 'Controle de Saída', icon: <FaFileExcel size={22} />, color: '#10b981', description: 'Histórico consolidado · exporta Excel', cat: 'residuos' },
+    { id: 'conciliacao', label: 'Conciliação Mensal', icon: <FaTable size={22} />, color: '#00ccff', description: 'Conferência por fornecedor · pivot anual', cat: 'residuos' },
 
     // Monitoramento
     { id: 'esg-carbono', label: 'ESG & Carbono', icon: <FaGlobeAmericas size={22} />, color: '#10b981', description: 'Inventário de GEE e trajetória Net Zero', cat: 'monitoramento' },
@@ -40,7 +41,7 @@ const MENU = [
 
 const CATEGORIES = [
     { id: 'visao', label: 'Visão Geral', color: '#00ccff', ids: ['dashboard', 'calendario'] },
-    { id: 'residuos', label: 'Operação de Resíduos', color: '#00ff9d', ids: ['autorizacoes', 'manifestos', 'tickets', 'controle-residuos'] },
+    { id: 'residuos', label: 'Operação de Resíduos', color: '#00ff9d', ids: ['autorizacoes', 'manifestos', 'tickets', 'controle-residuos', 'conciliacao'] },
     { id: 'monitoramento', label: 'Monitoramento & Conformidade', color: '#10b981', ids: ['esg-carbono', 'fumaca', 'lira', 'dedetizacao'] },
     { id: 'comercial', label: 'Comercial & Logística', color: '#ffb700', ids: ['nf-sucata', 'motoristas'] },
     { id: 'cadastros', label: 'Cadastros', color: '#9d4edd', ids: ['cadastros', 'ficha-residuos'] },

@@ -21,6 +21,7 @@ import FichaResiduosView from './pages/FichaResiduosView';
 import UsuariosView from './pages/UsuariosView';
 import LiraView from './pages/LiraView';
 import DedetizacaoView from './pages/DedetizacaoView';
+import ConciliacaoFornecedoresView from './pages/ConciliacaoFornecedoresView';
 
 
 function App() {
@@ -89,6 +90,7 @@ function App() {
                 {view === 'ficha-residuos' && guardedView('ficha-residuos', FichaResiduosView, { onBack: back })}
                 {view === 'usuarios' && (currentUser?.is_admin ? <UsuariosView onBack={back} /> : (() => { setTimeout(() => setView('main-menu'), 0); return null; })())}
                 {view === 'calendario' && guardedView('calendario', CalendarioAmbientalView, { onBack: back })}
+                {view === 'conciliacao' && guardedView('conciliacao', ConciliacaoFornecedoresView, { onBack: back })}
             </main>
         </div>
     );

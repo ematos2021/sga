@@ -221,7 +221,7 @@ export function StatusBadge({ status, map }) {
 }
 
 // ─── Tabela de dados ───
-export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = false, onRowClick }) {
+export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = false, onRowClick, rowStyle }) {
     if (!rows || rows.length === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-subtle)', fontSize: '0.9rem' }}>
@@ -253,7 +253,8 @@ export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = f
                             }}
                             style={{ 
                                 borderBottom: '1px solid var(--border-color-soft)',
-                                cursor: onRowClick ? 'pointer' : 'default'
+                                cursor: onRowClick ? 'pointer' : 'default',
+                                ...(rowStyle ? rowStyle(row) : {}),
                             }}
                         >
                             {columns.map((c) => (
