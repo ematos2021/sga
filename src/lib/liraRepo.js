@@ -18,7 +18,7 @@ const VIEW = 'lira_analises';
 const COLS_LISTA = 'id,codigo,requisito,sumario,obrigacao,origem,prioridade,situacao,conformidade,observacoes,analisado_em,analisado_por,temas,macrotemas,setor';
 
 // Um registro conta como analisado quando as observações/conclusões foram preenchidas
-export const foiAnalisado = (r) => !!(r?.observacoes && String(r.observacoes).trim());
+export const foiAnalisado = (r) => !!(r?.observacoes && String(r.observacoes).trim() && r?.analisado_em);
 
 export function useLira() {
     const [items, setItems] = useState([]);

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>SGA — Sistema de Gestão Ambiental · Resumo Executivo</title>
+<style>
+    @page { size: A4; margin: 16mm 14mm 14mm; }
+
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+        color: #1f2937; margin: 0; font-size: 10.2pt; line-height: 1.5;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* ─── Capa ─── */
+    .capa { padding-top: 34mm; page-break-after: always; }
+    .capa .tarja { width: 46mm; height: 5px; background: #0f7b4f; margin-bottom: 9mm; }
+    .capa h1 { font-size: 30pt; margin: 0 0 2mm; letter-spacing: -0.6px; color: #0b2e20; }
+    .capa .sub { font-size: 13pt; color: #0f7b4f; font-weight: 600; margin-bottom: 12mm; }
+    .capa .linha { font-size: 10.5pt; color: #4b5563; margin: 1.4mm 0; }
+    .capa .linha b { color: #1f2937; }
+    .capa .rodape-capa {
+        margin-top: 18mm; padding-top: 5mm; border-top: 1px solid #d1d5db;
+        font-size: 9pt; color: #6b7280;
+    }
+
+    h2 {
+        font-size: 12.5pt; margin: 9mm 0 3mm; padding-bottom: 1.6mm;
+        border-bottom: 2px solid #0f7b4f; color: #0b2e20;
+        text-transform: uppercase; letter-spacing: 0.6px;
+        page-break-after: avoid;
+    }
+    h2:first-of-type { margin-top: 0; }
+    h3 { font-size: 10.8pt; margin: 5mm 0 2mm; color: #0f7b4f; page-break-after: avoid; }
+    p { margin: 0 0 3mm; text-align: justify; }
+
+    .destaque {
+        background: #f0f7f3; border-left: 3px solid #0f7b4f;
+        padding: 3.5mm 4mm; margin: 0 0 4mm; font-size: 9.8pt;
+    }
+    .nota {
+        background: #fbfbfc; border: 1px solid #e5e7eb; border-radius: 4px;
+        padding: 3mm 4mm; margin: 3mm 0; font-size: 8.8pt; color: #4b5563;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9pt; }
+    th {
+        background: #0b2e20; color: #fff; text-align: left; padding: 2mm 2.5mm;
+        font-size: 8.2pt; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600;
+    }
+    td { padding: 2mm 2.5mm; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    tr:nth-child(even) td { background: #f9fafb; }
+    td.c { text-align: center; }
+    .peq { font-size: 8.2pt; color: #6b7280; }
+
+    /* Indicadores */
+    .kpis { display: flex; gap: 3mm; margin: 3mm 0 5mm; }
+    .kpi {
+        flex: 1; border: 1px solid #e5e7eb; border-top: 3px solid #0f7b4f;
+        border-radius: 3px; padding: 3mm; text-align: center;
+    }
+    .kpi b { display: block; font-size: 17pt; color: #0b2e20; line-height: 1.1; }
+    .kpi span { font-size: 7.6pt; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    /* Antes × Depois */
+    .cmp td:nth-child(2) { color: #9a3412; }
+    .cmp td:nth-child(3) { color: #14532d; font-weight: 600; }
+
+    ul { margin: 0 0 3mm; padding-left: 5mm; }
+    li { margin-bottom: 1.4mm; }
+
+    .quebra { page-break-before: always; }
+    .rodape {
+        margin-top: 8mm; padding-top: 3mm; border-top: 1px solid #e5e7eb;
+        font-size: 8pt; color: #9ca3af; display: flex; justify-content: space-between;
+    }
+    .tag {
+        display: inline-block; padding: 0.4mm 2mm; border-radius: 3px;
+        font-size: 7.6pt; font-weight: 600; letter-spacing: 0.3px;
+    }
+    .ok { background: #dcfce7; color: #14532d; }
+    .par { background: #fef3c7; color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ CAPA ════════════════ -->
+<section class="capa">
+    <div class="tarja"></div>
+    <h1>SGA</h1>
+    <div class="sub">Sistema de Gestão Ambiental — Resumo Executivo</div>
+
+    <div class="linha"><b>Organização:</b> Mondial Eletrodomésticos · Unidades MK BR e NE</div>
+    <div class="linha"><b>Área responsável:</b> SGI — Qualidade &amp; Ambiental</div>
+    <div class="linha"><b>Classificação:</b> documento técnico-descritivo</div>
+    <div class="linha"><b>Emissão:</b> 10 de agosto de 2026</div>
+</section>
+
+<!-- ════════════════ 1. SUMÁRIO EXECUTIVO ════════════════ -->
+<h2>1. Sumário executivo</h2>
+
+<p>
+    O <b>SGA</b> é a plataforma própria de gestão ambiental da Mondial. Substitui o conjunto de
+    planilhas, formulários impressos e registros avulsos que sustentavam a rotina ambiental por um
+    sistema único, com controle de acesso, trilha de auditoria e indicadores calculados sobre o
+    próprio dado operacional — e não sobre digitação paralela.
+</p>
+
+<p>
+    O escopo cobre três frentes que antes operavam de forma independente: a <b>operação de
+    resíduos</b>, da autorização de saída ao manifesto no SINIR e à conciliação com o fornecedor; o
+    <b>monitoramento de conformidade</b>, abrangendo requisitos legais, emissões atmosféricas e
+    controle de pragas; e a <b>gestão comercial dos recicláveis</b>. Cada módulo corresponde a um
+    controle manual preexistente. O ganho não está em digitalizar o formulário, mas em vincular o
+    documento ao número que ele gera.
+</p>
+
+<div class="kpis">
+    <div class="kpi"><b>13</b><span>módulos operacionais</span></div>
+    <div class="kpi"><b>4</b><span>frentes de conformidade</span></div>
+    <div class="kpi"><b>3</b><span>perfis de acesso</span></div>
+    <div class="kpi"><b>22</b><span>entregas versionadas</span></div>
+</div>
+
+<div class="destaque">
+    <b>Efeito sobre a gestão.</b> Duas questões que antes exigiam apuração manual passam a ter
+    resposta imediata e auditável: o destino de cada quilo de resíduo que deixa a planta e a situação
+    do atendimento aos requisitos legais aplicáveis.
+</div>
+
+<!-- ════════════════ 2. ESCOPO ════════════════ -->
+<h2>2. Escopo funcional</h2>
+
+<table>
+    <thead>
+        <tr><th style="width:24%">Frente</th><th style="width:26%">Módulo</th><th>Função e base normativa</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td rowspan="2"><b>Visão geral</b></td>
+            <td>Dashboard Ambiental</td>
+            <td>Indicadores consolidados: massa destinada, taxa de valorização (reciclagem, reutilização, compostagem e coprocessamento sobre o total), situação dos manifestos e conformidade das medições atmosféricas. Base ISO 14001.</td>
+        </tr>
+        <tr>
+            <td>Calendário Ambiental</td>
+            <td>Cronograma de obrigações e datas ambientais, com alerta de eventos próximos na tela inicial.</td>
+        </tr>
+
+        <tr>
+            <td rowspan="3"><b>Operação de resíduos</b></td>
+            <td>Autorização de Saída</td>
+            <td>Registro diário (segunda a sábado) da liberação de resíduo — documento que autoriza a carga a deixar a planta.</td>
+        </tr>
+        <tr>
+            <td>Manifesto MTR / SINIR</td>
+            <td>Emissão e controle do Manifesto de Transporte de Resíduos, com o fluxo operacional documentado passo a passo na própria tela, cancelamento mediante motivo obrigatório e impressão do FR 231.</td>
+        </tr>
+        <tr>
+            <td>Conciliação Mensal</td>
+            <td>Conferência por fornecedor em matriz anual (kg ou R$), confrontando o que a planta enviou com o que o fornecedor reconheceu.</td>
+        </tr>
+
+        <tr>
+            <td rowspan="3"><b>Monitoramento e conformidade</b></td>
+            <td>LIRA — Requisitos Legais</td>
+            <td>Levantamento e análise de requisitos legais aplicáveis, com classificação por setor, situação, prioridade e conformidade da obrigação. Registra autor e data de cada análise.</td>
+        </tr>
+        <tr>
+            <td>Fumaça Preta</td>
+            <td>Medição da densidade de fumaça dos geradores pela Escala Ringelmann (FR 658), com apuração automática de conformidade — limite legal no grau 2 (40%).</td>
+        </tr>
+        <tr>
+            <td>Controle de Pragas</td>
+            <td>Dedetização conforme FR 861: solicitação, análise técnica (isolamento, escopo contratual, parecer), agendamento e execução, com leitura de reincidência por área e por tipo de praga.</td>
+        </tr>
+
+        <tr>
+            <td rowspan="2"><b>Comercial e logística</b></td>
+            <td>NF Sucata Plástica</td>
+            <td>Emissão e controle das notas de venda de sucata plástica.</td>
+        </tr>
+        <tr>
+            <td>Motoristas &amp; Logística</td>
+            <td>Cadastro de transportadoras e motoristas e comunicação das coletas.</td>
+        </tr>
+
+        <tr>
+            <td rowspan="2"><b>Cadastros mestres</b></td>
+            <td>Cadastro de Resíduos</td>
+            <td>Ficha mestre do resíduo — classificação NBR 10004 (Classe I, II A e II B), estado físico, unidade, destinadores e transportadores homologados.</td>
+        </tr>
+        <tr>
+            <td>Cadastros gerais</td>
+            <td>Resíduos e geradores a diesel utilizados nas medições.</td>
+        </tr>
+
+        <tr>
+            <td><b>Administração</b></td>
+            <td>Gerenciar Usuários</td>
+            <td>Cadastro de usuários, perfis e permissão de acesso tela a tela.</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ════════════════ 3. EVIDÊNCIAS ════════════════ -->
+<div class="quebra"></div>
+<h2>3. Evidências de melhoria</h2>
+
+<p>
+    O quadro a seguir contrapõe a prática anterior — reconstituída a partir dos próprios fluxos que o
+    sistema documenta, como a solicitação de manifesto recebida por mensagem e a nota fiscal
+    localizada em pasta física — ao que o SGA passou a garantir. A última coluna indica onde cada
+    afirmação pode ser conferida.
+</p>
+
+<table class="cmp">
+    <thead>
+        <tr>
+            <th style="width:20%">Frente</th>
+            <th style="width:27%">Situação anterior</th>
+            <th style="width:29%">Situação com o SGA</th>
+            <th>Como comprovar</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><b>Rastreabilidade do resíduo</b></td>
+            <td>Documentos avulsos: nota fiscal em pasta, autorização em papel e manifesto no portal, sem vínculo entre si.</td>
+            <td>Cadeia única e navegável — autorização, manifesto e conciliação —, cada etapa com data, responsável e quantidade.</td>
+            <td>Abrir um manifesto no módulo MTR e percorrer os registros vinculados.</td>
+        </tr>
+        <tr>
+            <td><b>Cancelamento de manifesto</b></td>
+            <td>Cancelamento sem registro de motivo; a decisão não permanecia documentada.</td>
+            <td>Motivo de cancelamento obrigatório, gravado junto ao manifesto.</td>
+            <td>Solicitar o cancelamento de um MTR: o sistema exige a justificativa.</td>
+        </tr>
+        <tr>
+            <td><b>Divergência de peso</b></td>
+            <td>Diferença entre o peso enviado e o peso reconhecido pelo fornecedor tratada por correio eletrônico, sem consolidação.</td>
+            <td>Registro do peso recebido do fornecedor e do reembolso correspondente, com fluxo de caixa auditável por operador e período.</td>
+            <td>Módulo MTR — auditoria de fluxo de caixa, com filtro por data.</td>
+        </tr>
+        <tr>
+            <td><b>Fechamento mensal</b></td>
+            <td>Conferência por planilha, refeita a cada mês e a cada fornecedor.</td>
+            <td>Matriz anual por fornecedor, em kg ou R$, com exportação para Excel e impressão.</td>
+            <td>Módulo Conciliação Mensal — comparação com a planilha do mês anterior.</td>
+        </tr>
+        <tr>
+            <td><b>Requisitos legais</b></td>
+            <td>Levantamento tratado como evento pontual, sem registro de autoria por análise.</td>
+            <td>Análise contínua com meta diária de cinco requisitos, autor e data em cada registro, classificação por setor e relatório de desempenho imprimível.</td>
+            <td>Módulo LIRA — indicador de meta diária e relatório de desempenho.</td>
+        </tr>
+        <tr>
+            <td><b>Emissões atmosféricas</b></td>
+            <td>Medição anotada em formulário, com o julgamento de conformidade feito posteriormente pelo leitor.</td>
+            <td>Registro por rodada e fase (ignição e carga), com apuração automática contra o limite legal de 40% — grau 2 da Escala Ringelmann.</td>
+            <td>Módulo Fumaça Preta — cada medição é classificada como conforme ou não conforme.</td>
+        </tr>
+        <tr>
+            <td><b>Controle de pragas</b></td>
+            <td>Solicitação por mensagem; reincidência identificada de forma empírica.</td>
+            <td>Ciclo formal do FR 861 — solicitação, análise, agendamento e execução —, com leitura de reincidência por área e por tipo de praga.</td>
+            <td>Módulo Controle de Pragas — indicadores de aparição e reincidência.</td>
+        </tr>
+        <tr>
+            <td><b>Acesso e segregação</b></td>
+            <td>Planilhas compartilhadas, sem distinção entre consulta e alteração.</td>
+            <td>Autenticação individual, três perfis (gestor, analista e operador) e permissão concedida tela a tela; funções financeiras restritas a gestor e analista.</td>
+            <td>Módulo Gerenciar Usuários — matriz de permissões por usuário.</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="nota">
+    <b>Quanto aos valores operacionais.</b> Este documento não reproduz volumes — massa destinada,
+    percentual de valorização ou índices de conformidade —, uma vez que se alteram a cada coleta e
+    devem ser consultados na base em uso. O Dashboard Ambiental apresenta esses valores atualizados.
+    A reprodução de um número fixo em documento impresso representaria situação já superada pelo
+    próprio sistema.
+</div>
+
+<!-- ════════════════ 4. CONFORMIDADE ════════════════ -->
+<h2>4. Aderência normativa</h2>
+
+<table>
+    <thead>
+        <tr><th style="width:30%">Norma / instrumento</th><th>Forma de atendimento</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><b>ISO 14001</b></td><td>Indicadores de desempenho ambiental, controle operacional dos aspectos significativos, registro de conformidade legal e evidência documental de cada etapa.</td></tr>
+        <tr><td><b>ABNT NBR 10004</b></td><td>Classificação de cada resíduo em Classe I (perigoso), II A (não inerte) e II B (inerte) na ficha mestre, propagada para manifestos e relatórios.</td></tr>
+        <tr><td><b>SINIR — MTR</b></td><td>Fluxo de emissão do manifesto reproduzido na tela, inclusive o caso de duplo MTR entre unidades, e controle do ciclo até a destinação.</td></tr>
+        <tr><td><b>CONAMA / ABNT NBR 6016</b></td><td>Medição de fumaça preta pela Escala Ringelmann, com o limite de grau 2 (40%) aplicado automaticamente.</td></tr>
+        <tr><td><b>Requisitos legais aplicáveis</b></td><td>Base LIRA com origem, macrotema, penalidade, aplicabilidade, situação e conformidade de cada obrigação, analisada e datada individualmente.</td></tr>
+        <tr><td><b>Formulários internos</b></td><td>FR 231 (manifesto), FR 658 (fumaça preta) e FR 861 (dedetização) emitidos pelo próprio sistema, no layout aprovado.</td></tr>
+    </tbody>
+</table>
+
+<!-- ════════════════ 5. ARQUITETURA ════════════════ -->
+<div class="quebra"></div>
+<h2>5. Arquitetura e segurança</h2>
+
+<p>
+    A aplicação é construída em <b>React 19</b> com <b>Vite</b>, e o dado reside no <b>Supabase</b>
+    (PostgreSQL gerenciado), com autenticação nativa e políticas de acesso no banco. Não há servidor
+    intermediário a manter: a superfície de manutenção limita-se à aplicação e ao banco.
+</p>
+
+<h3>Controle de acesso</h3>
+<ul>
+    <li><b>Autenticação individual</b> por usuário, com sessão persistente e perfil vinculado.</li>
+    <li><b>Três perfis</b> — Gestor Ambiental, Analista Ambiental e Operador —, além da marcação de administrador.</li>
+    <li><b>Permissão por tela</b>: cada usuário recebe explicitamente as telas que pode acessar; o administrador dispõe de acesso integral.</li>
+    <li><b>Restrição funcional</b>: as rotinas financeiras do módulo de manifestos (reembolsos e fluxo de caixa) são acessíveis apenas a gestor e analista.</li>
+</ul>
+
+<h3>Trilha de auditoria</h3>
+<ul>
+    <li>Análises do LIRA gravam autor e data, permitindo apurar o cumprimento da meta diária.</li>
+    <li>Solicitações de dedetização gravam o analista e a data da análise técnica, separando quem solicita de quem aprova.</li>
+    <li>Lançamentos de fluxo de caixa registram o operador responsável.</li>
+    <li>Cancelamento de manifesto exige motivo, que permanece anexado ao registro.</li>
+</ul>
+
+<h3>Estado da implantação</h3>
+<table>
+    <thead>
+        <tr><th style="width:34%">Conjunto de dados</th><th style="width:22%">Situação</th><th>Observação</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Manifestos, reembolsos e fluxo de caixa</td><td><span class="tag ok">Em banco</span></td><td>Compartilhado entre usuários, com histórico.</td></tr>
+        <tr><td>LIRA — requisitos legais</td><td><span class="tag ok">Em banco</span></td><td>Inclui a camada de análise e a classificação por setor.</td></tr>
+        <tr><td>Controle de pragas (FR 861)</td><td><span class="tag ok">Em banco</span></td><td>Ciclo completo da solicitação à execução.</td></tr>
+        <tr><td>Ficha mestre de resíduos</td><td><span class="tag ok">Em banco</span></td><td>Destinadores e transportadores homologados.</td></tr>
+        <tr><td>Usuários e permissões</td><td><span class="tag ok">Em banco</span></td><td>Autenticação e matriz de acesso.</td></tr>
+        <tr><td>Autorizações de saída, fumaça preta e calendário</td><td><span class="tag par">Local, em migração</span></td><td>Operam no navegador do usuário; a migração para o banco constitui o próximo passo técnico e está prevista sem alteração de tela.</td></tr>
+    </tbody>
+</table>
+
+<div class="nota">
+    O registro dessa distinção é deliberado: enquanto um conjunto de dados não estiver no banco, não
+    é compartilhado entre usuários nem persiste à limpeza do navegador. Os módulos já migrados
+    constituem fonte corporativa; os demais permanecem como controle operacional em transição.
+</div>
+
+<!-- ════════════════ 6. LINHA DO TEMPO ════════════════ -->
+<h2>6. Evolução do produto</h2>
+
+<p>
+    O sistema foi construído e colocado em uso em ciclos curtos, com entregas verificáveis. O
+    histórico de versionamento registra <b>22 entregas entre 25 de junho e 4 de agosto de 2026</b>,
+    todas rastreáveis. As mais recentes refletem o amadurecimento do controle:
+</p>
+
+<table>
+    <thead>
+        <tr><th style="width:26%">Entrega</th><th>Efeito prático</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Controle de acesso por tela</td><td>Encerramento do acesso indiscriminado; cada usuário passa a visualizar apenas o que lhe compete.</td></tr>
+        <tr><td>Múltiplos resíduos por manifesto, reembolsos e fluxo de caixa</td><td>O manifesto deixa de ser apenas documento e passa a carregar a consequência financeira da divergência de peso.</td></tr>
+        <tr><td>Restrição das rotinas financeiras a gestor e analista</td><td>Segregação de função entre operação e controle.</td></tr>
+        <tr><td>Módulo LIRA com meta diária e relatório</td><td>O requisito legal deixa de ser evento anual e passa a rotina medida.</td></tr>
+        <tr><td>Classificação do LIRA por setor</td><td>A obrigação passa a ter responsável identificável dentro da planta.</td></tr>
+        <tr><td>Módulo de dedetização (FR 861)</td><td>O controle de pragas passa a integrar o sistema, com análise técnica e leitura de reincidência.</td></tr>
+        <tr><td>Registro do peso recebido do fornecedor</td><td>A conciliação passa a comparar o volume expedido com o volume reconhecido.</td></tr>
+        <tr><td>Motivo obrigatório no cancelamento</td><td>Toda anulação de manifesto passa a ter justificativa registrada.</td></tr>
+    </tbody>
+</table>
+
+<!-- ════════════════ 7. PRÓXIMOS PASSOS ════════════════ -->
+<h2>7. Próximos passos recomendados</h2>
+
+<table>
+    <thead>
+        <tr><th style="width:6%">#</th><th style="width:32%">Ação</th><th>Justificativa</th></tr>
+    </thead>
+    <tbody>
+        <tr><td class="c">1</td><td>Conclusão da migração dos módulos locais para o banco</td><td>Autorizações de saída, fumaça preta e calendário passam a constituir dado corporativo compartilhado, com histórico e cópia de segurança.</td></tr>
+        <tr><td class="c">2</td><td>Consolidação do Dashboard como painel gerencial</td><td>Reunião, em painel único, da taxa de valorização, da conformidade legal apurada no LIRA e da conformidade atmosférica.</td></tr>
+        <tr><td class="c">3</td><td>Anexação de evidência documental aos registros</td><td>Nota fiscal e certificado de destinação anexados ao próprio manifesto dispensam a manutenção da pasta física.</td></tr>
+        <tr><td class="c">4</td><td>Definição formal de metas por indicador</td><td>Sem meta declarada, o indicador informa mas não cobra; com meta, o desvio torna-se evidente por si.</td></tr>
+        <tr><td class="c">5</td><td>Extensão do modelo às demais unidades</td><td>A estrutura de cadastros e permissões já comporta múltiplas plantas sem duplicação do sistema.</td></tr>
+    </tbody>
+</table>
+
+<div class="destaque">
+    <b>Conclusão.</b> O SGA sustenta a rotina ambiental da planta com rastreabilidade documental,
+    apuração automática de conformidade e segregação de acesso — condições que a gestão anterior,
+    apoiada em planilhas e formulários avulsos, não oferecia. O esforço remanescente é de
+    consolidação, e não de concepção: migrar os módulos ainda locais, consolidar o painel gerencial e
+    formalizar as metas que convertem indicador em cobrança.
+</div>
+
+<div class="rodape">
+    <span>SGA · Sistema de Gestão Ambiental — Mondial · SGI Qualidade &amp; Ambiental</span>
+    <span>Resumo executivo · 10/08/2026</span>
+</div>
+
+</body>
+</html>

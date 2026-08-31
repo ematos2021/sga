@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FaBalanceScale, FaClipboardCheck, FaEdit, FaFileExcel, FaHourglassHalf, FaCheckCircle, FaCalendarCheck, FaBullseye, FaForward, FaChartBar, FaPrint, FaTimes } from 'react-icons/fa';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import { PageShell, Btn, Card, Field, Input, Select, Textarea, FormGrid, DataTable, RowAction, Modal, Kpi } from '../components/ui';
@@ -111,6 +112,9 @@ function LiraView({ onBack }) {
 
     // Relatório de desempenho
     const [showReport, setShowReport] = useState(false);
+
+    // Relatório completo por setor
+    const [showRelatorioSetor, setShowRelatorioSetor] = useState(null);
 
     // Modal de análise: { row, full, observacoes, conformidade }
     const [modal, setModal] = useState(null);
@@ -468,6 +472,11 @@ function LiraView({ onBack }) {
                                         <span style={{ color: s.naoConformes ? '#ff4757' : 'var(--color-text-subtle)', fontWeight: 700 }}>{s.naoConformes}✗</span>
                                     </span>
                                 </div>
+                                <div style={{ marginTop: 10 }}>
+                                    <Btn variant="outline" color={info.cor} onClick={(e) => { e.stopPropagation(); setShowRelatorioSetor(s.setor); }} style={{ padding: '0.35rem', fontSize: '0.65rem', width: '100%', borderColor: info.cor + '44' }}>
+                                        <FaPrint size={10} style={{ marginRight: 6 }} /> Gerar Relatório
+                                    </Btn>
+                                </div>
                             </div>
                         );
                     })}
@@ -570,7 +579,7 @@ function LiraView({ onBack }) {
             {showCobranca && (
                 <CobrancaSetor
                     itens={itensSelecionados}
-                    emissor={nomeUsuario}
+
                     onClose={() => setShowCobranca(false)}
                 />
             )}
@@ -582,8 +591,17 @@ function LiraView({ onBack }) {
                     periodo={periodoLabel}
                     rel={relatorio}
                     stats={stats}
-                    emissor={nomeUsuario}
+
                     onExcel={exportarRelatorio}
+                />
+            )}
+
+            {/* Relatório do Setor (imprimível) */}
+            {showRelatorioSetor && (
+                <RelatorioSetor
+                    setor={showRelatorioSetor}
+                    itens={items.filter(r => setorDe(r) === showRelatorioSetor)}
+                    onClose={() => setShowRelatorioSetor(null)}
                 />
             )}
 
@@ -848,6 +866,284 @@ function CobrancaSetor({ itens, emissor, onClose }) {
                 </div>
             </div>
         </div>
+    );
+}
+
+// ── Relatório de Requisitos do Setor — formulário imprimível (A4 → PDF) ──
+// Padrão "papel": tinta escura sobre fundo branco, independente do tema da
+// aplicação, para que a tela seja idêntica ao que sai na impressora / PDF.
+const PAPEL = {
+    fundo: '#ffffff',
+    fundoAlt: '#f7f9fc',
+    faixa: '#eef2f7',
+    tinta: '#14181f',
+    tintaMedia: '#3f4a5a',
+    tintaClara: '#697488',
+    linha: '#c6d0dd',
+    linhaSuave: '#e3e9f1',
+};
+
+// Conformidade → cor com contraste adequado sobre branco
+const CONF_CORES = {
+    'CONFORME': { fg: '#15803d', bg: '#eefaf1', br: '#bfe5cb' },
+    'NAO CONFORME': { fg: '#b42318', bg: '#fdf1f0', br: '#f2c5c0' },
+    'PARCIALMENTE CONFORME': { fg: '#b45309', bg: '#fdf6e8', br: '#f0d9a6' },
+    'EM ADEQUACAO': { fg: '#1d4ed8', bg: '#eff4ff', br: '#c5d4fb' },
+    'NAO APLICAVEL': { fg: '#586274', bg: '#f4f6fa', br: '#dbe1ea' },
+};
+const corStatusPapel = (v) => CONF_CORES[norm(v)] || { fg: '#697488', bg: '#f4f6fa', br: '#dbe1ea' };
+
+// Situações já encerradas — não voltam ao setor para comprovação
+const CONF_RESOLVIDAS = ['CONFORME', 'NAO APLICAVEL', 'NAO SE APLICA'];
+const estaPendente = (r) => !CONF_RESOLVIDAS.includes(norm(r.conformidade));
+
+// Os textos da base vêm em Title Case ("Estabelece As Diretrizes Básicas Para A…").
+// Rebaixa apenas conectivos/artigos no meio da frase — siglas (NR, CONAMA) e
+// nomes próprios (Eletrodomésticos Mondial) permanecem intactos.
+const CONECTIVOS = new Set([
+    'a', 'à', 'às', 'ao', 'aos', 'as', 'o', 'os', 'um', 'uma', 'uns', 'umas',
+    'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 'num', 'numa',
+    'por', 'pelo', 'pela', 'pelos', 'pelas', 'para', 'com', 'sem', 'sob', 'sobre',
+    'entre', 'até', 'após', 'contra', 'desde', 'perante',
+    'e', 'ou', 'nem', 'mas', 'que', 'se', 'como', 'quando', 'onde', 'ainda', 'também',
+    'seu', 'sua', 'seus', 'suas', 'este', 'esta', 'esse', 'essa', 'aquele', 'aquela',
+    'qual', 'quais', 'cujo', 'cuja', 'ser', 'estar', 'sendo', 'bem',
+]);
+const humanizar = (txt) => {
+    const s = String(txt ?? '').replace(/\s+/g, ' ').trim();
+    if (!s) return '';
+    const partes = s.split(' ');
+    return partes
+        .map((p, i) => {
+            if (i === 0 || /[.:;!?]$/.test(partes[i - 1])) return p; // início de frase
+            const nucleo = p.replace(/[^\p{L}]/gu, '');
+            if (!/^\p{Lu}\p{Ll}*$/u.test(nucleo)) return p; // sigla, número ou já em minúsculo
+            return CONECTIVOS.has(nucleo.toLowerCase()) ? p.replace(nucleo, nucleo.toLowerCase()) : p;
+        })
+        .join(' ');
+};
+
+function RelatorioSetor({ setor, itens, onClose }) {
+    const [prazo, setPrazo] = useState('');
+    const [obs, setObs] = useState('');
+    const agora = new Date();
+    const info = setorInfo(setor);
+    const prazoFmt = prazo ? prazo.split('-').reverse().join('/') : '____/____/______';
+
+    // O relatório traz apenas o que ainda depende do setor: os requisitos já
+    // encerrados (Conforme / Não Aplicável) ficam de fora.
+    const pendentes = itens.filter(estaPendente);
+
+    // Não conformes e parciais primeiro — são os de maior risco
+    const itensOrdenados = [...pendentes].sort((a, b) => {
+        const confA = String(a.conformidade || '').toUpperCase();
+        const confB = String(b.conformidade || '').toUpperCase();
+        const aNC = confA.includes('NÃO CONFORME') || confA.includes('PARCIAL');
+        const bNC = confB.includes('NÃO CONFORME') || confB.includes('PARCIAL');
+        if (aNC && !bNC) return -1;
+        if (!aNC && bNC) return 1;
+        return (a.codigo || '').localeCompare(b.codigo || '');
+    });
+
+    const th = {
+        textAlign: 'left', padding: '6px 8px', fontSize: '6.5pt', fontWeight: 700,
+        letterSpacing: '0.6px', textTransform: 'uppercase', color: PAPEL.tintaMedia,
+        background: PAPEL.faixa, borderTop: `1px solid ${PAPEL.linha}`, borderBottom: `1px solid ${PAPEL.linha}`,
+    };
+    const td = {
+        padding: '8px', fontSize: '8pt', borderBottom: `1px solid ${PAPEL.linhaSuave}`,
+        color: PAPEL.tinta, verticalAlign: 'top', lineHeight: 1.45,
+    };
+    const rotulo = { fontSize: '6.5pt', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: PAPEL.tintaClara };
+    const valor = { fontSize: '8.5pt', fontWeight: 600, color: PAPEL.tinta, marginTop: 2 };
+    const linhaPreencher = { borderBottom: `1px solid ${PAPEL.linha}`, height: '1.1em', marginTop: 4 };
+    const btnBase = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.9rem', borderRadius: 8, border: 'none', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer' };
+    const inputClaro = { width: '100%', padding: '0.42rem 0.6rem', borderRadius: 8, border: `1px solid ${PAPEL.linha}`, background: '#fff', color: PAPEL.tinta, fontSize: '0.78rem', fontFamily: 'inherit' };
+
+    // Renderizado direto no <body> (portal): na impressão a folha precisa ficar
+    // no fluxo normal do documento para paginar — dentro do app ela ficava presa
+    // a um ancestral fixed/overflow e só saía a primeira página.
+    return createPortal(
+        <div className="lira-rel-overlay" onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(8,10,14,0.82)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6000, padding: '1rem' }}>
+            <style>{`
+                @media print {
+                    @page { size: A4 portrait; margin: 12mm 10mm 14mm; }
+                    html, body {
+                        background: #fff !important; margin: 0 !important; padding: 0 !important;
+                        display: block !important; height: auto !important; min-height: 0 !important;
+                        overflow: visible !important;
+                    }
+                    /* Só a folha vai para a impressora; o app sai do fluxo por completo */
+                    body > *:not(.lira-rel-overlay) { display: none !important; }
+                    /* index.css esconde tudo com "body * { visibility: hidden }" — reativa a folha */
+                    .lira-rel-overlay, .lira-rel-overlay * { visibility: visible !important; }
+                    .lira-rel-overlay {
+                        position: static !important; inset: auto !important; display: block !important;
+                        padding: 0 !important; background: #fff !important; backdrop-filter: none !important;
+                        overflow: visible !important; z-index: auto !important;
+                    }
+                    .lira-rel-setor {
+                        max-width: none !important; width: 100% !important; max-height: none !important;
+                        overflow: visible !important; background: #fff !important; border: none !important;
+                        box-shadow: none !important; border-radius: 0 !important;
+                    }
+                    .lira-rel-setor, .lira-rel-setor * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    .lira-rel-setor .no-print { display: none !important; }
+                    .lira-rel-setor .folha { padding: 0 !important; }
+                    .lira-rel-setor thead { display: table-header-group; }
+                    .lira-rel-setor tr, .lira-rel-setor .bloco { page-break-inside: avoid; break-inside: avoid; }
+                }
+            `}</style>
+
+            <div className="lira-rel-setor" onClick={(e) => e.stopPropagation()} style={{ background: PAPEL.fundo, color: PAPEL.tinta, borderRadius: 10, maxWidth: 880, width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
+
+                {/* Barra de configuração — não sai na impressão */}
+                <div className="no-print" style={{ display: 'flex', alignItems: 'flex-end', gap: '0.7rem', flexWrap: 'wrap', padding: '0.85rem 1.1rem', background: PAPEL.fundoAlt, borderBottom: `1px solid ${PAPEL.linha}`, borderRadius: '10px 10px 0 0', position: 'sticky', top: 0, zIndex: 2 }}>
+                    <div style={{ minWidth: 150 }}>
+                        <div style={{ ...rotulo, marginBottom: 3 }}>Prazo de devolução</div>
+                        <input type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} style={inputClaro} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 220 }}>
+                        <div style={{ ...rotulo, marginBottom: 3 }}>Observações para o setor</div>
+                        <input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Instruções específicas desta remessa…" style={inputClaro} />
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => window.print()} style={{ ...btnBase, background: '#0f766e', color: '#fff' }}><FaPrint size={12} /> Imprimir / PDF</button>
+                        <button onClick={onClose} style={{ ...btnBase, background: '#e5e9ef', color: PAPEL.tintaMedia, padding: '0.5rem 0.65rem' }}><FaTimes size={13} /></button>
+                    </div>
+                </div>
+
+                {/* ═══ Folha A4 ═══ */}
+                <div className="folha" style={{ padding: '1.6rem 1.8rem 2rem' }}>
+
+                    {/* Cabeçalho */}
+                    <div className="bloco" style={{ borderBottom: `2.5px solid ${info.cor}`, paddingBottom: '0.7rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', flexWrap: 'wrap' }}>
+                            <div style={{ ...rotulo, color: PAPEL.tintaMedia }}>Grupo MK · Sistema de Gestão Ambiental</div>
+                            <div style={{ ...rotulo, color: PAPEL.tintaClara }}>Emitido em {agora.toLocaleDateString('pt-BR')}</div>
+                        </div>
+                        <div style={{ fontSize: '15pt', fontWeight: 800, letterSpacing: '-0.2px', color: PAPEL.tinta, marginTop: 6, lineHeight: 1.2 }}>
+                            Requisitos Legais Pendentes — {setor}
+                        </div>
+                        <div style={{ fontSize: '8pt', color: PAPEL.tintaMedia, marginTop: 3 }}>
+                            LIRA · Levantamento e Identificação de Requisitos Legais — obrigações que ainda dependem de comprovação do setor
+                        </div>
+                    </div>
+
+                    {/* Identificação: quem responde, até quando, quantos itens */}
+                    <div className="bloco" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.9rem', border: `1px solid ${PAPEL.linha}`, borderTop: 'none', padding: '0.75rem 0.9rem', background: PAPEL.fundoAlt }}>
+                        <div>
+                            <div style={rotulo}>Setor responsável</div>
+                            <div style={valor}>{setor}</div>
+                        </div>
+                        <div>
+                            <div style={rotulo}>Requisitos pendentes</div>
+                            <div style={valor}>{pendentes.length} de {itens.length} do setor</div>
+                        </div>
+                        <div>
+                            <div style={rotulo}>Devolver até</div>
+                            <div style={valor}>{prazoFmt}</div>
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <div style={rotulo}>Responsável pelas respostas (nome e cargo)</div>
+                            <div style={linhaPreencher} />
+                        </div>
+                    </div>
+
+                    {/* Nota da equipe ambiental */}
+                    {obs && (
+                        <div className="bloco" style={{ fontSize: '8pt', color: PAPEL.tinta, marginTop: '0.85rem', padding: '0.55rem 0.7rem', background: PAPEL.fundoAlt, border: `1px solid ${PAPEL.linha}`, borderLeft: `3px solid ${info.cor}`, borderRadius: 3, lineHeight: 1.5 }}>
+                            <strong>Nota da equipe ambiental:</strong> {obs}
+                        </div>
+                    )}
+
+                    {/* Instruções de preenchimento */}
+                    <div className="bloco" style={{ marginTop: '0.85rem', padding: '0.7rem 0.85rem', background: '#f2faf5', border: '1px solid #c5e6d2', borderRadius: 6 }}>
+                        <div style={{ ...rotulo, color: '#15803d', marginBottom: 5 }}>Como preencher</div>
+                        <ol style={{ margin: 0, paddingLeft: 16, fontSize: '8pt', color: PAPEL.tinta, lineHeight: 1.55 }}>
+                            <li>Cada linha é uma obrigação legal do seu setor <strong>ainda pendente de comprovação</strong> — o que já está Conforme ou Não Aplicável não entra nesta lista. A coluna <strong>Status atual</strong> mostra como o requisito está registrado hoje no SGA.</li>
+                            <li>Na coluna <strong>Evidências / plano de ação</strong>, cite os documentos, registros ou fotos que comprovam o atendimento (ex.: laudo, certificado, ordem de serviço — sempre com data).</li>
+                            <li>Se a obrigação <strong>não</strong> estiver atendida, escreva a ação corretiva, o responsável e o prazo de regularização.</li>
+                            <li>Requisitos <strong>Não Aplicáveis</strong> devem ser justificados em uma linha (ex.: a unidade não executa este processo).</li>
+                        </ol>
+                    </div>
+
+                    {/* Tabela de requisitos */}
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '0.9rem' }}>
+                        <thead>
+                            <tr>
+                                <th style={{ ...th, width: '7%' }}>Cód.</th>
+                                <th style={{ ...th, width: '46%' }}>Requisito legal e obrigação</th>
+                                <th style={{ ...th, width: '10%' }}>Status atual</th>
+                                <th style={{ ...th, width: '37%' }}>Evidências / plano de ação / prazo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {itensOrdenados.map((r, i) => {
+                                const c = corStatusPapel(r.conformidade);
+                                return (
+                                    <tr key={r.id} style={{ background: i % 2 ? PAPEL.fundoAlt : PAPEL.fundo }}>
+                                        <td style={{ ...td, fontFamily: 'ui-monospace, Consolas, monospace', fontSize: '7.5pt', color: PAPEL.tintaMedia, whiteSpace: 'nowrap' }}>{r.codigo || `#${r.id}`}</td>
+                                        <td style={td}>
+                                            <div style={{ fontWeight: 700, fontSize: '9pt', color: PAPEL.tinta, lineHeight: 1.3, marginBottom: 4 }}>{humanizar(r.requisito)}</div>
+                                            {r.sumario && (
+                                                <div style={{ fontSize: '7.5pt', color: PAPEL.tintaMedia, marginBottom: 6, padding: '4px 8px', background: '#fff', border: `1px solid ${PAPEL.linhaSuave}`, borderLeft: `2px solid ${PAPEL.linha}`, borderRadius: 3, lineHeight: 1.4 }}>
+                                                    <span style={{ ...rotulo, fontSize: '6pt' }}>Sumário · </span>{humanizar(r.sumario)}
+                                                </div>
+                                            )}
+                                            <div style={{ fontSize: '8pt', color: PAPEL.tinta, lineHeight: 1.5, marginBottom: 7 }}>{humanizar(r.obrigacao)}</div>
+                                            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                                {r.origem && <span style={{ fontSize: '6.5pt', fontWeight: 700, background: '#eff4ff', color: '#1d4ed8', border: '1px solid #c5d4fb', borderRadius: 10, padding: '1px 7px' }}>{r.origem}</span>}
+                                                {r.prioridade && <span style={{ fontSize: '6.5pt', fontWeight: 700, background: '#fdf6e8', color: '#b45309', border: '1px solid #f0d9a6', borderRadius: 10, padding: '1px 7px' }}>Prioridade {String(r.prioridade).toLowerCase()}</span>}
+                                                {r.situacao && <span style={{ fontSize: '6.5pt', fontWeight: 700, background: '#f4f6fa', color: '#586274', border: '1px solid #dbe1ea', borderRadius: 10, padding: '1px 7px' }}>{r.situacao}</span>}
+                                            </div>
+                                        </td>
+                                        <td style={{ ...td, textAlign: 'center' }}>
+                                            <span style={{ display: 'inline-block', fontSize: '7pt', fontWeight: 700, lineHeight: 1.3, color: c.fg, background: c.bg, border: `1px solid ${c.br}`, borderRadius: 4, padding: '3px 6px' }}>
+                                                {r.conformidade || 'Pendente'}
+                                            </span>
+                                        </td>
+                                        <td style={td}>
+                                            <div style={{ borderBottom: `1px solid ${PAPEL.linha}`, height: 26 }} />
+                                            <div style={{ borderBottom: `1px solid ${PAPEL.linha}`, height: 26 }} />
+                                            <div style={{ borderBottom: `1px solid ${PAPEL.linha}`, height: 26 }} />
+                                            <div style={{ borderBottom: `1px solid ${PAPEL.linha}`, height: 26 }} />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {itensOrdenados.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} style={{ ...td, textAlign: 'center', color: PAPEL.tintaMedia, padding: '1.4rem 8px' }}>
+                                        Nenhum requisito pendente para este setor — todos estão registrados como Conforme ou Não Aplicável.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+
+                    {/* Encerramento e assinaturas */}
+                    <div className="bloco" style={{ marginTop: '1.6rem' }}>
+                        <div style={{ fontSize: '8pt', color: PAPEL.tintaMedia, lineHeight: 1.5, marginBottom: '1.6rem' }}>
+                            As informações registradas neste formulário refletem a situação do setor na data da assinatura, e as evidências
+                            citadas ficam disponíveis para verificação pelo SGI / Meio Ambiente. Devolver preenchido e assinado até <strong>{prazoFmt}</strong>.
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                            <div style={{ borderTop: `1px solid ${PAPEL.tintaMedia}`, paddingTop: 4, ...rotulo }}>Responsável pelo setor — nome, cargo e data</div>
+                            <div style={{ borderTop: `1px solid ${PAPEL.tintaMedia}`, paddingTop: 4, ...rotulo }}>Recebido pelo SGI / Meio Ambiente — data</div>
+                        </div>
+                        <div style={{ marginTop: '1.2rem', paddingTop: '0.5rem', borderTop: `1px solid ${PAPEL.linhaSuave}`, display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', fontSize: '6.5pt', letterSpacing: '0.4px', textTransform: 'uppercase', color: PAPEL.tintaClara }}>
+                            <span>Grupo MK · SGA · Relatório LIRA por setor</span>
+                            <span>{setor} · {pendentes.length} {pendentes.length === 1 ? 'requisito pendente' : 'requisitos pendentes'} · {agora.toLocaleDateString('pt-BR')}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
     );
 }
 
