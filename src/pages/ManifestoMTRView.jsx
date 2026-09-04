@@ -95,7 +95,7 @@ const emptyForm = () => ({
     numeroMTR: '', data: new Date().toISOString().slice(0, 10), hora: new Date().toTimeString().slice(0, 5), residuo: '',
     solicitante: '', motorista: '', placa: '', responsavelSGI: '',
     notaFiscal: '', ticketSustentare: '', manifestoSupertrans: '', setorColeta: '',
-    destinador: '', destinacao: 'Reciclagem', status: 'Emitido', sinir: false,
+    destinador: '', destinadorFinal: '', destinacao: 'Reciclagem', status: 'Emitido', sinir: false,
     tipoRecebedor: 'Fornecedor',
 });
 
@@ -243,8 +243,11 @@ function ManifestoMTRView({ onBack }) {
     const [pageSize, setPageSize] = useState(25);
     const [page, setPage] = useState(1);
 
-    // Destinador: alterna entre escolher na lista do cadastro ou digitar livre
+    // Transportador: alterna entre escolher na lista do cadastro ou digitar livre
     const [destLivre, setDestLivre] = useState(false);
+
+    // Destinador: mesma lógica do Transportador, lista compartilhada
+    const [destFinalLivre, setDestFinalLivre] = useState(false);
 
     // Setor de coleta: escolher na lista (setores já usados) ou digitar novo
     const [setorLivre, setSetorLivre] = useState(false);
@@ -419,7 +422,7 @@ function ManifestoMTRView({ onBack }) {
             'Resíduo': m.residuo || '', 'Motorista': m.motorista || '', 'Placa': m.placa || '', 'Resp. SGI': m.responsavelSGI || '',
             'Nota Fiscal': m.notaFiscal || '', 'Ticket Sustentare': m.ticketSustentare || '',
             'Manifesto Mondial': m.numeroMTR || '', 'Manifesto Supertrans': m.manifestoSupertrans || '',
-            'Destinador': m.destinador || '', 'Setor de Coleta': m.setorColeta || '', 'Destinação': m.destinacao || '',
+            'Transportador': m.destinador || '', 'Destinador': m.destinadorFinal || '', 'Setor de Coleta': m.setorColeta || '', 'Destinação': m.destinacao || '',
             'SINIR': m.sinir ? 'Sim' : 'Não', 'Status': m.status || '',
         })), 'controle_manifestos_MTR', 'Manifestos');
     };
@@ -468,7 +471,8 @@ function ManifestoMTRView({ onBack }) {
         { key: 'solicitante', label: 'Solicitante', align: 'center', wrap: true, render: (r) => r.solicitante || '—' },
         { key: 'motorista', label: 'Motorista / Placa', align: 'center', wrap: true, render: (r) => <span>{r.motorista || '—'}{r.placa ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', fontFamily: 'ui-monospace, monospace' }}>{r.placa}</div> : null}</span> },
         { key: 'setorColeta', label: 'Setor de Coleta', align: 'center', render: (r) => r.setorColeta || '—' },
-        { key: 'destinador', label: 'Fornecedor', align: 'center', wrap: true, render: (r) => r.destinador || '—' },
+        { key: 'destinador', label: 'Transportador', align: 'center', wrap: true, render: (r) => r.destinador || '—' },
+        { key: 'destinadorFinal', label: 'Destinador', align: 'center', wrap: true, render: (r) => r.destinadorFinal || '—' },
         { key: 'responsavelSGI', label: 'SGI', align: 'center', wrap: true, render: (r) => r.responsavelSGI || '—' },
         {
             key: 'reembolso', label: 'Peso Recebido', align: 'center', render: (r) => {
@@ -688,7 +692,7 @@ function ManifestoMTRView({ onBack }) {
                                         </Select>
                                     )}
                                 </Field>
-                                <Field label="Fornecedor">
+                                <Field label="Transportador">
                                     {(destLivre || destinadoresSugeridos.length === 0) ? (
                                         <Input
                                             value={form.destinador}
@@ -705,9 +709,35 @@ function ManifestoMTRView({ onBack }) {
                                                 else if (e.target.value !== '__ATUAL__') set('destinador', e.target.value);
                                             }}
                                         >
-                                            <option value="">Selecione o fornecedor…</option>
+                                            <option value="">Selecione o transportador…</option>
                                             {form.destinador && !destinadoresSugeridos.includes(form.destinador) && (
                                                 <option value="__ATUAL__">{form.destinador}</option>
+                                            )}
+                                            {destinadoresSugeridos.map((nome, idx) => <option key={idx} value={nome}>{nome}</option>)}
+                                            <option value="__OUTRO__">✏️ Digitar outro…</option>
+                                        </Select>
+                                    )}
+                                </Field>
+                                <Field label="Destinador">
+                                    {(destFinalLivre || destinadoresSugeridos.length === 0) ? (
+                                        <Input
+                                            value={form.destinadorFinal}
+                                            onChange={(e) => set('destinadorFinal', e.target.value)}
+                                            placeholder="SUSTENTARE, PENHA…"
+                                            onBlur={() => { if (destinadoresSugeridos.length) setDestFinalLivre(false); }}
+                                            autoFocus={destFinalLivre}
+                                        />
+                                    ) : (
+                                        <Select
+                                            value={destinadoresSugeridos.includes(form.destinadorFinal) ? form.destinadorFinal : (form.destinadorFinal ? '__ATUAL__' : '')}
+                                            onChange={(e) => {
+                                                if (e.target.value === '__OUTRO__') { setDestFinalLivre(true); set('destinadorFinal', ''); }
+                                                else if (e.target.value !== '__ATUAL__') set('destinadorFinal', e.target.value);
+                                            }}
+                                        >
+                                            <option value="">Selecione o destinador…</option>
+                                            {form.destinadorFinal && !destinadoresSugeridos.includes(form.destinadorFinal) && (
+                                                <option value="__ATUAL__">{form.destinadorFinal}</option>
                                             )}
                                             {destinadoresSugeridos.map((nome, idx) => <option key={idx} value={nome}>{nome}</option>)}
                                             <option value="__OUTRO__">✏️ Digitar outro…</option>
@@ -751,7 +781,7 @@ function ManifestoMTRView({ onBack }) {
                     {tiposResiduo.map((r) => <option key={r} value={r}>{r.length > 24 ? r.slice(0, 24) + '…' : r}</option>)}
                 </Select>
                 <Select value={fDestinador} onChange={(e) => setFDestinador(e.target.value)} style={{ width: 150 }}>
-                    <option value="todos">Destinador</option>
+                    <option value="todos">Transportador</option>
                     {destinadores.map((d) => <option key={d} value={d}>{d}</option>)}
                 </Select>
                 <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 110 }}>
@@ -1030,7 +1060,8 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                         <DetailField label="Motorista" value={manifesto.motorista} />
                         <DetailField label="Placa do Veículo" value={manifesto.placa} />
-                        <DetailField label="Fornecedor" value={manifesto.destinador} />
+                        <DetailField label="Transportador" value={manifesto.destinador} />
+                        <DetailField label="Destinador" value={manifesto.destinadorFinal} />
                         <DetailField label="Tipo de Destinação" value={manifesto.destinacao} />
                     </div>
                 </div>
@@ -1783,6 +1814,7 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
     const [f, setF] = useState({ ...manifesto });
     const s = (k, v) => setF((prev) => ({ ...prev, [k]: v }));
     const [destLivre, setDestLivre] = useState(false);
+    const [destFinalLivre, setDestFinalLivre] = useState(false);
     const [setorLivre, setSetorLivre] = useState(false);
 
     // Destinadores sugeridos (mesma lógica do componente pai)
@@ -1909,7 +1941,7 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
                             </Select>
                         )}
                     </Field>
-                    <Field label="Fornecedor">
+                    <Field label="Transportador">
                         {(destLivre || destinadoresSugeridos.length === 0) ? (
                             <Input
                                 value={f.destinador}
@@ -1926,9 +1958,35 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
                                     else if (e.target.value !== '__ATUAL__') s('destinador', e.target.value);
                                 }}
                             >
-                                <option value="">Selecione o fornecedor…</option>
+                                <option value="">Selecione o transportador…</option>
                                 {f.destinador && !destinadoresSugeridos.includes(f.destinador) && (
                                     <option value="__ATUAL__">{f.destinador}</option>
+                                )}
+                                {destinadoresSugeridos.map((nome, idx) => <option key={idx} value={nome}>{nome}</option>)}
+                                <option value="__OUTRO__">✏️ Digitar outro…</option>
+                            </Select>
+                        )}
+                    </Field>
+                    <Field label="Destinador">
+                        {(destFinalLivre || destinadoresSugeridos.length === 0) ? (
+                            <Input
+                                value={f.destinadorFinal}
+                                onChange={(e) => s('destinadorFinal', e.target.value)}
+                                placeholder="SUSTENTARE, PENHA…"
+                                onBlur={() => { if (destinadoresSugeridos.length) setDestFinalLivre(false); }}
+                                autoFocus={destFinalLivre}
+                            />
+                        ) : (
+                            <Select
+                                value={destinadoresSugeridos.includes(f.destinadorFinal) ? f.destinadorFinal : (f.destinadorFinal ? '__ATUAL__' : '')}
+                                onChange={(e) => {
+                                    if (e.target.value === '__OUTRO__') { setDestFinalLivre(true); s('destinadorFinal', ''); }
+                                    else if (e.target.value !== '__ATUAL__') s('destinadorFinal', e.target.value);
+                                }}
+                            >
+                                <option value="">Selecione o destinador…</option>
+                                {f.destinadorFinal && !destinadoresSugeridos.includes(f.destinadorFinal) && (
+                                    <option value="__ATUAL__">{f.destinadorFinal}</option>
                                 )}
                                 {destinadoresSugeridos.map((nome, idx) => <option key={idx} value={nome}>{nome}</option>)}
                                 <option value="__OUTRO__">✏️ Digitar outro…</option>
