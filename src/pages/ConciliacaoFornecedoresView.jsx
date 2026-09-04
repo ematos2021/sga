@@ -148,44 +148,44 @@ function ConciliacaoFornecedoresView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaWeightHanging size={20} />} color="#10b981"
+            icon={<FaWeightHanging size={20} />} color="var(--color-success)"
             title="Conciliação Mensal por Fornecedor"
             subtitle={metrica === 'peso' ? 'Peso recebido (kg) · relatório mensal do fornecedor, agrupado por resíduo' : 'Valores de reembolso (R$) · agrupados por resíduo e fornecedor'}
             onBack={onBack}
             maxWidth="100%"
             actions={<>
                 <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: 10, overflow: 'hidden' }}>
-                    <button onClick={() => setMetrica('peso')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: metrica === 'peso' ? '#10b981' : 'transparent', color: metrica === 'peso' ? '#0f1014' : 'var(--color-text-muted)' }}>
+                    <button onClick={() => setMetrica('peso')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: metrica === 'peso' ? 'var(--color-success)' : 'transparent', color: metrica === 'peso' ? 'var(--color-on-accent)' : 'var(--color-text-muted)' }}>
                         <FaWeightHanging size={10} style={{ marginRight: 5 }} />Peso
                     </button>
-                    <button onClick={() => setMetrica('valor')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: metrica === 'valor' ? '#ffb700' : 'transparent', color: metrica === 'valor' ? '#0f1014' : 'var(--color-text-muted)' }}>
+                    <button onClick={() => setMetrica('valor')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: metrica === 'valor' ? 'var(--color-warning)' : 'transparent', color: metrica === 'valor' ? 'var(--color-on-accent)' : 'var(--color-text-muted)' }}>
                         <FaDollarSign size={10} style={{ marginRight: 5 }} />Valor
                     </button>
                 </div>
                 <Select value={anoFiltro} onChange={(e) => setAnoFiltro(e.target.value)} style={{ width: 100, fontSize: '0.72rem' }}>
                     {anos.map((a) => <option key={a} value={a}>{a}</option>)}
                 </Select>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => setShowReport(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setShowReport(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaChartBar size={10} /> Relatório de indicadores
                 </Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaFileExcel size={10} /> Exportar Excel
                 </Btn>
             </>}
         >
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.55rem', marginBottom: '1rem' }}>
-                <Kpi icon={<FaRecycle size={12} />} label="Resíduos" value={kpis.residuosUnicos} sub="tipos distintos" color="#10b981" />
-                <Kpi icon={<FaIndustry size={12} />} label="Fornecedores" value={kpis.fornecedoresUnicos} sub="parceiros ativos" color="#54a0ff" />
-                <Kpi icon={metrica === 'peso' ? <FaWeightHanging size={12} /> : <FaDollarSign size={12} />} label={`Total ${kpis.mesAtual}`} value={fmtUnidade(kpis.totalMesAtual)} sub="mês corrente" color="#ff9f43" />
-                <Kpi icon={<FaChartBar size={12} />} label={`Total ${anoFiltro}`} value={fmtUnidade(kpis.totalGeral)} sub="acumulado no ano" color="#a78bfa" />
-                <Kpi icon={<FaTrophy size={12} />} label="Maior fornecedor" value={indicadores.liderFornecedor ? fmtUnidade(indicadores.liderFornecedor.valor) : '—'} sub={indicadores.liderFornecedor?.nomeCompleto || 'sem dados'} color="#ffd32a" />
+                <Kpi icon={<FaRecycle size={12} />} label="Resíduos" value={kpis.residuosUnicos} sub="tipos distintos" color="var(--color-success)" />
+                <Kpi icon={<FaIndustry size={12} />} label="Fornecedores" value={kpis.fornecedoresUnicos} sub="parceiros ativos" color="var(--color-info)" />
+                <Kpi icon={metrica === 'peso' ? <FaWeightHanging size={12} /> : <FaDollarSign size={12} />} label={`Total ${kpis.mesAtual}`} value={fmtUnidade(kpis.totalMesAtual)} sub="mês corrente" color="var(--color-orange)" />
+                <Kpi icon={<FaChartBar size={12} />} label={`Total ${anoFiltro}`} value={fmtUnidade(kpis.totalGeral)} sub="acumulado no ano" color="var(--color-purple)" />
+                <Kpi icon={<FaTrophy size={12} />} label="Maior fornecedor" value={indicadores.liderFornecedor ? fmtUnidade(indicadores.liderFornecedor.valor) : '—'} sub={indicadores.liderFornecedor?.nomeCompleto || 'sem dados'} color="var(--color-warning)" />
             </div>
 
             {/* Indicadores */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', marginBottom: '1rem' }}>
                 <Card style={{ padding: '0.9rem 1rem' }}>
-                    <h3 style={chartTitle}><FaIndustry size={11} color="#54a0ff" /> Por fornecedor (top 8)</h3>
+                    <h3 style={chartTitle}><FaIndustry size={11} color="var(--color-info)" /> Por fornecedor (top 8)</h3>
                     {indicadores.topFornecedores.length === 0 ? <SemDados /> : (
                         <ResponsiveContainer width="100%" height={190}>
                             <BarChart data={indicadores.topFornecedores} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 0 }}>
@@ -193,13 +193,13 @@ function ConciliacaoFornecedoresView({ onBack }) {
                                 <XAxis type="number" allowDecimals={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 10 }} tickLine={false} axisLine={false} />
                                 <YAxis type="category" dataKey="nome" width={108} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }} formatter={(v) => [fmtUnidade(v), null]} labelFormatter={(l, p) => p?.[0]?.payload?.nomeCompleto || l} separator="" />
-                                <Bar dataKey="valor" fill="#54a0ff" radius={[0, 4, 4, 0]} maxBarSize={14} />
+                                <Bar dataKey="valor" fill="var(--color-info)" radius={[0, 4, 4, 0]} maxBarSize={14} />
                             </BarChart>
                         </ResponsiveContainer>
                     )}
                 </Card>
                 <Card style={{ padding: '0.9rem 1rem' }}>
-                    <h3 style={chartTitle}><FaRecycle size={11} color="#10b981" /> Por resíduo (top 8)</h3>
+                    <h3 style={chartTitle}><FaRecycle size={11} color="var(--color-success)" /> Por resíduo (top 8)</h3>
                     {indicadores.topResiduos.length === 0 ? <SemDados /> : (
                         <ResponsiveContainer width="100%" height={190}>
                             <BarChart data={indicadores.topResiduos} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 0 }}>
@@ -207,20 +207,20 @@ function ConciliacaoFornecedoresView({ onBack }) {
                                 <XAxis type="number" allowDecimals={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 10 }} tickLine={false} axisLine={false} />
                                 <YAxis type="category" dataKey="nome" width={108} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }} formatter={(v) => [fmtUnidade(v), null]} labelFormatter={(l, p) => p?.[0]?.payload?.nomeCompleto || l} separator="" />
-                                <Bar dataKey="valor" fill="#10b981" radius={[0, 4, 4, 0]} maxBarSize={14} />
+                                <Bar dataKey="valor" fill="var(--color-success)" radius={[0, 4, 4, 0]} maxBarSize={14} />
                             </BarChart>
                         </ResponsiveContainer>
                     )}
                 </Card>
                 <Card style={{ padding: '0.9rem 1rem' }}>
-                    <h3 style={chartTitle}><FaChartBar size={11} color="#ff9f43" /> Evolução mensal ({anoFiltro})</h3>
+                    <h3 style={chartTitle}><FaChartBar size={11} color="var(--color-orange)" /> Evolução mensal ({anoFiltro})</h3>
                     <ResponsiveContainer width="100%" height={190}>
                         <BarChart data={indicadores.evolucaoMensal} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color-soft)" vertical={false} />
                             <XAxis dataKey="mes" tick={{ fill: 'var(--color-text-subtle)', fontSize: 10 }} tickLine={false} axisLine={false} />
                             <YAxis allowDecimals={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 10 }} tickLine={false} axisLine={false} />
                             <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }} formatter={(v) => [fmtUnidade(v), null]} separator="" />
-                            <Bar dataKey="valor" fill="#ff9f43" radius={[4, 4, 0, 0]} maxBarSize={18} />
+                            <Bar dataKey="valor" fill="var(--color-orange)" radius={[4, 4, 0, 0]} maxBarSize={18} />
                         </BarChart>
                     </ResponsiveContainer>
                 </Card>
@@ -270,7 +270,7 @@ function ConciliacaoFornecedoresView({ onBack }) {
                     .conciliacao-tbl tfoot td:nth-child(2) { text-align: left; position: sticky; z-index: 3; }
                     .conciliacao-tbl tfoot td:first-child { left: 0; }
                     .conciliacao-tbl tfoot td:nth-child(2) { left: 180px; border-right: 2px solid #4a5f4b; }
-                    .conciliacao-tbl tfoot td:last-child { background: #3a4a3b; color: #10b981; }
+                    .conciliacao-tbl tfoot td:last-child { background: #3a4a3b; color: var(--color-success); }
                     .conciliacao-tbl .col-active { background: rgba(16, 185, 129, 0.04) !important; }
                     .conciliacao-tbl thead .col-active { background: #3a5a3b !important; }
                 `}</style>
@@ -316,7 +316,7 @@ function ConciliacaoFornecedoresView({ onBack }) {
                                                     {fmt(row[m])}
                                                 </td>
                                             ))}
-                                            <td style={{ color: row.SOMA > 0 ? '#10b981' : 'var(--color-text-subtle)' }}>{fmt(row.SOMA)}</td>
+                                            <td style={{ color: row.SOMA > 0 ? 'var(--color-success)' : 'var(--color-text-subtle)' }}>{fmt(row.SOMA)}</td>
                                         </tr>
                                     );
                                 })}
@@ -381,8 +381,8 @@ function RelatorioIndicadores({ onClose, ano, metrica, unidade, fmtUnidade, kpis
             `}</style>
             <div className="conc-report" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 14, maxWidth: 760, width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.55)', padding: '1.4rem 1.6rem' }}>
                 <div className="no-print" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.8rem' }}>
-                    <Btn color="#10b981" onClick={() => window.print()} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaPrint size={11} /> Imprimir</Btn>
-                    <Btn variant="outline" color="#8b9bb4" onClick={onClose} style={{ padding: '0.35rem 0.55rem', fontSize: '0.7rem' }}><FaTimes size={12} /></Btn>
+                    <Btn color="var(--color-success)" onClick={() => window.print()} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaPrint size={11} /> Imprimir</Btn>
+                    <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose} style={{ padding: '0.35rem 0.55rem', fontSize: '0.7rem' }}><FaTimes size={12} /></Btn>
                 </div>
 
                 <div style={{ borderBottom: '2px solid var(--border-color)', paddingBottom: '0.7rem', marginBottom: '0.9rem' }}>

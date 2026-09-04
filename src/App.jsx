@@ -41,8 +41,8 @@ function App() {
     if (isLoading) {
         return (
             <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', gap: '1rem' }}>
-                <FaLeaf size={48} color="#00ff9d" style={{ animation: 'pulse 1.5s infinite' }} />
-                <span style={{ color: '#666', fontSize: '0.9rem', letterSpacing: '3px' }}>SGA</span>
+                <FaLeaf size={48} color="var(--color-primary)" style={{ animation: 'pulse 1.5s infinite' }} />
+                <span style={{ color: 'var(--color-text-subtle)', fontSize: '0.9rem', letterSpacing: '3px' }}>SGA</span>
             </div>
         );
     }

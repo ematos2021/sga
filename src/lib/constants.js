@@ -4,9 +4,9 @@
 
 // Classificação NBR 10004
 export const CLASSES_RESIDUO = [
-    { id: 'I', label: 'Classe I — Perigoso', color: '#ff4757' },
-    { id: 'IIA', label: 'Classe II A — Não Inerte', color: '#ffb700' },
-    { id: 'IIB', label: 'Classe II B — Inerte', color: '#10b981' },
+    { id: 'I', label: 'Classe I — Perigoso', color: 'var(--color-danger)' },
+    { id: 'IIA', label: 'Classe II A — Não Inerte', color: 'var(--color-warning)' },
+    { id: 'IIB', label: 'Classe II B — Inerte', color: 'var(--color-success)' },
 ];
 
 export const ESTADOS_FISICOS = ['Sólido', 'Líquido', 'Pastoso', 'Gasoso'];
@@ -27,11 +27,11 @@ export const TIPOS_DESTINACAO = [
 // Escala de Ringelmann — densidade de fumaça preta (CONAMA / NBR 6016)
 // Limite legal: máx. grau 2 (40%), exceto 5s contínuos na partida (grau 3)
 export const RINGELMANN = [
-    { grau: 0, label: 'Grau 0 — 0% (Incolor)', pct: '0%', color: '#10b981', ok: true },
+    { grau: 0, label: 'Grau 0 — 0% (Incolor)', pct: '0%', color: 'var(--color-success)', ok: true },
     { grau: 1, label: 'Grau 1 — 20%', pct: '20%', color: '#84cc16', ok: true },
-    { grau: 2, label: 'Grau 2 — 40% (Limite)', pct: '40%', color: '#ffb700', ok: true },
-    { grau: 3, label: 'Grau 3 — 60%', pct: '60%', color: '#ff9f43', ok: false },
-    { grau: 4, label: 'Grau 4 — 80%', pct: '80%', color: '#ff4757', ok: false },
+    { grau: 2, label: 'Grau 2 — 40% (Limite)', pct: '40%', color: 'var(--color-warning)', ok: true },
+    { grau: 3, label: 'Grau 3 — 60%', pct: '60%', color: 'var(--color-orange)', ok: false },
+    { grau: 4, label: 'Grau 4 — 80%', pct: '80%', color: 'var(--color-danger)', ok: false },
     { grau: 5, label: 'Grau 5 — 100% (Total)', pct: '100%', color: '#7f1d1d', ok: false },
 ];
 
@@ -46,9 +46,9 @@ export const PADROES_APURADOS = [0, 20, 40, 60, 80, 100];
 // Limite legal: até grau 2 (40%) é tolerado. Acima de 40% = não conforme.
 export function apuradoInfo(pct) {
     const p = Number(pct);
-    if (p <= 20) return { color: '#10b981', conforme: true, label: 'Conforme' };
-    if (p === 40) return { color: '#ffb700', conforme: true, label: 'Limite legal' };
-    return { color: '#ff4757', conforme: false, label: 'Não conforme' };
+    if (p <= 20) return { color: 'var(--color-success)', conforme: true, label: 'Conforme' };
+    if (p === 40) return { color: 'var(--color-warning)', conforme: true, label: 'Limite legal' };
+    return { color: 'var(--color-danger)', conforme: false, label: 'Não conforme' };
 }
 export function pctToGrau(pct) {
     return PADROES_APURADOS.indexOf(Number(pct)); // 0%→0, 20%→1, ...
@@ -82,7 +82,7 @@ export const DIAS_OPERACAO = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export const SINIR_URL = 'https://mtr.sinir.gov.br/';
 
 export function classeColor(id) {
-    return CLASSES_RESIDUO.find((c) => c.id === id)?.color || '#8b9bb4';
+    return CLASSES_RESIDUO.find((c) => c.id === id)?.color || 'var(--color-text-muted)';
 }
 export function ringelmann(grau) {
     return RINGELMANN.find((r) => r.grau === Number(grau)) || RINGELMANN[0];
@@ -91,13 +91,13 @@ export function ringelmann(grau) {
 // ─── Calendário Ambiental (Datas Comemorativas) ───
 
 export const CALENDAR_CATEGORIES = {
-    global: { label: 'Global / Internacional', color: '#00ccff' },
-    nacional: { label: 'Nacional', color: '#10b981' },
-    conscientizacao: { label: 'Conscientização', color: '#ffb700' },
-    profissional: { label: 'Profissional', color: '#a78bfa' },
-    institucional: { label: 'Institucional / Órgãos', color: '#ff9f43' },
-    periodo: { label: 'Semana / Período', color: '#ff4757' },
-    custom: { label: 'Customizado', color: '#06b6d4' },
+    global: { label: 'Global / Internacional', color: 'var(--color-secondary)' },
+    nacional: { label: 'Nacional', color: 'var(--color-success)' },
+    conscientizacao: { label: 'Conscientização', color: 'var(--color-warning)' },
+    profissional: { label: 'Profissional', color: 'var(--color-purple)' },
+    institucional: { label: 'Institucional / Órgãos', color: 'var(--color-orange)' },
+    periodo: { label: 'Semana / Período', color: 'var(--color-danger)' },
+    custom: { label: 'Customizado', color: 'var(--color-cyan)' },
 };
 
 export const DEFAULT_CALENDAR_EVENTS = [
@@ -232,9 +232,9 @@ export function obterEventosProximos(eventos, dataReferencia = new Date(2026, 5,
 
 // Escopos do GHG Protocol
 export const GEE_ESCOPOS = {
-    1: { id: 1, label: 'Escopo 1', titulo: 'Emissões Diretas', desc: 'Combustão em fontes próprias — geradores, frota e GLP', color: '#ff6b6b' },
+    1: { id: 1, label: 'Escopo 1', titulo: 'Emissões Diretas', desc: 'Combustão em fontes próprias — geradores, frota e GLP', color: 'var(--color-danger)' },
     2: { id: 2, label: 'Escopo 2', titulo: 'Energia Adquirida', desc: 'Eletricidade comprada da rede (SIN)', color: '#feca57' },
-    3: { id: 3, label: 'Escopo 3', titulo: 'Cadeia de Valor', desc: 'Emissões indiretas — logística, resíduos e viagens', color: '#54a0ff' },
+    3: { id: 3, label: 'Escopo 3', titulo: 'Cadeia de Valor', desc: 'Emissões indiretas — logística, resíduos e viagens', color: 'var(--color-info)' },
 };
 
 // Fatores de emissão (kg CO₂e por unidade) — base Programa Brasileiro GHG Protocol / IPCC / MCTI
@@ -263,9 +263,9 @@ export function calcCO2e(consumo, fatorKg) {
 
 // Pilares ESG
 export const ESG_PILARES = {
-    E: { id: 'E', label: 'Ambiental', sigla: 'E', color: '#10b981', desc: 'Clima, energia, água e resíduos' },
-    S: { id: 'S', label: 'Social', sigla: 'S', color: '#54a0ff', desc: 'Pessoas, segurança e comunidade' },
-    G: { id: 'G', label: 'Governança', sigla: 'G', color: '#a78bfa', desc: 'Ética, compliance e transparência' },
+    E: { id: 'E', label: 'Ambiental', sigla: 'E', color: 'var(--color-success)', desc: 'Clima, energia, água e resíduos' },
+    S: { id: 'S', label: 'Social', sigla: 'S', color: 'var(--color-info)', desc: 'Pessoas, segurança e comunidade' },
+    G: { id: 'G', label: 'Governança', sigla: 'G', color: 'var(--color-purple)', desc: 'Ética, compliance e transparência' },
 };
 
 // Programa de descarbonização (metas alinhadas a SBTi / Net Zero)
@@ -280,7 +280,7 @@ export const ESG_PROGRAMA_DEFAULT = {
 
 export const STATUS_INICIATIVA = ['Planejada', 'Em andamento', 'Concluída', 'Suspensa'];
 export const ESG_STATUS_COLORS = {
-    'Planejada': '#8b9bb4', 'Em andamento': '#ffb700', 'Concluída': '#10b981', 'Suspensa': '#ff4757',
+    'Planejada': 'var(--color-text-muted)', 'Em andamento': 'var(--color-warning)', 'Concluída': 'var(--color-success)', 'Suspensa': 'var(--color-danger)',
 };
 
 // Avalia um indicador ESG (progresso 0-100 conforme a direção desejada)
@@ -294,11 +294,11 @@ export function progressoIndicador(valor, meta, melhor = 'maior') {
 }
 
 export function scoreColor(score) {
-    if (score >= 80) return '#10b981';
+    if (score >= 80) return 'var(--color-success)';
     if (score >= 60) return '#84cc16';
-    if (score >= 40) return '#ffb700';
-    if (score >= 20) return '#ff9f43';
-    return '#ff4757';
+    if (score >= 40) return 'var(--color-warning)';
+    if (score >= 20) return 'var(--color-orange)';
+    return 'var(--color-danger)';
 }
 
 export function scoreRating(score) {
@@ -340,8 +340,8 @@ export function unidadeMedidaPadrao(rotulo) {
 
 // Status da fonte (regra de fronteira de emissão)
 export const STATUS_FONTE = {
-    'Mapeado': { label: 'Mapeado', color: '#10b981', desc: 'Fonte dentro das fronteiras de emissão — exige coleta de dados.' },
-    'Não aplicável': { label: 'Não aplicável', color: '#8b9bb4', desc: 'Equipamento inexistente na unidade ou gerido por terceiros (ex.: gerador do condomínio) — fora das fronteiras.' },
+    'Mapeado': { label: 'Mapeado', color: 'var(--color-success)', desc: 'Fonte dentro das fronteiras de emissão — exige coleta de dados.' },
+    'Não aplicável': { label: 'Não aplicável', color: 'var(--color-text-muted)', desc: 'Equipamento inexistente na unidade ou gerido por terceiros (ex.: gerador do condomínio) — fora das fronteiras.' },
 };
 
 // Geolocalização / centro de custo: até 7 níveis organizacionais
@@ -349,14 +349,14 @@ export const HIERARQUIA_NIVEIS = 7;
 
 // RBAC do Programa de Carbono (Role-Based Access Control)
 export const PERFIS_CARBONO = {
-    fornecedor: { label: 'Fornecedor de Informação', color: '#54a0ff', desc: 'Insere os dados dos IDs/parâmetros sob sua responsabilidade. Dono exclusivo do dado; visibilidade limitada aos seus parâmetros.' },
-    gestor_unidade: { label: 'Gestor de Unidade Operacional', color: '#ffb700', desc: 'Leitura e gestão atreladas a um ou mais nós da hierarquia (suas unidades de atuação).' },
-    gestor_corporativo: { label: 'Gestor Corporativo', color: '#a78bfa', desc: 'Visão holística e global. Administra o sistema, audita rastreabilidade e consolida as emissões da companhia.' },
+    fornecedor: { label: 'Fornecedor de Informação', color: 'var(--color-info)', desc: 'Insere os dados dos IDs/parâmetros sob sua responsabilidade. Dono exclusivo do dado; visibilidade limitada aos seus parâmetros.' },
+    gestor_unidade: { label: 'Gestor de Unidade Operacional', color: 'var(--color-warning)', desc: 'Leitura e gestão atreladas a um ou mais nós da hierarquia (suas unidades de atuação).' },
+    gestor_corporativo: { label: 'Gestor Corporativo', color: 'var(--color-purple)', desc: 'Visão holística e global. Administra o sistema, audita rastreabilidade e consolida as emissões da companhia.' },
 };
 
 export const COLETA_STATUS = {
-    pendente: { label: 'Pendente', color: '#8b9bb4', sigla: '·' },
-    coletado: { label: 'Coletado', color: '#10b981', sigla: '✓' },
+    pendente: { label: 'Pendente', color: 'var(--color-text-muted)', sigla: '·' },
+    coletado: { label: 'Coletado', color: 'var(--color-success)', sigla: '✓' },
     na: { label: 'Não aplicável', color: '#3a3d4a', sigla: '—' },
 };
 // Ciclo de status ao clicar numa célula de mês

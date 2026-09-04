@@ -7,9 +7,10 @@ import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FaInfoCircle, FaCalculator, FaBookOpen, FaTimes, FaChevronDown } from 'react-icons/fa';
 import { GLOSSARIO } from '../lib/constants';
+import { tint } from '../lib/color';
 
 // ─── InfoTip: ícone ⓘ que abre um popover com definição ───
-export function InfoTip({ title, children, color = '#00ccff', size = 12 }) {
+export function InfoTip({ title, children, color = 'var(--color-secondary)', size = 12 }) {
     const [open, setOpen] = useState(false);
     const [pos, setPos] = useState({ top: 0, left: 0 });
     const ref = useRef(null);
@@ -40,7 +41,7 @@ export function InfoTip({ title, children, color = '#00ccff', size = 12 }) {
                     <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 4000 }} />
                     <div style={{
                         position: 'fixed', top: pos.top, left: pos.left, zIndex: 4001, width: 300,
-                        background: 'var(--bg-surface)', border: `1px solid ${color}44`, borderRadius: 12,
+                        background: 'var(--bg-surface)', border: `1px solid ${tint(color,'44')}`, borderRadius: 12,
                         boxShadow: '0 12px 40px rgba(0,0,0,0.5)', padding: '0.9rem 1rem',
                         fontSize: '0.78rem', color: 'var(--color-text-muted)', lineHeight: 1.55,
                         animation: 'fadeIn 0.15s ease-out',
@@ -59,10 +60,10 @@ export function InfoTip({ title, children, color = '#00ccff', size = 12 }) {
 
 // ─── MemoriaCalculo: bloco com fórmula, substituição e resultado ───
 // passos: array de { label, valor } (a substituição). resultado: string.
-export function MemoriaCalculo({ titulo, formula, passos = [], resultado, color = '#10b981', compact = false }) {
+export function MemoriaCalculo({ titulo, formula, passos = [], resultado, color = 'var(--color-success)', compact = false }) {
     return (
         <div style={{
-            border: `1px solid ${color}33`, borderRadius: 12, background: `${color}0c`,
+            border: `1px solid ${tint(color,'33')}`, borderRadius: 12, background: `${tint(color,'0c')}`,
             padding: compact ? '0.7rem 0.9rem' : '0.9rem 1.1rem',
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 6 }}>
@@ -84,7 +85,7 @@ export function MemoriaCalculo({ titulo, formula, passos = [], resultado, color 
                 </div>
             )}
             {resultado && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px dashed ${color}55`, paddingTop: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px dashed ${tint(color,'55')}`, paddingTop: 6 }}>
                     <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 700 }}>Resultado</span>
                     <span style={{ fontSize: '0.95rem', fontWeight: 800, color }}>{resultado}</span>
                 </div>
@@ -94,7 +95,7 @@ export function MemoriaCalculo({ titulo, formula, passos = [], resultado, color 
 }
 
 // ─── ExplicaBox: banner colapsável "Como ler esta tela" ───
-export function ExplicaBox({ titulo = 'Como interpretar esta tela', children, color = '#54a0ff', defaultOpen = false }) {
+export function ExplicaBox({ titulo = 'Como interpretar esta tela', children, color = 'var(--color-info)', defaultOpen = false }) {
     const [open, setOpen] = useState(defaultOpen);
     return (
         <div className="glass-panel" style={{ borderLeft: `3px solid ${color}`, padding: 0, marginBottom: '1.2rem', overflow: 'hidden' }}>
@@ -116,7 +117,7 @@ export function ExplicaBox({ titulo = 'Como interpretar esta tela', children, co
 }
 
 // ─── Termo: palavra sublinhada que abre a definição do glossário ───
-export function Termo({ children, def, title, color = '#00ccff' }) {
+export function Termo({ children, def, title, color = 'var(--color-secondary)' }) {
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
             <span style={{ borderBottom: `1px dotted ${color}`, cursor: 'help' }}>{children}</span>
@@ -136,7 +137,7 @@ export function GlossarioModal({ onClose }) {
             <div onClick={(e) => e.stopPropagation()} className="animate-slide-up" style={{ background: 'var(--bg-surface)', borderRadius: 18, border: '1px solid var(--border-color)', width: '100%', maxWidth: 640, maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.55)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.1rem 1.4rem', borderBottom: '1px solid var(--border-color-soft)' }}>
                     <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <FaBookOpen size={16} color="#00ccff" /> Glossário do SGA
+                        <FaBookOpen size={16} color="var(--color-secondary)" /> Glossário do SGA
                     </h2>
                     <button onClick={onClose} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--color-text-muted)', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaTimes size={13} /></button>
                 </div>
@@ -149,10 +150,10 @@ export function GlossarioModal({ onClose }) {
                         <div key={t.termo} style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '0.7rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{t.termo}</span>
-                                {t.tag && <span style={{ fontSize: '0.62rem', fontWeight: 600, color: '#00ccff', background: '#00ccff18', padding: '1px 7px', borderRadius: 5 }}>{t.tag}</span>}
+                                {t.tag && <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--color-secondary)', background: `${tint('var(--color-secondary)','18')}`, padding: '1px 7px', borderRadius: 5 }}>{t.tag}</span>}
                             </div>
                             <div style={{ fontSize: '0.79rem', color: 'var(--color-text-muted)', lineHeight: 1.55 }}>{t.def}</div>
-                            {t.formula && <div style={{ marginTop: 4, fontFamily: 'ui-monospace, monospace', fontSize: '0.74rem', color: '#10b981', background: '#10b9810c', padding: '0.3rem 0.5rem', borderRadius: 6, display: 'inline-block' }}>{t.formula}</div>}
+                            {t.formula && <div style={{ marginTop: 4, fontFamily: 'ui-monospace, monospace', fontSize: '0.74rem', color: 'var(--color-success)', background: `${tint('var(--color-success)','0c')}`, padding: '0.3rem 0.5rem', borderRadius: 6, display: 'inline-block' }}>{t.formula}</div>}
                             {t.ref && <div style={{ marginTop: 3, fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>Referência: {t.ref}</div>}
                         </div>
                     ))}

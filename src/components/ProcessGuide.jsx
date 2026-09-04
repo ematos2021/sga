@@ -4,6 +4,7 @@
 // ════════════════════════════════════════════════════════════════
 import { useState } from 'react';
 import { FaClipboardList, FaChevronDown, FaChevronUp, FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
+import { tint } from '../lib/color';
 
 /**
  * @param {string}   title   — Título do guia (ex.: "Fluxo de Solicitação de Manifesto")
@@ -15,7 +16,7 @@ import { FaClipboardList, FaChevronDown, FaChevronUp, FaCheckCircle, FaExclamati
  *   step.notes = [string]                               (notas contextuais)
  * @param {Array}    notes   — Notas gerais do processo (NOTA 1, NOTA 2, etc.)
  */
-export default function ProcessGuide({ title, color = '#00ff9d', steps = [], notes = [], defaultOpen = false }) {
+export default function ProcessGuide({ title, color = 'var(--color-primary)', steps = [], notes = [], defaultOpen = false }) {
     const [open, setOpen] = useState(defaultOpen);
 
     return (
@@ -48,7 +49,7 @@ export default function ProcessGuide({ title, color = '#00ff9d', steps = [], not
                     {notes.length > 0 && (
                         <div className="process-notes">
                             <div className="process-notes__header">
-                                <FaExclamationTriangle size={13} color="#ffb700" />
+                                <FaExclamationTriangle size={13} color="var(--color-warning)" />
                                 <span>Atenções e Exceções</span>
                             </div>
                             {notes.map((note, i) => (
@@ -74,10 +75,10 @@ function StepItem({ step, index, total, color }) {
     return (
         <div className={`process-step ${isEnd ? 'process-step--end' : ''} ${isDecision ? 'process-step--decision' : ''}`}>
             {/* Conector vertical */}
-            {!isLast && <div className="process-step__connector" style={{ background: `linear-gradient(180deg, ${color}40, ${color}10)` }} />}
+            {!isLast && <div className="process-step__connector" style={{ background: `linear-gradient(180deg, ${tint(color,'40')}, ${tint(color,'10')})` }} />}
 
             {/* Indicador */}
-            <div className="process-step__indicator" style={isEnd ? { background: '#10b981', borderColor: '#10b981' } : isDecision ? { background: `${color}25`, borderColor: color, transform: 'rotate(45deg)' } : { borderColor: `${color}60` }}>
+            <div className="process-step__indicator" style={isEnd ? { background: 'var(--color-success)', borderColor: 'var(--color-success)' } : isDecision ? { background: `${tint(color,'25')}`, borderColor: color, transform: 'rotate(45deg)' } : { borderColor: `${tint(color,'60')}` }}>
                 {isEnd ? (
                     <FaCheckCircle size={14} color="#fff" />
                 ) : isDecision ? (
@@ -161,7 +162,7 @@ function StepItem({ step, index, total, color }) {
                     <div className="process-step__notes">
                         {step.notes.map((n, ni) => (
                             <div key={ni} className="process-step__note">
-                                <FaInfoCircle size={11} color="#54a0ff" style={{ flexShrink: 0, marginTop: 2 }} />
+                                <FaInfoCircle size={11} color="var(--color-info)" style={{ flexShrink: 0, marginTop: 2 }} />
                                 <span>{n}</span>
                             </div>
                         ))}

@@ -5,7 +5,7 @@ import { useCollection, COL } from '../lib/store';
 import { STATUS_NF } from '../lib/constants';
 import { exportToExcel } from '../lib/excel';
 
-const STATUS_COLORS = { Emitida: '#ffb700', Enviada: '#54a0ff', Faturada: '#a78bfa', Paga: '#10b981' };
+const STATUS_COLORS = { Emitida: 'var(--color-warning)', Enviada: 'var(--color-info)', Faturada: 'var(--color-purple)', Paga: 'var(--color-success)' };
 
 const brl = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const empty = () => ({ numeroNF: '', data: new Date().toISOString().slice(0, 10), peso: '', valorKg: '', fornecedor: 'VIAMED', status: 'Emitida' });
@@ -43,7 +43,7 @@ function NFSucataView({ onBack }) {
         { key: 'fornecedor', label: 'Fornecedor' },
         { key: 'peso', label: 'Peso', align: 'right', render: (r) => `${Number(r.peso).toLocaleString('pt-BR')} kg` },
         { key: 'valorKg', label: 'Valor/kg', align: 'right', render: (r) => brl(r.valorKg) },
-        { key: 'total', label: 'Total', align: 'right', render: (r) => <strong style={{ color: '#10b981' }}>{brl(Number(r.peso || 0) * Number(r.valorKg || 0))}</strong> },
+        { key: 'total', label: 'Total', align: 'right', render: (r) => <strong style={{ color: 'var(--color-success)' }}>{brl(Number(r.peso || 0) * Number(r.valorKg || 0))}</strong> },
         {
             key: 'status', label: 'Status', render: (r) => (
                 <Select value={r.status} onChange={(e) => update(r.id, { status: e.target.value })}
@@ -52,27 +52,27 @@ function NFSucataView({ onBack }) {
                 </Select>
             ),
         },
-        { key: 'acoes', label: '', align: 'right', render: (r) => <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => window.confirm('Excluir NF?') && remove(r.id)} /> },
+        { key: 'acoes', label: '', align: 'right', render: (r) => <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm('Excluir NF?') && remove(r.id)} /> },
     ];
 
     return (
         <PageShell
-            icon={<FaFileInvoiceDollar size={20} />} color="#ffb700"
+            icon={<FaFileInvoiceDollar size={20} />} color="var(--color-warning)"
             title="NF de Sucata Plástica — VIAMED"
             subtitle="Emissão e controle de notas fiscais de sucata destinada à VIAMED"
             onBack={onBack}
-            actions={<Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar Excel</Btn>}
+            actions={<Btn variant="outline" color="var(--color-text-muted)" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar Excel</Btn>}
         >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                <Kpi icon={<FaReceipt size={15} />} label="Notas emitidas" value={items.length} color="#ffb700" />
-                <Kpi icon={<FaWeightHanging size={15} />} label="Peso total" value={`${stats.pesoTotal.toLocaleString('pt-BR')} kg`} color="#00ff9d" />
-                <Kpi icon={<FaDollarSign size={15} />} label="Valor total" value={brl(stats.valorTotal)} color="#10b981" />
-                <Kpi icon={<FaDollarSign size={15} />} label="A receber" value={brl(stats.aReceber)} sub="não pagas" color="#54a0ff" />
+                <Kpi icon={<FaReceipt size={15} />} label="Notas emitidas" value={items.length} color="var(--color-warning)" />
+                <Kpi icon={<FaWeightHanging size={15} />} label="Peso total" value={`${stats.pesoTotal.toLocaleString('pt-BR')} kg`} color="var(--color-primary)" />
+                <Kpi icon={<FaDollarSign size={15} />} label="Valor total" value={brl(stats.valorTotal)} color="var(--color-success)" />
+                <Kpi icon={<FaDollarSign size={15} />} label="A receber" value={brl(stats.aReceber)} sub="não pagas" color="var(--color-info)" />
             </div>
 
-            <Card style={{ marginBottom: '1.5rem', borderLeft: '3px solid #ffb700' }}>
+            <Card style={{ marginBottom: '1.5rem', borderLeft: '3px solid var(--color-warning)' }}>
                 <h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FaPlus size={13} color="#ffb700" /> Nova Nota Fiscal
+                    <FaPlus size={13} color="var(--color-warning)" /> Nova Nota Fiscal
                 </h3>
                 <form onSubmit={handleSubmit}>
                     <FormGrid cols={3}>
@@ -89,9 +89,9 @@ function NFSucataView({ onBack }) {
                     </FormGrid>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
                         <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                            Valor total: <strong style={{ color: '#10b981', fontSize: '1.05rem' }}>{brl(valorTotalForm)}</strong>
+                            Valor total: <strong style={{ color: 'var(--color-success)', fontSize: '1.05rem' }}>{brl(valorTotalForm)}</strong>
                         </span>
-                        <Btn type="submit" color="#ffb700"><FaPlus size={12} /> Registrar NF</Btn>
+                        <Btn type="submit" color="var(--color-warning)"><FaPlus size={12} /> Registrar NF</Btn>
                     </div>
                 </form>
             </Card>

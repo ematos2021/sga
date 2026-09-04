@@ -3,6 +3,7 @@ import { FaRecycle, FaPlus, FaTrash, FaEdit, FaFileExcel } from 'react-icons/fa'
 import { PageShell, Btn, Card, Field, Input, Select, FormGrid, DataTable, RowAction, Modal, Kpi } from '../components/ui';
 import { exportToExcel } from '../lib/excel';
 import { useWasteRegistry, CAMPOS } from '../lib/wasteRegistryRepo';
+import { tint } from '../lib/color';
 
 // ── Formulário: campos agrupados por seção ──
 const SECOES = [
@@ -137,8 +138,8 @@ function FichaResiduosView({ onBack }) {
         {
             key: 'acoes', label: '', align: 'center', render: (r) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <RowAction icon={<FaEdit size={13} />} color="#54a0ff" title="Editar" onClick={() => setModal({ form: { ...empty(), ...r }, id: r.id })} />
-                    <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => window.confirm(`Excluir a ficha de "${r.waste_type}"?`) && remove(r.id)} />
+                    <RowAction icon={<FaEdit size={13} />} color="var(--color-info)" title="Editar" onClick={() => setModal({ form: { ...empty(), ...r }, id: r.id })} />
+                    <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm(`Excluir a ficha de "${r.waste_type}"?`) && remove(r.id)} />
                 </div>
             ),
         },
@@ -146,30 +147,30 @@ function FichaResiduosView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaRecycle size={20} />} color="#9d4edd"
+            icon={<FaRecycle size={20} />} color="var(--color-purple)"
             title="Cadastro de Resíduos"
             subtitle="Ficha mestre · destinadores, transportadores e classificação"
             onBack={onBack}
             maxWidth="100%"
             actions={<>
-                <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaFileExcel size={10} /> Exportar Excel
                 </Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => { setShowForm(!showForm); setTimeout(() => { document.querySelector('.ficha-form-card')?.scrollIntoView({ behavior: 'smooth' }); }, 50); }} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => { setShowForm(!showForm); setTimeout(() => { document.querySelector('.ficha-form-card')?.scrollIntoView({ behavior: 'smooth' }); }, 50); }} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaPlus size={10} /> Adicionar resíduo
                 </Btn>
             </>}
         >
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                <Kpi icon={<FaRecycle size={15} />} label="Fichas cadastradas" value={kpis.total} color="#9d4edd" />
-                <Kpi icon={<FaRecycle size={15} />} label="Tipos de resíduo" value={kpis.tipos} color="#00ccff" />
-                <Kpi icon={<FaRecycle size={15} />} label="Destinadores" value={kpis.destinadores} color="#10b981" />
-                <Kpi icon={<FaTrash size={15} />} label="Classe I / RSS (perigosos)" value={kpis.perigosos} color={kpis.perigosos ? '#ff4757' : '#10b981'} />
+                <Kpi icon={<FaRecycle size={15} />} label="Fichas cadastradas" value={kpis.total} color="var(--color-purple)" />
+                <Kpi icon={<FaRecycle size={15} />} label="Tipos de resíduo" value={kpis.tipos} color="var(--color-secondary)" />
+                <Kpi icon={<FaRecycle size={15} />} label="Destinadores" value={kpis.destinadores} color="var(--color-success)" />
+                <Kpi icon={<FaTrash size={15} />} label="Classe I / RSS (perigosos)" value={kpis.perigosos} color={kpis.perigosos ? 'var(--color-danger)' : 'var(--color-success)'} />
             </div>
 
             {/* Form de Cadastro retrátil (mesmo design, tamanho, visual e ludicidade do MTR) */}
-            <Card className="ficha-form-card" style={{ marginBottom: '1rem', borderLeft: '3px solid #9d4edd', padding: '0.6rem 0.9rem' }}>
+            <Card className="ficha-form-card" style={{ marginBottom: '1rem', borderLeft: '3px solid var(--color-purple)', padding: '0.6rem 0.9rem' }}>
                 <div
                     onClick={() => setShowForm(!showForm)}
                     style={{
@@ -178,7 +179,7 @@ function FichaResiduosView({ onBack }) {
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                        <FaRecycle size={14} color="#9d4edd" />
+                        <FaRecycle size={14} color="var(--color-purple)" />
                         <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
                             🆕 Registrar Novo Resíduo
                         </span>
@@ -202,7 +203,7 @@ function FichaResiduosView({ onBack }) {
                         
                         {SECOES.map((sec) => (
                             <div key={sec.titulo} style={{ marginBottom: '1.2rem' }}>
-                                <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#9d4edd', marginBottom: '0.6rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.35rem' }}>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--color-purple)', marginBottom: '0.6rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.35rem' }}>
                                     {sec.titulo}
                                 </div>
                                 <FormGrid cols={3}>
@@ -221,8 +222,8 @@ function FichaResiduosView({ onBack }) {
                         ))}
                         
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
-                            <Btn variant="outline" color="#8b9bb4" onClick={() => { setShowForm(false); setForm(empty()); }}>Cancelar</Btn>
-                            <Btn color="#9d4edd" type="submit"><FaPlus size={10} /> Adicionar resíduo</Btn>
+                            <Btn variant="outline" color="var(--color-text-muted)" onClick={() => { setShowForm(false); setForm(empty()); }}>Cancelar</Btn>
+                            <Btn color="var(--color-purple)" type="submit"><FaPlus size={10} /> Adicionar resíduo</Btn>
                         </div>
                     </form>
                 )}
@@ -246,7 +247,7 @@ function FichaResiduosView({ onBack }) {
             </div>
 
             {error && (
-                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: '#ff47571a', border: '1px solid #ff475755', fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
+                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: `${tint('var(--color-danger)','1a')}`, border: `1px solid ${tint('var(--color-danger)','55')}`, fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
                     Falha ao carregar do Supabase: {error}
                 </div>
             )}
@@ -274,9 +275,9 @@ function FichaResiduosView({ onBack }) {
             {filtrados.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.8rem', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
                     <span>{(pageSafe - 1) * pageSize + 1}–{Math.min(pageSafe * pageSize, filtrados.length)} de {filtrados.length}</span>
-                    <Btn variant="outline" color="#9d4edd" onClick={() => setPage(Math.max(1, pageSafe - 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe <= 1 ? 0.4 : 1, pointerEvents: pageSafe <= 1 ? 'none' : 'auto' }}>Anterior</Btn>
+                    <Btn variant="outline" color="var(--color-purple)" onClick={() => setPage(Math.max(1, pageSafe - 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe <= 1 ? 0.4 : 1, pointerEvents: pageSafe <= 1 ? 'none' : 'auto' }}>Anterior</Btn>
                     <span>Página {pageSafe} de {totalPages}</span>
-                    <Btn variant="outline" color="#9d4edd" onClick={() => setPage(Math.min(totalPages, pageSafe + 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe >= totalPages ? 0.4 : 1, pointerEvents: pageSafe >= totalPages ? 'none' : 'auto' }}>Próxima</Btn>
+                    <Btn variant="outline" color="var(--color-purple)" onClick={() => setPage(Math.min(totalPages, pageSafe + 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe >= totalPages ? 0.4 : 1, pointerEvents: pageSafe >= totalPages ? 'none' : 'auto' }}>Próxima</Btn>
                 </div>
             )}
 
@@ -284,7 +285,7 @@ function FichaResiduosView({ onBack }) {
                 <Modal title={modal.id ? 'Editar ficha de resíduo' : 'Nova ficha de resíduo'} onClose={() => setModal(null)} width={780}>
                     {SECOES.map((sec) => (
                         <div key={sec.titulo} style={{ marginBottom: '1.2rem' }}>
-                            <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#9d4edd', marginBottom: '0.6rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.35rem' }}>
+                            <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--color-purple)', marginBottom: '0.6rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.35rem' }}>
                                 {sec.titulo}
                             </div>
                             <FormGrid cols={2}>
@@ -301,8 +302,8 @@ function FichaResiduosView({ onBack }) {
                         </div>
                     ))}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
-                        <Btn variant="outline" color="#8b9bb4" onClick={() => setModal(null)}>Cancelar</Btn>
-                        <Btn color="#9d4edd" onClick={salvar}><FaPlus size={12} /> {modal.id ? 'Salvar alterações' : 'Adicionar'}</Btn>
+                        <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setModal(null)}>Cancelar</Btn>
+                        <Btn color="var(--color-purple)" onClick={salvar}><FaPlus size={12} /> {modal.id ? 'Salvar alterações' : 'Adicionar'}</Btn>
                     </div>
                 </Modal>
             )}

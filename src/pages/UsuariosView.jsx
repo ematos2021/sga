@@ -3,27 +3,28 @@ import { FaUsersCog, FaPlus, FaTrash, FaEdit, FaUserShield, FaLock } from 'react
 import { PageShell, Btn, Field, Input, Select, FormGrid, DataTable, RowAction, Modal, Kpi } from '../components/ui';
 import { useUsuarios } from '../lib/usersRepo';
 import { ROLE_LABELS } from '../contexts/AuthContext';
+import { tint } from '../lib/color';
 
 const ROLES = ['gestor', 'analista', 'operador'];
 const AVATARES = ['🌱', '♻️', '🌎', '🍃', '👤', '🧑‍🔬', '🧑‍💼', '🛠️', '📋', '⚗️'];
-const corPapel = (r) => (r === 'gestor' ? '#10b981' : r === 'analista' ? '#54a0ff' : '#ffb700');
+const corPapel = (r) => (r === 'gestor' ? 'var(--color-success)' : r === 'analista' ? 'var(--color-info)' : 'var(--color-warning)');
 
 // Todas as telas disponíveis no SGA (exceto 'usuarios' que é só admin)
 const ALL_PAGES = [
-    { id: 'dashboard', label: 'Dashboard Ambiental', cat: 'Visão Geral', color: '#00ccff' },
-    { id: 'calendario', label: 'Calendário Ambiental', cat: 'Visão Geral', color: '#10b981' },
-    { id: 'autorizacoes', label: 'Autorização de Saída', cat: 'Operação de Resíduos', color: '#00ff9d' },
-    { id: 'manifestos', label: 'Manifesto MTR / SINIR', cat: 'Operação de Resíduos', color: '#54a0ff' },
-    { id: 'tickets', label: 'Tickets de Coleta', cat: 'Operação de Resíduos', color: '#ff9f43' },
-    { id: 'controle-residuos', label: 'Controle de Saída', cat: 'Operação de Resíduos', color: '#10b981' },
-    { id: 'esg-carbono', label: 'ESG & Carbono', cat: 'Monitoramento', color: '#10b981' },
-    { id: 'fumaca', label: 'Fumaça Preta', cat: 'Monitoramento', color: '#a78bfa' },
-    { id: 'lira', label: 'LIRA · Requisitos Legais', cat: 'Monitoramento', color: '#00ccff' },
-    { id: 'dedetizacao', label: 'Controle de Pragas · Dedetização', cat: 'Monitoramento', color: '#ff9f43' },
-    { id: 'nf-sucata', label: 'NF Sucata Plástica', cat: 'Comercial & Logística', color: '#ffb700' },
-    { id: 'motoristas', label: 'Motoristas & Logística', cat: 'Comercial & Logística', color: '#06b6d4' },
-    { id: 'cadastros', label: 'Cadastros', cat: 'Cadastros', color: '#9d4edd' },
-    { id: 'ficha-residuos', label: 'Cadastro de Resíduos', cat: 'Cadastros', color: '#c77dff' },
+    { id: 'dashboard', label: 'Dashboard Ambiental', cat: 'Visão Geral', color: 'var(--color-secondary)' },
+    { id: 'calendario', label: 'Calendário Ambiental', cat: 'Visão Geral', color: 'var(--color-success)' },
+    { id: 'autorizacoes', label: 'Autorização de Saída', cat: 'Operação de Resíduos', color: 'var(--color-primary)' },
+    { id: 'manifestos', label: 'Manifesto MTR / SINIR', cat: 'Operação de Resíduos', color: 'var(--color-info)' },
+    { id: 'tickets', label: 'Tickets de Coleta', cat: 'Operação de Resíduos', color: 'var(--color-orange)' },
+    { id: 'controle-residuos', label: 'Controle de Saída', cat: 'Operação de Resíduos', color: 'var(--color-success)' },
+    { id: 'esg-carbono', label: 'ESG & Carbono', cat: 'Monitoramento', color: 'var(--color-success)' },
+    { id: 'fumaca', label: 'Fumaça Preta', cat: 'Monitoramento', color: 'var(--color-purple)' },
+    { id: 'lira', label: 'LIRA · Requisitos Legais', cat: 'Monitoramento', color: 'var(--color-secondary)' },
+    { id: 'dedetizacao', label: 'Controle de Pragas · Dedetização', cat: 'Monitoramento', color: 'var(--color-orange)' },
+    { id: 'nf-sucata', label: 'NF Sucata Plástica', cat: 'Comercial & Logística', color: 'var(--color-warning)' },
+    { id: 'motoristas', label: 'Motoristas & Logística', cat: 'Comercial & Logística', color: 'var(--color-cyan)' },
+    { id: 'cadastros', label: 'Cadastros', cat: 'Cadastros', color: 'var(--color-purple)' },
+    { id: 'ficha-residuos', label: 'Cadastro de Resíduos', cat: 'Cadastros', color: 'var(--color-purple)' },
 ];
 
 const PAGE_CATEGORIES = [...new Set(ALL_PAGES.map((p) => p.cat))];
@@ -111,21 +112,21 @@ function UsuariosView({ onBack }) {
         {
             key: 'role', label: 'Papel', align: 'center', render: (u) => {
                 const c = corPapel(u.role);
-                return <span style={{ fontSize: '0.62rem', fontWeight: 700, color: c, background: c + '1a', border: `1px solid ${c}55`, padding: '2px 9px', borderRadius: 20, textTransform: 'uppercase' }}>{ROLE_LABELS[u.role] || u.role}</span>;
+                return <span style={{ fontSize: '0.62rem', fontWeight: 700, color: c, background: tint(c,'1a'), border: `1px solid ${tint(c,'55')}`, padding: '2px 9px', borderRadius: 20, textTransform: 'uppercase' }}>{ROLE_LABELS[u.role] || u.role}</span>;
             },
         },
-        { key: 'is_admin', label: 'Admin', align: 'center', render: (u) => u.is_admin ? <FaUserShield size={14} color="#ffb700" title="Administrador" /> : <span style={{ color: 'var(--color-text-subtle)' }}>—</span> },
+        { key: 'is_admin', label: 'Admin', align: 'center', render: (u) => u.is_admin ? <FaUserShield size={14} color="var(--color-warning)" title="Administrador" /> : <span style={{ color: 'var(--color-text-subtle)' }}>—</span> },
         {
             key: 'active', label: 'Ativo', align: 'center', render: (u) => {
-                const on = u.active !== false; const c = on ? '#10b981' : '#8b9bb4';
-                return <span onClick={() => update(u.id, { active: !on })} title="Clique para alternar" style={{ cursor: 'pointer', fontSize: '0.62rem', fontWeight: 700, color: c, background: c + '1a', border: `1px solid ${c}55`, padding: '2px 9px', borderRadius: 20 }}>{on ? 'ATIVO' : 'INATIVO'}</span>;
+                const on = u.active !== false; const c = on ? 'var(--color-success)' : 'var(--color-text-muted)';
+                return <span onClick={() => update(u.id, { active: !on })} title="Clique para alternar" style={{ cursor: 'pointer', fontSize: '0.62rem', fontWeight: 700, color: c, background: tint(c,'1a'), border: `1px solid ${tint(c,'55')}`, padding: '2px 9px', borderRadius: 20 }}>{on ? 'ATIVO' : 'INATIVO'}</span>;
             },
         },
         {
             key: 'acoes', label: '', align: 'center', render: (u) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                    <RowAction icon={<FaEdit size={13} />} color="#54a0ff" title="Editar" onClick={() => openModal(u, u.id)} />
-                    <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir perfil" onClick={() => setConfirmDel(u)} />
+                    <RowAction icon={<FaEdit size={13} />} color="var(--color-info)" title="Editar" onClick={() => openModal(u, u.id)} />
+                    <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir perfil" onClick={() => setConfirmDel(u)} />
                 </div>
             ),
         },
@@ -133,16 +134,16 @@ function UsuariosView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaUsersCog size={20} />} color="#a78bfa"
+            icon={<FaUsersCog size={20} />} color="var(--color-purple)"
             title="Gerenciar Usuários"
             subtitle="Cadastro e permissões · autenticação via Supabase"
             onBack={onBack}
-            actions={<Btn variant="outline" color="#8b9bb4" onClick={() => openModal(novo(), null)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Novo usuário</Btn>}
+            actions={<Btn variant="outline" color="var(--color-text-muted)" onClick={() => openModal(novo(), null)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Novo usuário</Btn>}
         >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.6rem', marginBottom: '1rem' }}>
-                <Kpi icon={<FaUsersCog size={13} />} label="Usuários" value={kpis.total} color="#a78bfa" />
-                <Kpi icon={<FaUserShield size={13} />} label="Administradores" value={kpis.admins} color="#ffb700" />
-                <Kpi icon={<FaUsersCog size={13} />} label="Ativos" value={kpis.ativos} color="#10b981" />
+                <Kpi icon={<FaUsersCog size={13} />} label="Usuários" value={kpis.total} color="var(--color-purple)" />
+                <Kpi icon={<FaUserShield size={13} />} label="Administradores" value={kpis.admins} color="var(--color-warning)" />
+                <Kpi icon={<FaUsersCog size={13} />} label="Ativos" value={kpis.ativos} color="var(--color-success)" />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem', flexWrap: 'wrap' }}>
@@ -151,7 +152,7 @@ function UsuariosView({ onBack }) {
             </div>
 
             {error && (
-                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: '#ff47571a', border: '1px solid #ff475755', fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
+                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: `${tint('var(--color-danger)','1a')}`, border: `1px solid ${tint('var(--color-danger)','55')}`, fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
                     Falha ao carregar usuários: {error}. Verifique se a tabela <code>profiles</code> existe no Supabase.
                 </div>
             )}
@@ -177,7 +178,7 @@ function UsuariosView({ onBack }) {
                     </FormGrid>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', color: 'var(--color-text-muted)', cursor: 'pointer', margin: '0.8rem 0 0.6rem' }}>
                         <input type="checkbox" checked={!!modal.form.is_admin} onChange={(e) => setModal((m) => ({ ...m, form: { ...m.form, is_admin: e.target.checked } }))} />
-                        <FaUserShield size={12} color="#ffb700" /> Administrador (acesso total a todas as telas)
+                        <FaUserShield size={12} color="var(--color-warning)" /> Administrador (acesso total a todas as telas)
                     </label>
 
                     {/* ── Permissões de Acesso por Tela ── */}
@@ -188,7 +189,7 @@ function UsuariosView({ onBack }) {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.7rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaLock size={13} color="#a78bfa" />
+                                    <FaLock size={13} color="var(--color-purple)" />
                                     <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
                                         Permissões de Acesso
                                     </span>
@@ -201,7 +202,7 @@ function UsuariosView({ onBack }) {
                                     style={{
                                         padding: '3px 10px', fontSize: '0.62rem', fontWeight: 700, borderRadius: 6,
                                         border: '1px solid rgba(167,139,250,0.3)', background: 'rgba(167,139,250,0.08)',
-                                        color: '#a78bfa', cursor: 'pointer', transition: 'all 0.2s',
+                                        color: 'var(--color-purple)', cursor: 'pointer', transition: 'all 0.2s',
                                     }}
                                 >
                                     {ALL_PAGES.every((p) => (modal.permissions || []).includes(p.id)) ? 'Desmarcar tudo' : 'Marcar tudo'}
@@ -230,7 +231,7 @@ function UsuariosView({ onBack }) {
                                                             padding: '0.3rem 0.6rem', borderRadius: 8, cursor: 'pointer',
                                                             fontSize: '0.72rem', fontWeight: 600, transition: 'all 0.15s',
                                                             background: checked ? `${page.color}15` : 'rgba(255,255,255,0.02)',
-                                                            border: `1px solid ${checked ? page.color + '55' : 'rgba(255,255,255,0.06)'}`,
+                                                            border: `1px solid ${checked ? page.tint(color,'55') : 'rgba(255,255,255,0.06)'}`,
                                                             color: checked ? page.color : 'var(--color-text-muted)',
                                                         }}
                                                     >
@@ -255,7 +256,7 @@ function UsuariosView({ onBack }) {
                         <div style={{
                             marginTop: '0.6rem', padding: '0.7rem 0.9rem', borderRadius: 10,
                             background: 'rgba(255,183,0,0.06)', border: '1px solid rgba(255,183,0,0.2)',
-                            fontSize: '0.75rem', color: '#ffb700', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            fontSize: '0.75rem', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '0.5rem',
                         }}>
                             <FaUserShield size={14} />
                             Administradores possuem acesso total a todas as telas automaticamente.
@@ -263,8 +264,8 @@ function UsuariosView({ onBack }) {
                     )}
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1rem' }}>
-                        <Btn variant="outline" color="#8b9bb4" onClick={() => setModal(null)}>Cancelar</Btn>
-                        <Btn color="#a78bfa" onClick={salvar}><FaPlus size={12} /> {salvando ? 'Salvando…' : (modal.id ? 'Salvar' : 'Criar usuário')}</Btn>
+                        <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setModal(null)}>Cancelar</Btn>
+                        <Btn color="var(--color-purple)" onClick={salvar}><FaPlus size={12} /> {salvando ? 'Salvando…' : (modal.id ? 'Salvar' : 'Criar usuário')}</Btn>
                     </div>
                 </Modal>
             )}
@@ -272,14 +273,14 @@ function UsuariosView({ onBack }) {
             {confirmDel && (
                 <div onClick={() => setConfirmDel(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6000, padding: '1rem' }}>
                     <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 16, maxWidth: 420, width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,0.55)', padding: '1.6rem', textAlign: 'center' }}>
-                        <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#ff47571a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}><FaTrash size={22} color="#ff4757" /></div>
+                        <div style={{ width: 54, height: 54, borderRadius: '50%', background: `${tint('var(--color-danger)','1a')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}><FaTrash size={22} color="var(--color-danger)" /></div>
                         <h3 style={{ margin: '0 0 0.4rem', fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text-main)' }}>Excluir perfil?</h3>
                         <p style={{ margin: '0 0 1.4rem', fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
                             O perfil de <strong style={{ color: 'var(--color-text-main)' }}>{confirmDel.name || confirmDel.email}</strong> será removido. O login no Auth permanece (para removê-lo de vez é preciso uma função admin no servidor) — considere apenas <strong>inativar</strong> o usuário.
                         </p>
                         <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center' }}>
-                            <Btn variant="outline" color="#8b9bb4" onClick={() => setConfirmDel(null)}>Cancelar</Btn>
-                            <Btn color="#ff4757" onClick={() => { remove(confirmDel.id); setConfirmDel(null); }}><FaTrash size={12} /> Excluir</Btn>
+                            <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setConfirmDel(null)}>Cancelar</Btn>
+                            <Btn color="var(--color-danger)" onClick={() => { remove(confirmDel.id); setConfirmDel(null); }}><FaTrash size={12} /> Excluir</Btn>
                         </div>
                     </div>
                 </div>

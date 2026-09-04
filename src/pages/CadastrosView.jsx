@@ -3,11 +3,12 @@ import { FaDatabase, FaRecycle, FaIndustry, FaPlus, FaTrash } from 'react-icons/
 import { PageShell, Btn, Card, Field, Input, Select, FormGrid, DataTable, RowAction } from '../components/ui';
 import { useCollection, COL } from '../lib/store';
 import { CLASSES_RESIDUO, ESTADOS_FISICOS, UNIDADES, TIPOS_DESTINACAO, classeColor, INJECAO_TIPOS } from '../lib/constants';
+import { tint } from '../lib/color';
 
 function CadastrosView({ onBack }) {
     const [tab, setTab] = useState('residuos');
     return (
-        <PageShell icon={<FaDatabase size={20} />} color="#9d4edd" title="Cadastros" subtitle="Resíduos e geradores" onBack={onBack}
+        <PageShell icon={<FaDatabase size={20} />} color="var(--color-purple)" title="Cadastros" subtitle="Resíduos e geradores" onBack={onBack}
             actions={
                 <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <TabBtn active={tab === 'residuos'} onClick={() => setTab('residuos')} icon={<FaRecycle size={10} />}>Resíduos</TabBtn>
@@ -25,8 +26,8 @@ function TabBtn({ active, onClick, icon, children }) {
         <button onClick={onClick} style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.7rem', borderRadius: 8,
             fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s',
-            background: active ? '#9d4edd22' : 'transparent', color: active ? '#9d4edd' : '#8b9bb4',
-            border: `1px solid ${active ? '#9d4edd55' : 'var(--border-color-soft)'}`,
+            background: active ? `${tint('var(--color-purple)','22')}` : 'transparent', color: active ? 'var(--color-purple)' : 'var(--color-text-muted)',
+            border: `1px solid ${active ? `${tint('var(--color-purple)','55')}` : 'var(--border-color-soft)'}`,
         }}>{icon}{children}</button>
     );
 }
@@ -43,7 +44,7 @@ function ResiduosTab() {
         { key: 'estado', label: 'Estado' },
         { key: 'destinacao', label: 'Destinação' },
         { key: 'destinador', label: 'Destinador' },
-        { key: 'acoes', label: '', align: 'right', render: (r) => <RowAction icon={<FaTrash size={13} />} color="#ff4757" onClick={() => window.confirm('Excluir resíduo?') && remove(r.id)} /> },
+        { key: 'acoes', label: '', align: 'right', render: (r) => <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" onClick={() => window.confirm('Excluir resíduo?') && remove(r.id)} /> },
     ];
 
     return (
@@ -70,7 +71,7 @@ function ResiduosTab() {
                         <Field label="Destinador padrão" span={2}><Input value={f.destinador} onChange={(e) => set('destinador', e.target.value)} placeholder="Empresa destinadora" /></Field>
                     </FormGrid>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                        <Btn type="submit" color="#9d4edd"><FaPlus size={12} /> Adicionar Resíduo</Btn>
+                        <Btn type="submit" color="var(--color-purple)"><FaPlus size={12} /> Adicionar Resíduo</Btn>
                     </div>
                 </form>
             </Card>
@@ -90,7 +91,7 @@ function GeradoresTab() {
         { key: 'injecao', label: 'Injeção' },
         { key: 'fabricante', label: 'Fabricante' },
         { key: 'potencia', label: 'Potência' },
-        { key: 'acoes', label: '', align: 'right', render: (r) => <RowAction icon={<FaTrash size={13} />} color="#ff4757" onClick={() => window.confirm('Excluir gerador?') && remove(r.id)} /> },
+        { key: 'acoes', label: '', align: 'right', render: (r) => <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" onClick={() => window.confirm('Excluir gerador?') && remove(r.id)} /> },
     ];
 
     return (
@@ -107,7 +108,7 @@ function GeradoresTab() {
                         <Field label="Fabricante" span={2}><Input value={f.fabricante} onChange={(e) => set('fabricante', e.target.value)} /></Field>
                     </FormGrid>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                        <Btn type="submit" color="#9d4edd"><FaPlus size={12} /> Adicionar Gerador</Btn>
+                        <Btn type="submit" color="var(--color-purple)"><FaPlus size={12} /> Adicionar Gerador</Btn>
                     </div>
                 </form>
             </Card>

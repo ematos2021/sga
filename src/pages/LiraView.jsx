@@ -6,6 +6,7 @@ import { PageShell, Btn, Card, Field, Input, Select, Textarea, FormGrid, DataTab
 import { useAuth } from '../contexts/AuthContext';
 import { useLira, foiAnalisado } from '../lib/liraRepo';
 import { exportToExcel } from '../lib/excel';
+import { tint } from '../lib/color';
 
 // Meta mínima de análises por dia (combinado com a analista)
 const META_DIA = 5;
@@ -20,12 +21,12 @@ const MESES_OPCOES = [
 
 // ── Setores responsáveis ──
 export const SETORES = [
-    { nome: 'Manutenção', emoji: '🔧', cor: '#ff9f43' },
-    { nome: 'Logística', emoji: '🚚', cor: '#06b6d4' },
-    { nome: 'SESMT', emoji: '🦺', cor: '#ffb700' },
-    { nome: 'Ambiental', emoji: '🌱', cor: '#10b981' },
-    { nome: 'RH', emoji: '👥', cor: '#a78bfa' },
-    { nome: 'Administrativo', emoji: '🏛️', cor: '#54a0ff' },
+    { nome: 'Manutenção', emoji: '🔧', cor: 'var(--color-orange)' },
+    { nome: 'Logística', emoji: '🚚', cor: 'var(--color-cyan)' },
+    { nome: 'SESMT', emoji: '🦺', cor: 'var(--color-warning)' },
+    { nome: 'Ambiental', emoji: '🌱', cor: 'var(--color-success)' },
+    { nome: 'RH', emoji: '👥', cor: 'var(--color-purple)' },
+    { nome: 'Administrativo', emoji: '🏛️', cor: 'var(--color-info)' },
 ];
 const SETOR_INDEFINIDO = 'A classificar';
 const setorInfo = (nome) => SETORES.find((s) => s.nome === nome) || { nome: nome || SETOR_INDEFINIDO, emoji: '❓', cor: '#5b6275' };
@@ -65,19 +66,19 @@ const brCurto = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 const brDataHora = (ts) => (ts ? new Date(ts).toLocaleDateString('pt-BR') : null);
 
 // ── Pills ── (null-safe: colunas podem vir nulas do banco)
-const corPrioridade = (p) => { const s = String(p ?? ''); return /alta/i.test(s) ? '#ff4757' : /m[eé]dia/i.test(s) ? '#ffb700' : /baixa/i.test(s) ? '#54a0ff' : '#8b9bb4'; };
+const corPrioridade = (p) => { const s = String(p ?? ''); return /alta/i.test(s) ? 'var(--color-danger)' : /m[eé]dia/i.test(s) ? 'var(--color-warning)' : /baixa/i.test(s) ? 'var(--color-info)' : 'var(--color-text-muted)'; };
 const corConformidade = (c) => {
     const s = String(c ?? '').trim().toLowerCase();
-    if (/^conforme/i.test(s)) return '#10b981'; // Green
-    if (/n[aã]o conforme/i.test(s)) return '#ff4757'; // Red
-    if (/parcial/i.test(s)) return '#ff9f43'; // Orange
-    if (/aplic[aá]vel|aplica/i.test(s)) return '#ffd32a'; // Yellow (Não Aplicável / Não se aplica)
-    if (/adequa/i.test(s)) return '#54a0ff'; // Blue (Em Adequação)
-    return '#8b9bb4'; // Default Gray
+    if (/^conforme/i.test(s)) return 'var(--color-success)'; // Green
+    if (/n[aã]o conforme/i.test(s)) return 'var(--color-danger)'; // Red
+    if (/parcial/i.test(s)) return 'var(--color-orange)'; // Orange
+    if (/aplic[aá]vel|aplica/i.test(s)) return 'var(--color-warning)'; // Yellow (Não Aplicável / Não se aplica)
+    if (/adequa/i.test(s)) return 'var(--color-info)'; // Blue (Em Adequação)
+    return 'var(--color-text-muted)'; // Default Gray
 };
 function Pill({ text, color }) {
     if (!text) return <span style={{ color: 'var(--color-text-subtle)' }}>—</span>;
-    return <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color, background: color + '1a', border: `1px solid ${color}45`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{text}</span>;
+    return <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color, background: tint(color,'1a'), border: `1px solid ${tint(color,'45')}`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{text}</span>;
 }
 
 const trunca = (s, n) => { const t = String(s ?? ''); return t.length > n ? t.slice(0, n) + '…' : t; };
@@ -136,9 +137,9 @@ function LiraView({ onBack }) {
         return true;
     }, [temFiltroData, fDia, fMes, fAno]);
 
-    const filtrados = useMemo(() => items.filter((r) => {
-        if (fStatus === 'pendentes' && foiAnalisado(r)) return false;
-        if (fStatus === 'analisados' && !foiAnalisado(r)) return false;
+    // Base dos indicadores: todos os recortes menos o de status — este é o
+    // próprio card, e se entrasse aqui clicar em "Pendentes" zeraria "Analisados".
+    const baseFiltrada = useMemo(() => items.filter((r) => {
         if (fOrigem !== 'todos' && r.origem !== fOrigem) return false;
         if (fPrioridade !== 'todos' && r.prioridade !== fPrioridade) return false;
         if (fSetor !== 'todos' && setorDe(r) !== fSetor) return false;
@@ -148,20 +149,29 @@ function LiraView({ onBack }) {
             if (!alvo.includes(busca.toLowerCase())) return false;
         }
         return true;
-    }), [items, fStatus, fOrigem, fPrioridade, fSetor, busca, dentroPeriodo]);
+    }), [items, fOrigem, fPrioridade, fSetor, busca, dentroPeriodo]);
+
+    const filtrados = useMemo(() => baseFiltrada.filter((r) => {
+        if (fStatus === 'pendentes') return !foiAnalisado(r);
+        if (fStatus === 'analisados') return foiAnalisado(r);
+        return true;
+    }), [baseFiltrada, fStatus]);
+
+    const filtroAtivo = fOrigem !== 'todos' || fPrioridade !== 'todos' || fSetor !== 'todos'
+        || busca.trim() !== '' || temFiltroData;
 
     useEffect(() => { setPage(1); }, [busca, fStatus, fOrigem, fPrioridade, fSetor, pageSize, fDia, fMes, fAno]);
     const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));
     const pageSafe = Math.min(page, totalPages);
     const paginados = filtrados.slice((pageSafe - 1) * pageSize, pageSafe * pageSize);
 
-    // ── Estatísticas de produtividade ──
+    // ── Estatísticas de produtividade — apuradas sobre a base filtrada ──
     const stats = useMemo(() => {
-        const total = items.length;
-        const analisados = items.filter(foiAnalisado).length;
+        const total = baseFiltrada.length;
+        const analisados = baseFiltrada.filter(foiAnalisado).length;
         const pendentes = total - analisados;
         const porDia = {};
-        items.forEach((r) => {
+        baseFiltrada.forEach((r) => {
             const d = diaDe(r.analisado_em);
             if (d) porDia[d] = (porDia[d] || 0) + 1;
         });
@@ -177,7 +187,7 @@ function LiraView({ onBack }) {
         const diasComMeta = serie.filter((s) => s.analises >= META_DIA).length;
         const pct = total ? Math.round((analisados / total) * 100) : 0;
         return { total, analisados, pendentes, hoje, serie, diasComMeta, pct };
-    }, [items]);
+    }, [baseFiltrada]);
 
     // ── Relatório de desempenho (segue o período filtrado) ──
     const periodoLabel = useMemo(() => {
@@ -340,14 +350,14 @@ function LiraView({ onBack }) {
         { key: 'conformidade', label: 'Conformidade', align: 'center', render: (r) => <Pill text={r.conformidade} color={corConformidade(r.conformidade)} /> },
         {
             key: 'analise', label: 'Análise', align: 'center', render: (r) => foiAnalisado(r)
-                ? <span><Pill text="Analisado" color="#10b981" />{r.analisado_em ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', marginTop: 2 }}>{brDataHora(r.analisado_em)}</div> : null}</span>
-                : <Pill text="Pendente" color="#ffb700" />,
+                ? <span><Pill text="Analisado" color="var(--color-success)" />{r.analisado_em ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', marginTop: 2 }}>{brDataHora(r.analisado_em)}</div> : null}</span>
+                : <Pill text="Pendente" color="var(--color-warning)" />,
         },
         {
             key: 'acoes', label: '', align: 'center', render: (r) => (
                 <RowAction
                     icon={foiAnalisado(r) ? <FaEdit size={13} /> : <FaClipboardCheck size={14} />}
-                    color={foiAnalisado(r) ? '#54a0ff' : '#00ccff'}
+                    color={foiAnalisado(r) ? 'var(--color-info)' : 'var(--color-secondary)'}
                     title={foiAnalisado(r) ? 'Editar análise' : 'Analisar'}
                     onClick={() => abrirAnalise(r)}
                 />
@@ -359,35 +369,35 @@ function LiraView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaBalanceScale size={20} />} color="#00ccff"
+            icon={<FaBalanceScale size={20} />} color="var(--color-secondary)"
             title="LIRA · Requisitos Legais"
             subtitle="Análise de conformidade legal · meta diária de preenchimento"
             onBack={onBack}
             maxWidth="100%"
             actions={<>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => setShowReport(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaChartBar size={11} /> Relatório de desempenho</Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={11} /> Exportar Excel</Btn>
-                <Btn color="#00ccff" onClick={() => { const p = proximaPendente(); if (p) abrirAnalise(p); }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.72rem' }}>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setShowReport(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaChartBar size={11} /> Relatório de desempenho</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={11} /> Exportar Excel</Btn>
+                <Btn color="var(--color-secondary)" onClick={() => { const p = proximaPendente(); if (p) abrirAnalise(p); }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.72rem' }}>
                     <FaForward size={11} /> Analisar próxima pendente
                 </Btn>
             </>}
         >
             {needsSetup && (
-                <div style={{ padding: '0.8rem 1rem', borderRadius: 10, background: '#ffb7001a', border: '1px solid #ffb70055', fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '1rem', lineHeight: 1.6 }}>
+                <div style={{ padding: '0.8rem 1rem', borderRadius: 10, background: `${tint('var(--color-warning)','1a')}`, border: `1px solid ${tint('var(--color-warning)','55')}`, fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '1rem', lineHeight: 1.6 }}>
                     <strong>Configuração pendente:</strong> rode o script <code>database/lira.sql</code> no SQL Editor do Supabase.
                     Ele cria as colunas de rastreio (<code>analisado_em</code>/<code>analisado_por</code>) e a view <code>lira_analises</code> que esta tela utiliza.
                 </div>
             )}
             {error && (
-                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: '#ff47571a', border: '1px solid #ff475755', fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
+                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: `${tint('var(--color-danger)','1a')}`, border: `1px solid ${tint('var(--color-danger)','55')}`, fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
                     Falha ao carregar: {error}
                 </div>
             )}
 
             {/* Meta do dia */}
-            <Card style={{ marginBottom: '1rem', padding: '0.7rem 1rem', borderLeft: `3px solid ${metaBatida ? '#10b981' : '#00ccff'}` }}>
+            <Card style={{ marginBottom: '1rem', padding: '0.7rem 1rem', borderLeft: `3px solid ${metaBatida ? 'var(--color-success)' : 'var(--color-secondary)'}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                    <FaBullseye size={16} color={metaBatida ? '#10b981' : '#00ccff'} />
+                    <FaBullseye size={16} color={metaBatida ? 'var(--color-success)' : 'var(--color-secondary)'} />
                     <div style={{ flex: 1, minWidth: 220 }}>
                         <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
                             {metaBatida
@@ -395,7 +405,7 @@ function LiraView({ onBack }) {
                                 : `Hoje: ${stats.hoje} de ${META_DIA} análises da meta diária.`}
                         </div>
                         <div style={{ height: 6, borderRadius: 4, background: 'var(--bg-surface-2)', marginTop: 6, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${Math.min(100, (stats.hoje / META_DIA) * 100)}%`, background: metaBatida ? '#10b981' : '#00ccff', transition: 'width 0.4s' }} />
+                            <div style={{ height: '100%', width: `${Math.min(100, (stats.hoje / META_DIA) * 100)}%`, background: metaBatida ? 'var(--color-success)' : 'var(--color-secondary)', transition: 'width 0.4s' }} />
                         </div>
                     </div>
                     <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>{stats.pendentes} pendentes no total</span>
@@ -404,17 +414,17 @@ function LiraView({ onBack }) {
 
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(125px, 1fr))', gap: '0.55rem', marginBottom: '1rem' }}>
-                <Kpi icon={<FaBalanceScale size={12} />} label="Requisitos" value={stats.total} sub="registros no LIRA" color="#00ccff" onClick={() => setFStatus('todos')} active={fStatus === 'todos'} />
-                <Kpi icon={<FaCheckCircle size={12} />} label="Analisados" value={stats.analisados} sub={`${stats.pct}% do total`} color="#10b981" onClick={() => setFStatus('analisados')} active={fStatus === 'analisados'} />
-                <Kpi icon={<FaHourglassHalf size={12} />} label="Pendentes" value={stats.pendentes} sub="aguardando análise" color="#ffb700" onClick={() => setFStatus('pendentes')} active={fStatus === 'pendentes'} />
-                <Kpi icon={<FaBullseye size={12} />} label="Hoje" value={`${stats.hoje}/${META_DIA}`} sub="meta diária" color={metaBatida ? '#10b981' : '#54a0ff'} />
-                <Kpi icon={<FaCalendarCheck size={12} />} label="Dias com meta" value={stats.diasComMeta} sub="últimos 30 dias" color="#a78bfa" />
+                <Kpi icon={<FaBalanceScale size={12} />} label="Requisitos" value={stats.total} sub={filtroAtivo ? `de ${items.length} · filtrado` : "registros no LIRA"} color="var(--color-secondary)" onClick={() => setFStatus('todos')} active={fStatus === 'todos'} />
+                <Kpi icon={<FaCheckCircle size={12} />} label="Analisados" value={stats.analisados} sub={`${stats.pct}% do total`} color="var(--color-success)" onClick={() => setFStatus('analisados')} active={fStatus === 'analisados'} />
+                <Kpi icon={<FaHourglassHalf size={12} />} label="Pendentes" value={stats.pendentes} sub="aguardando análise" color="var(--color-warning)" onClick={() => setFStatus('pendentes')} active={fStatus === 'pendentes'} />
+                <Kpi icon={<FaBullseye size={12} />} label="Hoje" value={`${stats.hoje}/${META_DIA}`} sub="meta diária" color={metaBatida ? 'var(--color-success)' : 'var(--color-info)'} />
+                <Kpi icon={<FaCalendarCheck size={12} />} label="Dias com meta" value={stats.diasComMeta} sub="últimos 30 dias" color="var(--color-purple)" />
             </div>
 
             {/* Produtividade diária */}
             <Card style={{ marginBottom: '1rem', padding: '0.9rem 1rem' }}>
                 <h3 style={{ margin: '0 0 0.6rem', fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <FaCalendarCheck size={12} color="#00ccff" /> Análises por dia — últimos 30 dias
+                    <FaCalendarCheck size={12} color="var(--color-secondary)" /> Análises por dia — últimos 30 dias
                 </h3>
                 <ResponsiveContainer width="100%" height={170}>
                     <BarChart data={stats.serie} margin={{ top: 12, right: 8, left: -22, bottom: 0 }}>
@@ -423,8 +433,8 @@ function LiraView({ onBack }) {
                         <YAxis allowDecimals={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 10 }} tickLine={false} axisLine={false} />
                         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }}
                             formatter={(v) => [`${v} análise${v === 1 ? '' : 's'}`, null]} labelFormatter={(l) => `Dia ${l}`} separator="" />
-                        <ReferenceLine y={META_DIA} stroke="#8b9bb4" strokeDasharray="5 4" label={{ value: `Meta · ${META_DIA}/dia`, position: 'insideTopRight', fill: 'var(--color-text-subtle)', fontSize: 10 }} />
-                        <Bar dataKey="analises" fill="#00ccff" radius={[4, 4, 0, 0]} maxBarSize={16} />
+                        <ReferenceLine y={META_DIA} stroke="var(--color-text-muted)" strokeDasharray="5 4" label={{ value: `Meta · ${META_DIA}/dia`, position: 'insideTopRight', fill: 'var(--color-text-subtle)', fontSize: 10 }} />
+                        <Bar dataKey="analises" fill="var(--color-secondary)" radius={[4, 4, 0, 0]} maxBarSize={16} />
                     </BarChart>
                 </ResponsiveContainer>
             </Card>
@@ -437,7 +447,7 @@ function LiraView({ onBack }) {
                         <span style={{ fontSize: '0.62rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>· para onde as análises estão inclinando</span>
                     </h3>
                     {podeGerenciar && pendentesClassificacao > 0 && (
-                        <Btn variant="outline" color="#00ccff" onClick={aplicarClassificacao} style={{ padding: '0.3rem 0.7rem', fontSize: '0.66rem' }}>
+                        <Btn variant="outline" color="var(--color-secondary)" onClick={aplicarClassificacao} style={{ padding: '0.3rem 0.7rem', fontSize: '0.66rem' }}>
                             {classificando ? 'Gravando…' : `Classificar ${pendentesClassificacao} itens automaticamente`}
                         </Btn>
                     )}
@@ -452,8 +462,8 @@ function LiraView({ onBack }) {
                                 onClick={() => setFSetor(ativo ? 'todos' : s.setor)}
                                 title="Clique para filtrar a tabela por este setor"
                                 style={{
-                                    border: `1px solid ${ativo ? info.cor + 'aa' : 'var(--border-color-soft)'}`,
-                                    background: ativo ? info.cor + '10' : 'var(--bg-card)',
+                                    border: `1px solid ${ativo ? info.tint(cor,'aa') : 'var(--border-color-soft)'}`,
+                                    background: ativo ? info.tint(cor,'10') : 'var(--bg-card)',
                                     borderRadius: 10, padding: '0.55rem 0.7rem', cursor: 'pointer', transition: 'all 0.15s',
                                 }}
                             >
@@ -467,13 +477,13 @@ function LiraView({ onBack }) {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: 'var(--color-text-subtle)' }}>
                                     <span>{s.analisados}/{s.total} analisados ({s.pctAnalisado}%)</span>
                                     <span>
-                                        <span style={{ color: '#10b981', fontWeight: 700 }}>{s.conformes}✓</span>
+                                        <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>{s.conformes}✓</span>
                                         {' · '}
-                                        <span style={{ color: s.naoConformes ? '#ff4757' : 'var(--color-text-subtle)', fontWeight: 700 }}>{s.naoConformes}✗</span>
+                                        <span style={{ color: s.naoConformes ? 'var(--color-danger)' : 'var(--color-text-subtle)', fontWeight: 700 }}>{s.naoConformes}✗</span>
                                     </span>
                                 </div>
                                 <div style={{ marginTop: 10 }}>
-                                    <Btn variant="outline" color={info.cor} onClick={(e) => { e.stopPropagation(); setShowRelatorioSetor(s.setor); }} style={{ padding: '0.35rem', fontSize: '0.65rem', width: '100%', borderColor: info.cor + '44' }}>
+                                    <Btn variant="outline" color={info.cor} onClick={(e) => { e.stopPropagation(); setShowRelatorioSetor(s.setor); }} style={{ padding: '0.35rem', fontSize: '0.65rem', width: '100%', borderColor: info.tint(cor,'44') }}>
                                         <FaPrint size={10} style={{ marginRight: 6 }} /> Gerar Relatório
                                     </Btn>
                                 </div>
@@ -520,7 +530,7 @@ function LiraView({ onBack }) {
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n}/pág</option>)}
                 </Select>
                 {(temFiltroData || busca || fStatus !== 'todos' || fOrigem !== 'todos' || fPrioridade !== 'todos' || fSetor !== 'todos') && (
-                    <Btn variant="outline" color="#ff4757" onClick={() => { setBusca(''); setFStatus('todos'); setFOrigem('todos'); setFPrioridade('todos'); setFSetor('todos'); setFDia(''); setFMes('todos'); setFAno('todos'); }} style={{ padding: '0.3rem 0.6rem', fontSize: '0.66rem' }}>
+                    <Btn variant="outline" color="var(--color-danger)" onClick={() => { setBusca(''); setFStatus('todos'); setFOrigem('todos'); setFPrioridade('todos'); setFSetor('todos'); setFDia(''); setFMes('todos'); setFAno('todos'); }} style={{ padding: '0.3rem 0.6rem', fontSize: '0.66rem' }}>
                         Limpar
                     </Btn>
                 )}
@@ -548,9 +558,9 @@ function LiraView({ onBack }) {
             {filtrados.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.8rem', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
                     <span>{(pageSafe - 1) * pageSize + 1}–{Math.min(pageSafe * pageSize, filtrados.length)} de {filtrados.length}</span>
-                    <Btn variant="outline" color="#00ccff" onClick={() => setPage(Math.max(1, pageSafe - 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe <= 1 ? 0.4 : 1, pointerEvents: pageSafe <= 1 ? 'none' : 'auto' }}>Anterior</Btn>
+                    <Btn variant="outline" color="var(--color-secondary)" onClick={() => setPage(Math.max(1, pageSafe - 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe <= 1 ? 0.4 : 1, pointerEvents: pageSafe <= 1 ? 'none' : 'auto' }}>Anterior</Btn>
                     <span>Página {pageSafe} de {totalPages}</span>
-                    <Btn variant="outline" color="#00ccff" onClick={() => setPage(Math.min(totalPages, pageSafe + 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe >= totalPages ? 0.4 : 1, pointerEvents: pageSafe >= totalPages ? 'none' : 'auto' }}>Próxima</Btn>
+                    <Btn variant="outline" color="var(--color-secondary)" onClick={() => setPage(Math.min(totalPages, pageSafe + 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe >= totalPages ? 0.4 : 1, pointerEvents: pageSafe >= totalPages ? 'none' : 'auto' }}>Próxima</Btn>
                 </div>
             )}
 
@@ -568,8 +578,8 @@ function LiraView({ onBack }) {
                     <span style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', marginRight: 'auto' }}>
                         gere o formulário de cobrança e envie ao setor responder
                     </span>
-                    <Btn variant="outline" color="#8b9bb4" onClick={() => setSelecionados(new Set())} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}>Limpar seleção</Btn>
-                    <Btn color="#00ccff" onClick={() => setShowCobranca(true)} style={{ padding: '0.35rem 0.9rem', fontSize: '0.72rem' }}>
+                    <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setSelecionados(new Set())} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}>Limpar seleção</Btn>
+                    <Btn color="var(--color-secondary)" onClick={() => setShowCobranca(true)} style={{ padding: '0.35rem 0.9rem', fontSize: '0.72rem' }}>
                         <FaPrint size={11} /> Gerar cobrança (PDF)
                     </Btn>
                 </div>
@@ -612,11 +622,11 @@ function LiraView({ onBack }) {
                         {modal.full.requisito}
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '0.9rem' }}>
-                        <Pill text={modal.full.origem} color="#54a0ff" />
+                        <Pill text={modal.full.origem} color="var(--color-info)" />
                         <Pill text={modal.full.prioridade} color={corPrioridade(modal.full.prioridade)} />
-                        <Pill text={modal.full.situacao} color="#8b9bb4" />
-                        {modal.full.aplicabilidade && <Pill text={`Aplicabilidade: ${modal.full.aplicabilidade}`} color="#a78bfa" />}
-                        {modal.full.analisado_em && <Pill text={`1ª análise: ${brDataHora(modal.full.analisado_em)} · ${modal.full.analisado_por || '—'}`} color="#10b981" />}
+                        <Pill text={modal.full.situacao} color="var(--color-text-muted)" />
+                        {modal.full.aplicabilidade && <Pill text={`Aplicabilidade: ${modal.full.aplicabilidade}`} color="var(--color-purple)" />}
+                        {modal.full.analisado_em && <Pill text={`1ª análise: ${brDataHora(modal.full.analisado_em)} · ${modal.full.analisado_por || '—'}`} color="var(--color-success)" />}
                     </div>
 
                     {modal.full.sumario && <BlocoLeitura titulo="Sumário do requisito" texto={modal.full.sumario} />}
@@ -650,9 +660,9 @@ function LiraView({ onBack }) {
                             Hoje: {stats.hoje}/{META_DIA} análises
                         </span>
                         <div style={{ display: 'flex', gap: '0.6rem' }}>
-                            <Btn variant="outline" color="#8b9bb4" onClick={() => setModal(null)}>Cancelar</Btn>
-                            <Btn variant="outline" color="#00ccff" onClick={() => salvar(false)}>{salvando ? 'Salvando…' : 'Salvar'}</Btn>
-                            <Btn color="#00ccff" onClick={() => salvar(true)}><FaForward size={11} /> {salvando ? 'Salvando…' : 'Salvar e próxima'}</Btn>
+                            <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setModal(null)}>Cancelar</Btn>
+                            <Btn variant="outline" color="var(--color-secondary)" onClick={() => salvar(false)}>{salvando ? 'Salvando…' : 'Salvar'}</Btn>
+                            <Btn color="var(--color-secondary)" onClick={() => salvar(true)}><FaForward size={11} /> {salvando ? 'Salvando…' : 'Salvar e próxima'}</Btn>
                         </div>
                     </div>
                 </Modal>
@@ -665,7 +675,7 @@ function LiraView({ onBack }) {
 function BlocoLeitura({ titulo, texto, destaque }) {
     return (
         <div style={{ marginBottom: '0.8rem' }}>
-            <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: destaque ? '#00ccff' : 'var(--color-text-subtle)', marginBottom: '0.3rem' }}>{titulo}</div>
+            <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: destaque ? 'var(--color-secondary)' : 'var(--color-text-subtle)', marginBottom: '0.3rem' }}>{titulo}</div>
             <div style={{
                 fontSize: '0.78rem', lineHeight: 1.55, color: 'var(--color-text-main)', whiteSpace: 'pre-wrap',
                 background: destaque ? 'rgba(0,204,255,0.06)' : 'var(--bg-surface-2)',
@@ -700,9 +710,9 @@ function RelatorioDesempenho({ onClose, periodo, rel, stats, emissor, onExcel })
             <div className="lira-report" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 14, maxWidth: 760, width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.55)', padding: '1.4rem 1.6rem' }}>
                 {/* Toolbar (não imprime) */}
                 <div className="no-print" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.8rem' }}>
-                    <Btn variant="outline" color="#10b981" onClick={onExcel} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={11} /> Excel</Btn>
-                    <Btn color="#00ccff" onClick={() => window.print()} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaPrint size={11} /> Imprimir</Btn>
-                    <Btn variant="outline" color="#8b9bb4" onClick={onClose} style={{ padding: '0.35rem 0.55rem', fontSize: '0.7rem' }}><FaTimes size={12} /></Btn>
+                    <Btn variant="outline" color="var(--color-success)" onClick={onExcel} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={11} /> Excel</Btn>
+                    <Btn color="var(--color-secondary)" onClick={() => window.print()} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}><FaPrint size={11} /> Imprimir</Btn>
+                    <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose} style={{ padding: '0.35rem 0.55rem', fontSize: '0.7rem' }}><FaTimes size={12} /></Btn>
                 </div>
 
                 {/* Cabeçalho */}
@@ -747,7 +757,7 @@ function RelatorioDesempenho({ onClose, periodo, rel, stats, emissor, onExcel })
                                 <td style={td}>{d.data}</td>
                                 <td style={{ ...td, textAlign: 'center', fontWeight: 700 }}>{d.count}</td>
                                 <td style={{ ...td, textAlign: 'center' }}>
-                                    <span style={{ color: d.metaOk ? '#10b981' : '#ffb700', fontWeight: 700, fontSize: '0.7rem' }}>
+                                    <span style={{ color: d.metaOk ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 700, fontSize: '0.7rem' }}>
                                         {d.metaOk ? '✔ Atingida' : '✖ Não atingida'}
                                     </span>
                                 </td>
@@ -808,8 +818,8 @@ function CobrancaSetor({ itens, emissor, onClose }) {
                         <Input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Instruções para o setor…" />
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Btn color="#00ccff" onClick={() => window.print()} style={{ padding: '0.45rem 0.9rem', fontSize: '0.72rem' }}><FaPrint size={11} /> Imprimir / PDF</Btn>
-                        <Btn variant="outline" color="#8b9bb4" onClick={onClose} style={{ padding: '0.45rem 0.6rem', fontSize: '0.72rem' }}><FaTimes size={12} /></Btn>
+                        <Btn color="var(--color-secondary)" onClick={() => window.print()} style={{ padding: '0.45rem 0.9rem', fontSize: '0.72rem' }}><FaPrint size={11} /> Imprimir / PDF</Btn>
+                        <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose} style={{ padding: '0.45rem 0.6rem', fontSize: '0.72rem' }}><FaTimes size={12} /></Btn>
                     </div>
                 </div>
 
@@ -1011,7 +1021,7 @@ function RelatorioSetor({ setor, itens, onClose }) {
                         <input value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Instruções específicas desta remessa…" style={inputClaro} />
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button onClick={() => window.print()} style={{ ...btnBase, background: '#0f766e', color: '#fff' }}><FaPrint size={12} /> Imprimir / PDF</button>
+                        <button onClick={() => window.print()} style={{ ...btnBase, background: '#0f766e', color: 'var(--color-on-accent)' }}><FaPrint size={12} /> Imprimir / PDF</button>
                         <button onClick={onClose} style={{ ...btnBase, background: '#e5e9ef', color: PAPEL.tintaMedia, padding: '0.5rem 0.65rem' }}><FaTimes size={13} /></button>
                     </div>
                 </div>
@@ -1062,7 +1072,7 @@ function RelatorioSetor({ setor, itens, onClose }) {
 
                     {/* Instruções de preenchimento */}
                     <div className="bloco" style={{ marginTop: '0.85rem', padding: '0.7rem 0.85rem', background: '#f2faf5', border: '1px solid #c5e6d2', borderRadius: 6 }}>
-                        <div style={{ ...rotulo, color: '#15803d', marginBottom: 5 }}>Como preencher</div>
+                        <div style={{ ...rotulo, color: 'var(--color-success)', marginBottom: 5 }}>Como preencher</div>
                         <ol style={{ margin: 0, paddingLeft: 16, fontSize: '8pt', color: PAPEL.tinta, lineHeight: 1.55 }}>
                             <li>Cada linha é uma obrigação legal do seu setor <strong>ainda pendente de comprovação</strong> — o que já está Conforme ou Não Aplicável não entra nesta lista. A coluna <strong>Status atual</strong> mostra como o requisito está registrado hoje no SGA.</li>
                             <li>Na coluna <strong>Evidências / plano de ação</strong>, cite os documentos, registros ou fotos que comprovam o atendimento (ex.: laudo, certificado, ordem de serviço — sempre com data).</li>

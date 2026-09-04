@@ -7,6 +7,7 @@ import {
     FaFlag, FaUserTie, FaBuilding, FaInfoCircle, FaList, FaChevronLeft, 
     FaChevronRight, FaPlusCircle, FaStar
 } from 'react-icons/fa';
+import { tint } from '../lib/color';
 
 const MONTHS_NAMES = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -153,12 +154,12 @@ export default function CalendarioAmbientalView({ onBack }) {
             title="Calendário Ambiental"
             subtitle="Datas comemorativas ecológicas, marcos regulatórios e conformidade ISO 14001"
             icon={<FaCalendarAlt size={20} />}
-            color="#10b981"
+            color="var(--color-success)"
             onBack={onBack}
             actions={
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     <Btn 
-                        color={viewMode === 'grid' ? '#10b981' : '#8b9bb4'} 
+                        color={viewMode === 'grid' ? 'var(--color-success)' : 'var(--color-text-muted)'} 
                         variant={viewMode === 'grid' ? 'solid' : 'outline'} 
                         onClick={() => setViewMode('grid')}
                         style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}
@@ -166,7 +167,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                         <FaCalendarAlt size={10} /> Grid Mensal
                     </Btn>
                     <Btn 
-                        color={viewMode === 'list' ? '#10b981' : '#8b9bb4'} 
+                        color={viewMode === 'list' ? 'var(--color-success)' : 'var(--color-text-muted)'} 
                         variant={viewMode === 'list' ? 'solid' : 'outline'} 
                         onClick={() => setViewMode('list')}
                         style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}
@@ -174,7 +175,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                         <FaList size={10} /> Lista Anual
                     </Btn>
                     <Btn 
-                        color="#8b9bb4" 
+                        color="var(--color-text-muted)" 
                         variant="outline"
                         onClick={() => {
                             setNewEvtDia(selectedDate.dia);
@@ -201,8 +202,8 @@ export default function CalendarioAmbientalView({ onBack }) {
                             className={`filter-badge ${selectedCategory === 'all' ? 'active' : ''}`}
                             style={{ 
                                 padding: '4px 10px', borderRadius: 20, fontSize: '0.7rem', border: '1px solid rgba(255,255,255,0.06)',
-                                cursor: 'pointer', background: selectedCategory === 'all' ? '#10b981' : 'rgba(255,255,255,0.03)',
-                                color: selectedCategory === 'all' ? '#0f1014' : 'var(--color-text-main)', fontWeight: 600, transition: 'all 0.2s'
+                                cursor: 'pointer', background: selectedCategory === 'all' ? 'var(--color-success)' : 'rgba(255,255,255,0.03)',
+                                color: selectedCategory === 'all' ? 'var(--color-on-accent)' : 'var(--color-text-main)', fontWeight: 600, transition: 'all 0.2s'
                             }}
                         >
                             Todos
@@ -218,12 +219,12 @@ export default function CalendarioAmbientalView({ onBack }) {
                                     style={{
                                         padding: '4px 10px', borderRadius: 20, fontSize: '0.7rem', border: '1px solid rgba(255,255,255,0.06)',
                                         cursor: 'pointer', background: active ? cat.color : 'rgba(255,255,255,0.03)',
-                                        color: active ? '#0f1014' : 'var(--color-text-main)', fontWeight: 600,
+                                        color: active ? 'var(--color-on-accent)' : 'var(--color-text-main)', fontWeight: 600,
                                         boxShadow: active ? `0 0 10px ${cat.color}44` : 'none', transition: 'all 0.2s'
                                     }}
                                 >
                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                        <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: active ? '#0f1014' : cat.color }} />
+                                        <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: active ? 'var(--color-on-accent)' : cat.color }} />
                                         {cat.label}
                                     </span>
                                 </button>
@@ -270,7 +271,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                         key={day} 
                                         style={{ 
                                             fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', 
-                                            color: idx === 0 || idx === 6 ? '#ff4757' : 'var(--color-text-muted)', 
+                                            color: idx === 0 || idx === 6 ? 'var(--color-danger)' : 'var(--color-text-muted)', 
                                             letterSpacing: '0.5px', padding: '6px 0' 
                                         }}
                                     >
@@ -298,7 +299,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                     
                                     // Estilo da borda
                                     let cellBorder = '1px solid rgba(255,255,255,0.03)';
-                                    if (isSelected) cellBorder = '1px solid #10b981';
+                                    if (isSelected) cellBorder = '1px solid var(--color-success)';
                                     else if (isToday) cellBorder = '1px solid rgba(0, 255, 157, 0.4)';
                                     
                                     return (
@@ -339,7 +340,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ 
                                                     fontSize: '0.78rem', fontWeight: isToday || isSelected ? 800 : 500,
-                                                    color: isToday ? '#00ff9d' : 'var(--color-text-main)',
+                                                    color: isToday ? 'var(--color-primary)' : 'var(--color-text-main)',
                                                     background: isToday ? 'rgba(0,255,157,0.15)' : 'transparent',
                                                     width: 20, height: 20, borderRadius: '50%', display: 'flex',
                                                     alignItems: 'center', justifyContent: 'center'
@@ -347,7 +348,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                     {cell.dia}
                                                 </span>
                                                 {isToday && (
-                                                    <span style={{ fontSize: '0.52rem', textTransform: 'uppercase', color: '#00ff9d', fontWeight: 700, letterSpacing: '0.5px' }}>
+                                                    <span style={{ fontSize: '0.52rem', textTransform: 'uppercase', color: 'var(--color-primary)', fontWeight: 700, letterSpacing: '0.5px' }}>
                                                         Hoje
                                                     </span>
                                                 )}
@@ -356,13 +357,13 @@ export default function CalendarioAmbientalView({ onBack }) {
                                             {/* LISTA DE EVENTOS DO DIA (DENTRO DA CÉLULA) */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, overflow: 'hidden' }}>
                                                 {visibleEvents.slice(0, 2).map((evt, eIdx) => {
-                                                    const catColor = CALENDAR_CATEGORIES[evt.categoria]?.color || '#8b9bb4';
+                                                    const catColor = CALENDAR_CATEGORIES[evt.categoria]?.color || 'var(--color-text-muted)';
                                                     return (
                                                         <div 
                                                             key={eIdx}
                                                             style={{
                                                                 fontSize: '0.56rem', padding: '2px 4px', borderRadius: 4,
-                                                                background: catColor + '1c', color: catColor,
+                                                                background: tint(catColor,'1c'), color: catColor,
                                                                 borderLeft: `2px solid ${catColor}`, whiteSpace: 'nowrap',
                                                                 textOverflow: 'ellipsis', overflow: 'hidden', fontWeight: 600
                                                             }}
@@ -386,7 +387,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                         
                         {/* PAINEL DE DETALHES LATERAL */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <Card style={{ borderLeft: '3px solid #10b981' }}>
+                            <Card style={{ borderLeft: '3px solid var(--color-success)' }}>
                                 <div style={{ marginBottom: '0.8rem' }}>
                                     <span style={{ fontSize: '0.64rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         Eventos Selecionados
@@ -402,7 +403,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                             <FaInfoCircle size={24} style={{ opacity: 0.4 }} />
                                             <span style={{ fontSize: '0.74rem', textAlign: 'center' }}>Nenhum evento registrado nesta data.</span>
                                             <Btn 
-                                                color="#10b981" 
+                                                color="var(--color-success)" 
                                                 variant="outline" 
                                                 onClick={() => {
                                                     setNewEvtDia(selectedDate.dia);
@@ -428,7 +429,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
                                                         <span style={{
                                                             fontSize: '0.62rem', fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-                                                            background: cat.color + '15', color: cat.color, border: `1px solid ${cat.color}33`,
+                                                            background: cat.tint(color,'15'), color: cat.color, border: `1px solid ${cat.color}33`,
                                                             display: 'inline-flex', alignItems: 'center', gap: '4px'
                                                         }}>
                                                             {getCategoryIcon(evt.categoria)}
@@ -438,7 +439,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                             <button 
                                                                 onClick={() => remove(evt.id)}
                                                                 title="Excluir evento customizado"
-                                                                style={{ background: 'transparent', border: 'none', color: '#ff4757', cursor: 'pointer', padding: '0.2rem' }}
+                                                                style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.2rem' }}
                                                             >
                                                                 <FaTrash size={11} />
                                                             </button>
@@ -461,7 +462,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                             
                             <Card style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.06), transparent)', border: '1px solid rgba(16,185,129,0.15)' }}>
                                 <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
-                                    <FaInfoCircle size={14} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
+                                    <FaInfoCircle size={14} color="var(--color-success)" style={{ marginTop: 2, flexShrink: 0 }} />
                                     <div>
                                         <h4 style={{ margin: '0 0 4px 0', fontSize: '0.76rem', fontWeight: 700, color: 'var(--color-text-main)' }}>Práticas ISO 14001</h4>
                                         <p style={{ margin: 0, fontSize: '0.68rem', color: 'var(--color-text-subtle)', lineHeight: 1.3 }}>
@@ -497,13 +498,13 @@ export default function CalendarioAmbientalView({ onBack }) {
                                     return (
                                         <div key={mesNome} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '0.8rem' }}>
                                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#10b981', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-success)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                                                     {mesNome}
                                                 </span>
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                                 {mesEventos.map((evt, idx) => {
-                                                    const catColor = CALENDAR_CATEGORIES[evt.categoria]?.color || '#8b9bb4';
+                                                    const catColor = CALENDAR_CATEGORIES[evt.categoria]?.color || 'var(--color-text-muted)';
                                                     return (
                                                         <div 
                                                             key={idx}
@@ -514,7 +515,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                             }}
                                                         >
                                                             <div style={{ 
-                                                                width: 32, height: 32, borderRadius: 8, background: catColor + '1a',
+                                                                width: 32, height: 32, borderRadius: 8, background: tint(catColor,'1a'),
                                                                 color: catColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                                 fontSize: '0.78rem', fontWeight: 800, flexShrink: 0
                                                             }}>
@@ -533,14 +534,14 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                                 <span style={{
                                                                     fontSize: '0.58rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4,
-                                                                    background: catColor + '10', color: catColor, border: `1px solid ${catColor}22`
+                                                                    background: tint(catColor,'10'), color: catColor, border: `1px solid ${tint(catColor,'22')}`
                                                                 }}>
                                                                     {CALENDAR_CATEGORIES[evt.categoria]?.label || 'Custom'}
                                                                 </span>
                                                                 {evt.custom && (
                                                                     <button 
                                                                         onClick={() => remove(evt.id)}
-                                                                        style={{ background: 'transparent', border: 'none', color: '#ff4757', cursor: 'pointer', padding: '0.2rem' }}
+                                                                        style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.2rem' }}
                                                                         title="Excluir evento"
                                                                     >
                                                                         <FaTrash size={10} />
@@ -620,10 +621,10 @@ export default function CalendarioAmbientalView({ onBack }) {
                         </Field>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
-                            <Btn color="#ff4757" variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                            <Btn color="var(--color-danger)" variant="outline" onClick={() => setIsAddModalOpen(false)}>
                                 Cancelar
                             </Btn>
-                            <Btn color="#10b981" type="submit" variant="solid">
+                            <Btn color="var(--color-success)" type="submit" variant="solid">
                                 <FaPlus size={10} /> Salvar Evento
                             </Btn>
                         </div>

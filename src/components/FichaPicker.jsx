@@ -6,6 +6,7 @@
 // ════════════════════════════════════════════════════════════════
 import { useMemo, useState } from 'react';
 import { FaSearch, FaChevronDown, FaArrowRight } from 'react-icons/fa';
+import { tint } from '../lib/color';
 
 // Emoji por tipo de resíduo (aproximado, só para leitura rápida)
 const iconeResiduo = (wt = '', cat = '') => {
@@ -30,16 +31,16 @@ const iconeResiduo = (wt = '', cat = '') => {
 // Cor do selo conforme o tratamento/destinação
 const corTratamento = (tr = '') => {
     const t = tr.toUpperCase();
-    if (/RECICLA|REREFINO|REUTILIZ/.test(t)) return '#10b981';
-    if (/ATERRO CLASSE I\b|ATERRO CLASSE 1/.test(t)) return '#ff6b6b';
-    if (/ATERRO/.test(t)) return '#ffb700';
-    if (/INCINER/.test(t)) return '#ff6b6b';
-    if (/AUTOCLAVE|DESCONTAMINA/.test(t)) return '#a78bfa';
-    if (/EFLUENTE|TRATAMENTO/.test(t)) return '#00ccff';
-    return '#8b9bb4';
+    if (/RECICLA|REREFINO|REUTILIZ/.test(t)) return 'var(--color-success)';
+    if (/ATERRO CLASSE I\b|ATERRO CLASSE 1/.test(t)) return 'var(--color-danger)';
+    if (/ATERRO/.test(t)) return 'var(--color-warning)';
+    if (/INCINER/.test(t)) return 'var(--color-danger)';
+    if (/AUTOCLAVE|DESCONTAMINA/.test(t)) return 'var(--color-purple)';
+    if (/EFLUENTE|TRATAMENTO/.test(t)) return 'var(--color-secondary)';
+    return 'var(--color-text-muted)';
 };
 
-export default function FichaPicker({ fichas = [], onSelect, color = '#54a0ff' }) {
+export default function FichaPicker({ fichas = [], onSelect, color = 'var(--color-info)' }) {
     const [open, setOpen] = useState(false);
     const [busca, setBusca] = useState('');
 
@@ -124,7 +125,7 @@ export default function FichaPicker({ fichas = [], onSelect, color = '#54a0ff' }
                                         <span style={{
                                             width: 30, height: 30, borderRadius: 8, flexShrink: 0,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            background: cor + '1f', fontSize: '1rem',
+                                            background: tint(cor,'1f'), fontSize: '1rem',
                                         }}>{iconeResiduo(f.waste_type, f.category)}</span>
 
                                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -140,7 +141,7 @@ export default function FichaPicker({ fichas = [], onSelect, color = '#54a0ff' }
                                         {f.treatment && (
                                             <span style={{
                                                 flexShrink: 0, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px',
-                                                color: cor, background: cor + '1a', border: `1px solid ${cor}40`,
+                                                color: cor, background: tint(cor,'1a'), border: `1px solid ${tint(cor,'40')}`,
                                                 padding: '2px 8px', borderRadius: 20, textTransform: 'uppercase',
                                             }}>{f.treatment}</span>
                                         )}

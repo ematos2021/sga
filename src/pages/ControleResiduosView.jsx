@@ -4,7 +4,7 @@ import { PageShell, Btn, Card, Field, Input, Select, DataTable, StatusBadge, Kpi
 import { useCollection, COL } from '../lib/store';
 import { exportToExcel } from '../lib/excel';
 
-const STATUS_COLORS = { Pendente: '#ffb700', Autorizada: '#54a0ff', Liberada: '#10b981', Recusada: '#ff4757' };
+const STATUS_COLORS = { Pendente: 'var(--color-warning)', Autorizada: 'var(--color-info)', Liberada: 'var(--color-success)', Recusada: 'var(--color-danger)' };
 
 function ControleResiduosView({ onBack }) {
     const { items } = useCollection(COL.AUTORIZACOES);
@@ -52,24 +52,24 @@ function ControleResiduosView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaFileExcel size={20} />} color="#10b981"
+            icon={<FaFileExcel size={20} />} color="var(--color-success)"
             title="Controle de Saída de Resíduos"
             subtitle="Histórico consolidado · exportação para Excel"
             onBack={onBack}
-            actions={<Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar Excel</Btn>}
+            actions={<Btn variant="outline" color="var(--color-text-muted)" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar Excel</Btn>}
         >
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                <Kpi icon={<FaBoxOpen size={15} />} label="Registros" value={filtered.length} color="#00ccff" />
-                <Kpi icon={<FaWeightHanging size={15} />} label="Total (kg)" value={kgTotal.toLocaleString('pt-BR')} sub="somente itens em kg" color="#00ff9d" />
-                <Kpi icon={<FaRecycle size={15} />} label="Destinos distintos" value={destinos} color="#10b981" />
-                <Kpi icon={<FaFilter size={15} />} label="Outras unidades" value={Object.entries(totais).filter(([u]) => u !== 'kg').map(([u, v]) => `${v} ${u}`).join(' · ') || '—'} color="#ffb700" />
+                <Kpi icon={<FaBoxOpen size={15} />} label="Registros" value={filtered.length} color="var(--color-secondary)" />
+                <Kpi icon={<FaWeightHanging size={15} />} label="Total (kg)" value={kgTotal.toLocaleString('pt-BR')} sub="somente itens em kg" color="var(--color-primary)" />
+                <Kpi icon={<FaRecycle size={15} />} label="Destinos distintos" value={destinos} color="var(--color-success)" />
+                <Kpi icon={<FaFilter size={15} />} label="Outras unidades" value={Object.entries(totais).filter(([u]) => u !== 'kg').map(([u, v]) => `${v} ${u}`).join(' · ') || '—'} color="var(--color-warning)" />
             </div>
 
             {/* Filtros */}
             <Card style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <FaFilter size={12} color="#10b981" />
+                    <FaFilter size={12} color="var(--color-success)" />
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)' }}>Filtros</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.9rem' }}>

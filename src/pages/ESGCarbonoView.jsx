@@ -20,12 +20,13 @@ import {
     TAXONOMIA_EMISSOES, CATEGORIAS_EMISSAO, taxonomiaPorRotulo, unidadeMedidaPadrao,
     STATUS_FONTE, PERFIS_CARBONO,
 } from '../lib/constants';
+import { tint } from '../lib/color';
 
 // ─── Formatação ───
 const fmt = (n, d = 1) => Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmt0 = (n) => Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 const co2eDe = (e) => calcCO2e(e.consumo, e.fator);
-const tooltipStyle = { background: '#1c1d26', border: '1px solid #2a2b32', borderRadius: 8, color: '#fff', fontSize: '0.8rem' };
+const tooltipStyle = { background: '#1c1d26', border: '1px solid #2a2b32', borderRadius: 8, color: 'var(--color-on-accent)', fontSize: '0.8rem' };
 
 const TABS = [
     { id: 'visao', label: 'Visão Geral', icon: <FaGlobeAmericas size={13} /> },
@@ -150,12 +151,12 @@ function ESGCarbonoView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaGlobeAmericas size={20} />} color="#10b981"
+            icon={<FaGlobeAmericas size={20} />} color="var(--color-success)"
             title="ESG & Carbono" subtitle="Inventário de GEE · GHG Protocol · Trajetória Net Zero"
             onBack={onBack}
             actions={<>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => setShowGlossario(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaBookOpen size={10} /> Glossário</Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => exportInventario(emissoes)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar inventário</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setShowGlossario(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaBookOpen size={10} /> Glossário</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => exportInventario(emissoes)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar inventário</Btn>
             </>}
         >
             {/* Abas */}
@@ -164,9 +165,9 @@ function ESGCarbonoView({ onBack }) {
                     <button key={t.id} onClick={() => setTab(t.id)} style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 0.9rem',
                         borderRadius: 10, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-                        background: tab === t.id ? '#10b98122' : 'transparent',
-                        color: tab === t.id ? '#10b981' : 'var(--color-text-muted)',
-                        border: `1px solid ${tab === t.id ? '#10b98155' : 'var(--border-color-soft)'}`,
+                        background: tab === t.id ? `${tint('var(--color-success)','22')}` : 'transparent',
+                        color: tab === t.id ? 'var(--color-success)' : 'var(--color-text-muted)',
+                        border: `1px solid ${tab === t.id ? `${tint('var(--color-success)','55')}` : 'var(--border-color-soft)'}`,
                     }}>{t.icon} {t.label}</button>
                 ))}
             </div>
@@ -188,7 +189,7 @@ function ESGCarbonoView({ onBack }) {
 function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta }) {
     return (
         <>
-            <ExplicaBox titulo="Como ler o Painel ESG & Carbono" color="#10b981">
+            <ExplicaBox titulo="Como ler o Painel ESG & Carbono" color="var(--color-success)">
                 <p style={{ margin: '0 0 0.5rem' }}>
                     Esta tela consolida a <strong>pegada de carbono</strong> da operação e o <strong>desempenho ESG</strong> em quatro abas:
                 </p>
@@ -199,22 +200,22 @@ function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta })
                     <li><strong>Descarbonização</strong> — as iniciativas que reduzem emissões e o quanto cobrem da meta.</li>
                 </ul>
                 <p style={{ margin: '0.5rem 0 0' }}>
-                    Passe o mouse no ícone <span style={{ color: '#00ccff' }}>ⓘ</span> de qualquer indicador para ver a definição e a fórmula. O botão <strong>Glossário</strong> (topo) reúne todos os termos técnicos.
+                    Passe o mouse no ícone <span style={{ color: 'var(--color-secondary)' }}>ⓘ</span> de qualquer indicador para ver a definição e a fórmula. O botão <strong>Glossário</strong> (topo) reúne todos os termos técnicos.
                 </p>
             </ExplicaBox>
 
             {/* KPIs principais */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                <BigKpi icon={<FaCloud size={16} />} color="#10b981"
+                <BigKpi icon={<FaCloud size={16} />} color="var(--color-success)"
                     label={`Emissões ${calc.anoCorrente}`} value={fmt(calc.totalCorrente)} unit="tCO₂e"
                     trend={calc.reducaoPct > 0 ? { dir: 'down', txt: `${calc.reducaoPct}% vs ${cfg.anoBase}` } : null}
-                    info={<InfoTip title={`Emissões totais de ${calc.anoCorrente}`} color="#10b981">
+                    info={<InfoTip title={`Emissões totais de ${calc.anoCorrente}`} color="var(--color-success)">
                         Soma de todos os gases de efeito estufa do ano, convertidos em <strong>toneladas de CO₂ equivalente (tCO₂e)</strong> e somando os Escopos 1, 2 e 3.
                     </InfoTip>} />
-                <BigKpi icon={<FaBullseye size={16} />} color="#54a0ff"
+                <BigKpi icon={<FaBullseye size={16} />} color="var(--color-info)"
                     label="Progresso da meta" value={calc.progressoMeta} unit="%"
                     sub={`Meta: −${cfg.reducaoMetaPct}% até ${cfg.anoMeta}`}
-                    info={<InfoTip title="Progresso da meta de redução" color="#54a0ff">
+                    info={<InfoTip title="Progresso da meta de redução" color="var(--color-info)">
                         Quanto da meta climática já foi cumprido. 100% significa atingir a redução de <strong>{cfg.reducaoMetaPct}%</strong> prevista para {cfg.anoMeta} (alinhada à <strong>SBTi</strong>).
                     </InfoTip>} />
                 <BigKpi icon={<FaChartLine size={16} />} color={scoreColor(scores.geral)}
@@ -222,18 +223,18 @@ function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta })
                     info={<InfoTip title="Score ESG (0–100)" color={scoreColor(scores.geral)}>
                         Média do desempenho nos três pilares — <strong>Ambiental, Social e Governança</strong> — onde cada indicador é medido contra sua meta. O rating (AAA–CCC) traduz a faixa atingida.
                     </InfoTip>} />
-                <BigKpi icon={<FaIndustry size={16} />} color="#ffb700"
+                <BigKpi icon={<FaIndustry size={16} />} color="var(--color-warning)"
                     label="Intensidade de carbono" value={fmt(calc.intensidade, 3)} unit={`tCO₂e/${(cfg.unidadeProducao || 't').replace('produzida', 't')}`}
                     sub={`Base: ${fmt0(cfg.producaoAnual)} ${cfg.unidadeProducao}`}
-                    info={<InfoTip title="Intensidade de carbono" color="#ffb700">
+                    info={<InfoTip title="Intensidade de carbono" color="var(--color-warning)">
                         Emissões por unidade produzida. Mede a <strong>eficiência climática</strong>: é possível crescer a produção e ainda assim emitir menos por produto.
                     </InfoTip>} />
                 {coleta && (
                     <div onClick={onIrColeta} style={{ cursor: 'pointer' }} title="Abrir Coleta & Responsáveis">
-                        <BigKpi icon={<FaClipboardCheck size={16} />} color={coleta.pct >= 80 ? '#10b981' : '#54a0ff'}
+                        <BigKpi icon={<FaClipboardCheck size={16} />} color={coleta.pct >= 80 ? 'var(--color-success)' : 'var(--color-info)'}
                             label="Coleta de dados" value={`${coleta.pct}%`} unit={`· ${coleta.unidades} unidades`}
                             sub={`${coleta.coletado}/${coleta.aplicaveis} dados mensais · ${coleta.fontes} fontes`}
-                            info={<InfoTip title="Progresso da coleta do inventário" color="#54a0ff">
+                            info={<InfoTip title="Progresso da coleta do inventário" color="var(--color-info)">
                                 Percentual dos dados mensais já coletados nas unidades (Manaus, Barueri, Cajamar, Araçariguama, MK Sul, Jacuípe). Cada fonte tem um <strong>responsável</strong> e 12 meses a preencher.
                             </InfoTip>} />
                     </div>
@@ -243,37 +244,37 @@ function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta })
             <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                 {/* Trajetória Net Zero */}
                 <Card>
-                    <SecTitle icon={<FaArrowDown size={13} color="#10b981" />}>Trajetória rumo ao Net Zero</SecTitle>
+                    <SecTitle icon={<FaArrowDown size={13} color="var(--color-success)" />}>Trajetória rumo ao Net Zero</SecTitle>
                     <ResponsiveContainer width="100%" height={280}>
                         <ComposedChart data={calc.anosTraj} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="gReal" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
-                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                                    <stop offset="0%" stopColor="var(--color-success)" stopOpacity={0.5} />
+                                    <stop offset="100%" stopColor="var(--color-success)" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                            <XAxis dataKey="ano" tick={{ fill: '#8b9bb4', fontSize: 11 }} />
-                            <YAxis tick={{ fill: '#8b9bb4', fontSize: 11 }} unit=" t" width={56} />
+                            <XAxis dataKey="ano" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                            <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} unit=" t" width={56} />
                             <Tooltip contentStyle={tooltipStyle} formatter={(v) => v == null ? '—' : `${fmt(v)} tCO₂e`} />
-                            <Area type="monotone" dataKey="realizado" name="Realizado" stroke="#10b981" strokeWidth={2.5} fill="url(#gReal)" connectNulls dot={{ r: 3 }} />
-                            <Line type="monotone" dataKey="meta" name="Meta (SBTi)" stroke="#54a0ff" strokeWidth={2} strokeDasharray="6 4" dot={false} />
-                            <ReferenceLine y={calc.metaFinal} stroke="#54a0ff" strokeOpacity={0.4} strokeDasharray="2 4" />
+                            <Area type="monotone" dataKey="realizado" name="Realizado" stroke="var(--color-success)" strokeWidth={2.5} fill="url(#gReal)" connectNulls dot={{ r: 3 }} />
+                            <Line type="monotone" dataKey="meta" name="Meta (SBTi)" stroke="var(--color-info)" strokeWidth={2} strokeDasharray="6 4" dot={false} />
+                            <ReferenceLine y={calc.metaFinal} stroke="var(--color-info)" strokeOpacity={0.4} strokeDasharray="2 4" />
                         </ComposedChart>
                     </ResponsiveContainer>
                     <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', fontSize: '0.72rem', color: 'var(--color-text-subtle)', marginTop: 4 }}>
-                        <Legenda color="#10b981" label="Emissões realizadas" />
-                        <Legenda color="#54a0ff" label={`Meta −${cfg.reducaoMetaPct}% (${cfg.anoMeta})`} />
+                        <Legenda color="var(--color-success)" label="Emissões realizadas" />
+                        <Legenda color="var(--color-info)" label={`Meta −${cfg.reducaoMetaPct}% (${cfg.anoMeta})`} />
                     </div>
                 </Card>
 
                 {/* Score ESG gauge */}
                 <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <SecTitle icon={<FaBalanceScale size={13} color="#a78bfa" />} style={{ alignSelf: 'flex-start' }}>Desempenho ESG</SecTitle>
+                    <SecTitle icon={<FaBalanceScale size={13} color="var(--color-purple)" />} style={{ alignSelf: 'flex-start' }}>Desempenho ESG</SecTitle>
                     <ScoreGauge score={scores.geral} />
                     <div style={{ display: 'flex', gap: '0.7rem', marginTop: '1rem', width: '100%' }}>
                         {[['E', scores.E], ['S', scores.S], ['G', scores.G]].map(([p, s]) => (
-                            <div key={p} style={{ flex: 1, textAlign: 'center', padding: '0.6rem 0.3rem', borderRadius: 10, background: ESG_PILARES[p].color + '12', border: `1px solid ${ESG_PILARES[p].color}33` }}>
+                            <div key={p} style={{ flex: 1, textAlign: 'center', padding: '0.6rem 0.3rem', borderRadius: 10, background: ESG_PILARES[p].tint(color,'12'), border: `1px solid ${ESG_PILARES[p].color}33` }}>
                                 <div style={{ fontSize: '0.62rem', color: ESG_PILARES[p].color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{ESG_PILARES[p].label}</div>
                                 <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text-main)' }}>{s}</div>
                             </div>
@@ -287,9 +288,9 @@ function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta })
                 {Object.values(GEE_ESCOPOS).map((esc) => (
                     <EscopoCardResumo key={esc.id} esc={esc} valor={calc.porEscopoCorrente[esc.id]} ano={calc.anoCorrente} />
                 ))}
-                <Card style={{ borderLeft: '3px solid #00ff9d' }}>
+                <Card style={{ borderLeft: '3px solid var(--color-primary)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                        <FaSeedling size={14} color="#00ff9d" />
+                        <FaSeedling size={14} color="var(--color-primary)" />
                         <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Potencial em carteira</span>
                     </div>
                     <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-main)' }}>−{fmt(potencialReducao)} <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)' }}>tCO₂e/ano</span></div>
@@ -299,25 +300,25 @@ function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta })
 
             {/* Memórias de cálculo — transparência e auditabilidade */}
             <h3 style={{ margin: '1.6rem 0 0.8rem', fontSize: '0.9rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FaCalculator size={13} color="#10b981" /> Memórias de cálculo
+                <FaCalculator size={13} color="var(--color-success)" /> Memórias de cálculo
                 <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>— como cada número desta tela é obtido</span>
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-                <MemoriaCalculo titulo="Redução vs. ano base" color="#10b981"
+                <MemoriaCalculo titulo="Redução vs. ano base" color="var(--color-success)"
                     formula="Redução (%) = (1 − emissões do ano ÷ linha de base) × 100"
                     passos={[
                         { label: `Emissões ${calc.anoCorrente}`, valor: `${fmt(calc.totalCorrente)} tCO₂e` },
                         { label: `Linha de base (${cfg.anoBase})`, valor: `${fmt(calc.baseline)} tCO₂e` },
                     ]}
                     resultado={`${calc.reducaoPct}% de redução`} />
-                <MemoriaCalculo titulo="Progresso da meta" color="#54a0ff"
+                <MemoriaCalculo titulo="Progresso da meta" color="var(--color-info)"
                     formula="Progresso (%) = redução atingida ÷ redução-meta × 100"
                     passos={[
                         { label: 'Redução atingida', valor: `${calc.reducaoPct}%` },
                         { label: `Redução-meta (${cfg.anoMeta})`, valor: `${cfg.reducaoMetaPct}%` },
                     ]}
                     resultado={`${calc.progressoMeta}% da meta`} />
-                <MemoriaCalculo titulo="Intensidade de carbono" color="#ffb700"
+                <MemoriaCalculo titulo="Intensidade de carbono" color="var(--color-warning)"
                     formula="Intensidade = emissões do ano ÷ produção do ano"
                     passos={[
                         { label: `Emissões ${calc.anoCorrente}`, valor: `${fmt(calc.totalCorrente)} tCO₂e` },
@@ -332,14 +333,14 @@ function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta })
                         { label: 'Governança (G)', valor: `${scores.G}` },
                     ]}
                     resultado={`${scores.geral} / 100 · ${scoreRating(scores.geral)}`} />
-                <MemoriaCalculo titulo="Meta de emissões (ano-alvo)" color="#a78bfa"
+                <MemoriaCalculo titulo="Meta de emissões (ano-alvo)" color="var(--color-purple)"
                     formula="Meta = linha de base × (1 − redução-meta ÷ 100)"
                     passos={[
                         { label: `Linha de base (${cfg.anoBase})`, valor: `${fmt(calc.baseline)} tCO₂e` },
                         { label: 'Redução-meta', valor: `${cfg.reducaoMetaPct}%` },
                     ]}
                     resultado={`${fmt(calc.metaFinal)} tCO₂e em ${cfg.anoMeta}`} />
-                <MemoriaCalculo titulo="Emissão de cada fonte (GEE)" color="#ff6b6b"
+                <MemoriaCalculo titulo="Emissão de cada fonte (GEE)" color="var(--color-danger)"
                     formula="Emissão (tCO₂e) = consumo × fator de emissão ÷ 1000"
                     passos={[
                         { label: 'Ex.: diesel geradores', valor: `${fmt0(18000)} L` },
@@ -401,9 +402,9 @@ function Inventario({ emissoes, calc, addEmissao, updEmissao, rmEmissao }) {
             {/* Donut por escopo + barra por categoria */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1rem', marginBottom: '1.5rem' }}>
                 <Card>
-                    <SecTitle icon={<FaCloud size={13} color="#10b981" />}>
+                    <SecTitle icon={<FaCloud size={13} color="var(--color-success)" />}>
                         Emissões por escopo
-                        <InfoTip title="O que são os Escopos 1, 2 e 3" color="#10b981">
+                        <InfoTip title="O que são os Escopos 1, 2 e 3" color="var(--color-success)">
                             Classificação do GHG Protocol: <strong>Escopo 1</strong> = fontes próprias (geradores, frota, GLP); <strong>Escopo 2</strong> = energia elétrica comprada; <strong>Escopo 3</strong> = cadeia de valor (logística, resíduos, viagens).
                         </InfoTip>
                     </SecTitle>
@@ -427,21 +428,21 @@ function Inventario({ emissoes, calc, addEmissao, updEmissao, rmEmissao }) {
                             ))}
                             <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.45rem', fontWeight: 800 }}>
                                 <span style={{ fontSize: '0.76rem', color: 'var(--color-text-subtle)' }}>TOTAL</span>
-                                <span style={{ fontSize: '0.9rem', color: '#10b981' }}>{fmt(totalFiltrado)} t</span>
+                                <span style={{ fontSize: '0.9rem', color: 'var(--color-success)' }}>{fmt(totalFiltrado)} t</span>
                             </div>
                         </div>
                     </div>
                 </Card>
                 <Card>
-                    <SecTitle icon={<FaIndustry size={13} color="#ffb700" />}>Emissões por categoria de fonte</SecTitle>
+                    <SecTitle icon={<FaIndustry size={13} color="var(--color-warning)" />}>Emissões por categoria de fonte</SecTitle>
                     {barCat.length === 0 ? <Vazio /> : (
                         <ResponsiveContainer width="100%" height={180}>
                             <BarChart data={barCat} layout="vertical" margin={{ left: 10, right: 16 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
-                                <XAxis type="number" tick={{ fill: '#8b9bb4', fontSize: 10 }} unit=" t" />
-                                <YAxis type="category" dataKey="name" tick={{ fill: '#8b9bb4', fontSize: 10 }} width={130} />
+                                <XAxis type="number" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} unit=" t" />
+                                <YAxis type="category" dataKey="name" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} width={130} />
                                 <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }} formatter={(v) => `${fmt(v)} tCO₂e`} />
-                                <Bar dataKey="t" fill="#ffb700" radius={[0, 5, 5, 0]} />
+                                <Bar dataKey="t" fill="var(--color-warning)" radius={[0, 5, 5, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     )}
@@ -459,7 +460,7 @@ function Inventario({ emissoes, calc, addEmissao, updEmissao, rmEmissao }) {
                     <option value="todos">Todos os escopos</option>
                     {[1, 2, 3].map((s) => <option key={s} value={String(s)}>{GEE_ESCOPOS[s].label}</option>)}
                 </Select>
-                <Btn color="#10b981" onClick={abrirNovo}><FaPlus size={11} /> Novo lançamento</Btn>
+                <Btn color="var(--color-success)" onClick={abrirNovo}><FaPlus size={11} /> Novo lançamento</Btn>
             </div>
 
             {/* Tabela */}
@@ -478,7 +479,7 @@ function Inventario({ emissoes, calc, addEmissao, updEmissao, rmEmissao }) {
                             <tr key={e.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-main)' }}>{e.ano}</td>
                                 <td style={{ padding: '0.55rem 0.8rem' }}>
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: GEE_ESCOPOS[e.escopo].color + '1f', color: GEE_ESCOPOS[e.escopo].color }}>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: GEE_ESCOPOS[e.escopo].tint(color,'1f'), color: GEE_ESCOPOS[e.escopo].color }}>
                                         {ESCOPO_ICON[e.escopo]} {e.escopo}
                                     </span>
                                 </td>
@@ -489,7 +490,7 @@ function Inventario({ emissoes, calc, addEmissao, updEmissao, rmEmissao }) {
                                 <td style={{ padding: '0.55rem 0.8rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-text-main)' }}>{fmt(co2eDe(e))}</td>
                                 <td style={{ padding: '0.4rem 0.6rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                     <RowAction icon={<FaEdit size={12} />} title="Editar" onClick={() => abrirEdit(e)} />
-                                    <RowAction icon={<FaTrash size={12} />} color="#ff4757" title="Excluir" onClick={() => window.confirm('Excluir lançamento?') && rmEmissao(e.id)} />
+                                    <RowAction icon={<FaTrash size={12} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm('Excluir lançamento?') && rmEmissao(e.id)} />
                                 </td>
                             </tr>
                         ))}
@@ -552,8 +553,8 @@ function EmissaoModal({ inicial, onClose, onSave }) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.3rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#10b981" onClick={submit}>{inicial ? 'Salvar' : 'Adicionar'}</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-success)" onClick={submit}>{inicial ? 'Salvar' : 'Adicionar'}</Btn>
             </div>
         </Modal>
     );
@@ -595,7 +596,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
 
     return (
         <>
-            <ExplicaBox titulo="O que é a Coleta & Responsáveis" color="#54a0ff">
+            <ExplicaBox titulo="O que é a Coleta & Responsáveis" color="var(--color-info)">
                 <p style={{ margin: '0 0 0.5rem' }}>
                     O inventário de GEE depende de dados que nascem em várias áreas e unidades. Aqui cada <strong>parâmetro</strong> tem um <strong>ID único</strong>, um <strong>Fornecedor de Informação</strong> (dono do dado) e, opcionalmente, um <strong>Validador</strong>; acompanha-se mês a mês se o dado já foi coletado.
                 </p>
@@ -606,7 +607,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                 </ul>
             </ExplicaBox>
 
-            <ExplicaBox titulo="Taxonomia, status e perfis de acesso (RBAC)" color="#a78bfa">
+            <ExplicaBox titulo="Taxonomia, status e perfis de acesso (RBAC)" color="var(--color-purple)">
                 <div style={{ fontWeight: 700, color: 'var(--color-text-main)', margin: '0 0 0.3rem' }}>Categorias por escopo (exemplos de tecnologias)</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.4rem 1.2rem', marginBottom: '0.8rem' }}>
                     {TAXONOMIA_EMISSOES.map((t) => (
@@ -629,10 +630,10 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
 
             {/* KPIs de coleta */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem', marginBottom: '1.3rem' }}>
-                <BigKpi icon={<FaClipboardCheck size={16} />} color={coleta.pct >= 80 ? '#10b981' : '#54a0ff'} label="Progresso de coleta" value={`${coleta.pct}%`} sub={`${coleta.coletado} de ${coleta.aplicaveis} dados mensais`} />
-                <BigKpi icon={<FaMapMarkedAlt size={16} />} color="#00ccff" label="Unidades" value={coleta.unidades} sub="no mapa de coleta" />
-                <BigKpi icon={<FaCloud size={16} />} color="#ffb700" label="Fontes mapeadas" value={coleta.fontes} sub={`${coleta.naoAplicavel} não aplicável(is)`} />
-                <BigKpi icon={<FaUserCheck size={16} />} color={coleta.semFornecedor ? '#ff4757' : '#10b981'} label="Sem fornecedor" value={coleta.semFornecedor} sub="parâmetros a designar" />
+                <BigKpi icon={<FaClipboardCheck size={16} />} color={coleta.pct >= 80 ? 'var(--color-success)' : 'var(--color-info)'} label="Progresso de coleta" value={`${coleta.pct}%`} sub={`${coleta.coletado} de ${coleta.aplicaveis} dados mensais`} />
+                <BigKpi icon={<FaMapMarkedAlt size={16} />} color="var(--color-secondary)" label="Unidades" value={coleta.unidades} sub="no mapa de coleta" />
+                <BigKpi icon={<FaCloud size={16} />} color="var(--color-warning)" label="Fontes mapeadas" value={coleta.fontes} sub={`${coleta.naoAplicavel} não aplicável(is)`} />
+                <BigKpi icon={<FaUserCheck size={16} />} color={coleta.semFornecedor ? 'var(--color-danger)' : 'var(--color-success)'} label="Sem fornecedor" value={coleta.semFornecedor} sub="parâmetros a designar" />
             </div>
 
             {/* Alternador mapa / contatos */}
@@ -642,7 +643,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                         <button key={id} onClick={() => setSub(id)} style={{
                             display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', borderRadius: 8,
                             fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer', border: 'none',
-                            background: sub === id ? '#54a0ff' : 'transparent', color: sub === id ? '#0f1014' : 'var(--color-text-muted)',
+                            background: sub === id ? 'var(--color-info)' : 'transparent', color: sub === id ? 'var(--color-on-accent)' : 'var(--color-text-muted)',
                         }}>{ic} {lbl}</button>
                     ))}
                 </div>
@@ -656,7 +657,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                             <option value="todas">Todas as categorias</option>
                             {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
                         </Select>
-                        <Btn color="#10b981" onClick={abrirNovo}><FaPlus size={11} /> Nova fonte</Btn>
+                        <Btn color="var(--color-success)" onClick={abrirNovo}><FaPlus size={11} /> Nova fonte</Btn>
                     </>
                 )}
             </div>
@@ -667,7 +668,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                     <div style={{ display: 'flex', gap: '1.2rem', marginBottom: '0.8rem', fontSize: '0.72rem', color: 'var(--color-text-subtle)', flexWrap: 'wrap' }}>
                         {Object.entries(COLETA_STATUS).map(([k, v]) => (
                             <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                                <span style={{ width: 14, height: 14, borderRadius: 4, background: v.color + '33', border: `1px solid ${v.color}`, color: v.color, fontSize: '0.6rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{v.sigla}</span> {v.label}
+                                <span style={{ width: 14, height: 14, borderRadius: 4, background: v.tint(color,'33'), border: `1px solid ${v.color}`, color: v.color, fontSize: '0.6rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{v.sigla}</span> {v.label}
                             </span>
                         ))}
                     </div>
@@ -675,11 +676,11 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                     {gruposOrd.length === 0 && <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--color-text-subtle)' }}>Nenhuma fonte para o filtro.</div>}
                     {gruposOrd.map((cat) => {
                         const esc = escopoDaCategoria(cat);
-                        const cor = GEE_ESCOPOS[esc]?.color || '#54a0ff';
+                        const cor = GEE_ESCOPOS[esc]?.color || 'var(--color-info)';
                         return (
                             <div key={cat} style={{ marginBottom: '1.3rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '2px 9px', borderRadius: 6, fontSize: '0.72rem', fontWeight: 700, background: cor + '1f', color: cor }}>{ESCOPO_ICON[esc]} {cat}</span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '2px 9px', borderRadius: 6, fontSize: '0.72rem', fontWeight: 700, background: tint(cor,'1f'), color: cor }}>{ESCOPO_ICON[esc]} {cat}</span>
                                     <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)' }}>{grupos[cat].length} fonte(s)</span>
                                 </div>
                                 <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid var(--border-color-soft)' }}>
@@ -703,7 +704,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                                                         <td style={{ padding: '0.5rem 0.7rem' }}>
                                                             <div style={{ color: 'var(--color-text-main)', fontSize: '0.78rem' }}>{m.parametro || m.tema}</div>
                                                             <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.66rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 1 }}>
-                                                                <span style={{ fontFamily: 'ui-monospace, monospace', color: '#54a0ff' }}>{m.paramId || '—'}</span>
+                                                                <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--color-info)' }}>{m.paramId || '—'}</span>
                                                                 {m.unidadeMedida && <span>un.: {m.unidadeMedida}</span>}
                                                                 <span>· {m.unidade}</span>
                                                             </div>
@@ -711,13 +712,13 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                                                         <td style={{ padding: '0.5rem 0.7rem' }}>
                                                             {fnome
                                                                 ? <span title={m.fornecedor?.email || ''} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-text-main)', cursor: m.fornecedor?.email ? 'help' : 'default' }}>
-                                                                    <FaUserCheck size={11} color="#10b981" /> {fnome}
-                                                                    {m.validador?.nome && <span title={`Validador: ${m.validador.nome}`} style={{ fontSize: '0.58rem', color: '#a78bfa', border: '1px solid #a78bfa55', borderRadius: 4, padding: '0 4px' }}>V</span>}
+                                                                    <FaUserCheck size={11} color="var(--color-success)" /> {fnome}
+                                                                    {m.validador?.nome && <span title={`Validador: ${m.validador.nome}`} style={{ fontSize: '0.58rem', color: 'var(--color-purple)', border: `1px solid ${tint('var(--color-purple)','55')}`, borderRadius: 4, padding: '0 4px' }}>V</span>}
                                                                 </span>
-                                                                : <span style={{ color: '#ff4757', fontSize: '0.72rem' }} title="Designar fornecedor">a designar</span>}
+                                                                : <span style={{ color: 'var(--color-danger)', fontSize: '0.72rem' }} title="Designar fornecedor">a designar</span>}
                                                         </td>
                                                         <td style={{ padding: '0.5rem 0.4rem', textAlign: 'center' }}>
-                                                            <span style={{ fontSize: '0.64rem', fontWeight: 700, color: sf.color, background: sf.color + '1f', padding: '2px 7px', borderRadius: 5, whiteSpace: 'nowrap' }} title={sf.desc}>{sf.label}</span>
+                                                            <span style={{ fontSize: '0.64rem', fontWeight: 700, color: sf.color, background: sf.tint(color,'1f'), padding: '2px 7px', borderRadius: 5, whiteSpace: 'nowrap' }} title={sf.desc}>{sf.label}</span>
                                                         </td>
                                                         {MESES.map((mes) => {
                                                             if (na) return <td key={mes} style={{ textAlign: 'center', color: 'var(--color-text-faint)' }}>—</td>;
@@ -734,7 +735,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                                                         })}
                                                         <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                                             <RowAction icon={<FaEdit size={12} />} title="Editar fonte / governança" onClick={() => abrirEdit(m)} />
-                                                            <RowAction icon={<FaTrash size={12} />} color="#ff4757" title="Excluir fonte" onClick={() => window.confirm('Excluir esta fonte do mapa?') && rmMapa(m.id)} />
+                                                            <RowAction icon={<FaTrash size={12} />} color="var(--color-danger)" title="Excluir fonte" onClick={() => window.confirm('Excluir esta fonte do mapa?') && rmMapa(m.id)} />
                                                         </td>
                                                     </tr>
                                                 );
@@ -827,12 +828,12 @@ function FonteModal({ inicial, contatos, onClose, onSave }) {
             </FormGrid>
 
             <div style={{ marginTop: '0.9rem', fontSize: '0.7rem', color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <FaUsers size={11} color="#54a0ff" /> Níveis de hierarquia 2–7 (centro de custo) podem ser detalhados depois; H1 já amarra o dado à unidade.
+                <FaUsers size={11} color="var(--color-info)" /> Níveis de hierarquia 2–7 (centro de custo) podem ser detalhados depois; H1 já amarra o dado à unidade.
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.3rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#10b981" onClick={submit}>{inicial ? 'Salvar' : 'Adicionar'}</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-success)" onClick={submit}>{inicial ? 'Salvar' : 'Adicionar'}</Btn>
             </div>
         </Modal>
     );
@@ -875,10 +876,10 @@ function ContatosLista({ contatos }) {
                                 <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)' }}>{c.gestor}</td>
                                 <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-subtle)' }}>{c.ramal || '—'}</td>
                                 <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-muted)' }}>
-                                    {c.telefone ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><FaPhone size={9} color="#54a0ff" /> {c.telefone}</span> : '—'}
+                                    {c.telefone ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><FaPhone size={9} color="var(--color-info)" /> {c.telefone}</span> : '—'}
                                 </td>
                                 <td style={{ padding: '0.5rem 0.7rem' }}>
-                                    {c.email ? <a href={`mailto:${c.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: '#00ccff', textDecoration: 'none' }}><FaEnvelope size={9} /> {c.email}</a> : <span style={{ color: 'var(--color-text-faint)' }}>—</span>}
+                                    {c.email ? <a href={`mailto:${c.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: 'var(--color-secondary)', textDecoration: 'none' }}><FaEnvelope size={9} /> {c.email}</a> : <span style={{ color: 'var(--color-text-faint)' }}>—</span>}
                                 </td>
                             </tr>
                         ))}
@@ -912,7 +913,7 @@ function Indicadores({ scores, esgInd, updInd }) {
                         <Card key={p} style={{ borderTop: `3px solid ${pil.color}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                    <div style={{ width: 34, height: 34, borderRadius: 9, background: pil.color + '1f', color: pil.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{pil.sigla}</div>
+                                    <div style={{ width: 34, height: 34, borderRadius: 9, background: pil.tint(color,'1f'), color: pil.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{pil.sigla}</div>
                                     <div>
                                         <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{pil.label}</div>
                                         <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>{pil.desc}</div>
@@ -939,7 +940,7 @@ function Indicadores({ scores, esgInd, updInd }) {
                 })}
             </div>
 
-            <Card style={{ marginTop: '1.2rem', borderLeft: '3px solid #54a0ff' }}>
+            <Card style={{ marginTop: '1.2rem', borderLeft: '3px solid var(--color-info)' }}>
                 <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
                     Os indicadores <strong>Ambientais derivados</strong> (redução de emissões, valorização de resíduos e conformidade atmosférica)
                     são calculados automaticamente a partir do inventário de GEE, dos manifestos (MTR) e das medições de fumaça preta.
@@ -972,7 +973,7 @@ function IndicadorLinha({ it, color, onEdit }) {
             <div style={{ height: 6, borderRadius: 4, background: 'var(--bg-surface-2)', overflow: 'hidden', position: 'relative' }}>
                 <div style={{ height: '100%', width: `${prog}%`, background: pColor, borderRadius: 4, transition: 'width 0.5s' }} />
             </div>
-            <div style={{ fontSize: '0.62rem', color: atingiu ? '#10b981' : 'var(--color-text-subtle)', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <div style={{ fontSize: '0.62rem', color: atingiu ? 'var(--color-success)' : 'var(--color-text-subtle)', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 {atingiu ? <><FaCheckCircle size={9} /> Meta atingida</> : `${prog}% da meta · ${it.melhor === 'menor' ? 'menor é melhor' : 'maior é melhor'}`}
             </div>
         </div>
@@ -991,8 +992,8 @@ function IndicadorModal({ it, onClose, onSave }) {
                 <Field label={`Meta (${it.unidade})`}><Input type="number" value={meta} onChange={(e) => setMeta(e.target.value)} /></Field>
             </FormGrid>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.3rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#10b981" onClick={() => onSave({ valor: Number(valor), meta: Number(meta) })}>Salvar</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-success)" onClick={() => onSave({ valor: Number(valor), meta: Number(meta) })}>Salvar</Btn>
             </div>
         </Modal>
     );
@@ -1018,17 +1019,17 @@ function Descarbonizacao({ calc, cfg, iniciativas, addIni, updIni, rmIni }) {
         <>
             {/* Resumo do programa */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                <BigKpi icon={<FaCloud size={16} />} color="#8b9bb4" label={`Linha de base ${cfg.anoBase}`} value={fmt(calc.baseline)} unit="tCO₂e" />
-                <BigKpi icon={<FaBullseye size={16} />} color="#54a0ff" label={`Meta ${cfg.anoMeta}`} value={fmt(calc.metaFinal)} unit="tCO₂e" sub={`−${cfg.reducaoMetaPct}% absoluto`} />
-                <BigKpi icon={<FaArrowDown size={16} />} color="#10b981" label="Gap até a meta" value={fmt(gapMeta)} unit="tCO₂e" sub="redução necessária" />
-                <BigKpi icon={<FaSeedling size={16} />} color="#00ff9d" label="Potencial das iniciativas" value={fmt(concluido + emCurso + planejado)} unit="tCO₂e/ano" />
+                <BigKpi icon={<FaCloud size={16} />} color="var(--color-text-muted)" label={`Linha de base ${cfg.anoBase}`} value={fmt(calc.baseline)} unit="tCO₂e" />
+                <BigKpi icon={<FaBullseye size={16} />} color="var(--color-info)" label={`Meta ${cfg.anoMeta}`} value={fmt(calc.metaFinal)} unit="tCO₂e" sub={`−${cfg.reducaoMetaPct}% absoluto`} />
+                <BigKpi icon={<FaArrowDown size={16} />} color="var(--color-success)" label="Gap até a meta" value={fmt(gapMeta)} unit="tCO₂e" sub="redução necessária" />
+                <BigKpi icon={<FaSeedling size={16} />} color="var(--color-primary)" label="Potencial das iniciativas" value={fmt(concluido + emCurso + planejado)} unit="tCO₂e/ano" />
             </div>
 
             {/* Cobertura da meta pelas iniciativas */}
             <Card style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-                    <SecTitle icon={<FaChartLine size={13} color="#10b981" />} style={{ margin: 0 }}>Cobertura do gap de descarbonização</SecTitle>
-                    <Btn variant="outline" color="#54a0ff" onClick={() => setShowCfg(true)}><FaCog size={11} /> Metas do programa</Btn>
+                    <SecTitle icon={<FaChartLine size={13} color="var(--color-success)" />} style={{ margin: 0 }}>Cobertura do gap de descarbonização</SecTitle>
+                    <Btn variant="outline" color="var(--color-info)" onClick={() => setShowCfg(true)}><FaCog size={11} /> Metas do programa</Btn>
                 </div>
                 <CoberturaBar gap={gapMeta} concluido={concluido} emCurso={emCurso} planejado={planejado} />
             </Card>
@@ -1036,7 +1037,7 @@ function Descarbonizacao({ calc, cfg, iniciativas, addIni, updIni, rmIni }) {
             {/* Tabela de iniciativas */}
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.9rem' }}>
                 <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text-main)', marginRight: 'auto' }}>Iniciativas de descarbonização</span>
-                <Btn color="#10b981" onClick={abrirNovo}><FaPlus size={11} /> Nova iniciativa</Btn>
+                <Btn color="var(--color-success)" onClick={abrirNovo}><FaPlus size={11} /> Nova iniciativa</Btn>
             </div>
             <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid var(--border-color-soft)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
@@ -1053,15 +1054,15 @@ function Descarbonizacao({ calc, cfg, iniciativas, addIni, updIni, rmIni }) {
                             <tr key={i.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-main)', maxWidth: 280 }}>{i.nome}</td>
                                 <td style={{ padding: '0.55rem 0.8rem' }}>
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: GEE_ESCOPOS[i.escopo].color + '1f', color: GEE_ESCOPOS[i.escopo].color }}>{ESCOPO_ICON[i.escopo]} {i.escopo}</span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: GEE_ESCOPOS[i.escopo].tint(color,'1f'), color: GEE_ESCOPOS[i.escopo].color }}>{ESCOPO_ICON[i.escopo]} {i.escopo}</span>
                                 </td>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-muted)', fontSize: '0.76rem' }}>{i.responsavel || '—'}</td>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-muted)' }}>{i.prazo ? i.prazo.split('-').reverse().join('/') : '—'}</td>
-                                <td style={{ padding: '0.55rem 0.8rem', textAlign: 'right', fontWeight: 700, color: '#10b981' }}>−{fmt(i.reducao)} t</td>
+                                <td style={{ padding: '0.55rem 0.8rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>−{fmt(i.reducao)} t</td>
                                 <td style={{ padding: '0.55rem 0.8rem' }}><StatusBadge status={i.status} map={ESG_STATUS_COLORS} /></td>
                                 <td style={{ padding: '0.4rem 0.6rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                     <RowAction icon={<FaEdit size={12} />} title="Editar" onClick={() => { setEditing(i); setShowModal(true); }} />
-                                    <RowAction icon={<FaTrash size={12} />} color="#ff4757" title="Excluir" onClick={() => window.confirm('Excluir iniciativa?') && rmIni(i.id)} />
+                                    <RowAction icon={<FaTrash size={12} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm('Excluir iniciativa?') && rmIni(i.id)} />
                                 </td>
                             </tr>
                         ))}
@@ -1082,17 +1083,17 @@ function CoberturaBar({ gap, concluido, emCurso, planejado }) {
     return (
         <div>
             <div style={{ display: 'flex', height: 26, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-surface-2)', border: '1px solid var(--border-color-soft)' }}>
-                <div style={{ width: `${seg(concluido)}%`, background: '#10b981' }} title={`Concluído: ${fmt(concluido)} t`} />
-                <div style={{ width: `${seg(emCurso)}%`, background: '#ffb700' }} title={`Em andamento: ${fmt(emCurso)} t`} />
-                <div style={{ width: `${seg(planejado)}%`, background: '#54a0ff' }} title={`Planejado: ${fmt(planejado)} t`} />
+                <div style={{ width: `${seg(concluido)}%`, background: 'var(--color-success)' }} title={`Concluído: ${fmt(concluido)} t`} />
+                <div style={{ width: `${seg(emCurso)}%`, background: 'var(--color-warning)' }} title={`Em andamento: ${fmt(emCurso)} t`} />
+                <div style={{ width: `${seg(planejado)}%`, background: 'var(--color-info)' }} title={`Planejado: ${fmt(planejado)} t`} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.7rem', flexWrap: 'wrap', gap: '0.8rem' }}>
                 <div style={{ display: 'flex', gap: '1.2rem', fontSize: '0.74rem', color: 'var(--color-text-muted)', flexWrap: 'wrap' }}>
-                    <Legenda color="#10b981" label={`Concluído (${fmt(concluido)} t)`} />
-                    <Legenda color="#ffb700" label={`Em andamento (${fmt(emCurso)} t)`} />
-                    <Legenda color="#54a0ff" label={`Planejado (${fmt(planejado)} t)`} />
+                    <Legenda color="var(--color-success)" label={`Concluído (${fmt(concluido)} t)`} />
+                    <Legenda color="var(--color-warning)" label={`Em andamento (${fmt(emCurso)} t)`} />
+                    <Legenda color="var(--color-info)" label={`Planejado (${fmt(planejado)} t)`} />
                 </div>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: cobertura >= 100 ? '#10b981' : '#ffb700' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: cobertura >= 100 ? 'var(--color-success)' : 'var(--color-warning)' }}>
                     {cobertura}% do gap coberto
                 </span>
             </div>
@@ -1123,8 +1124,8 @@ function IniciativaModal({ inicial, onClose, onSave }) {
                 <Field label="Responsável" span={2}><Input value={f.responsavel} onChange={(e) => set('responsavel', e.target.value)} /></Field>
             </FormGrid>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.3rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#10b981" onClick={submit}>{inicial ? 'Salvar' : 'Adicionar'}</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-success)" onClick={submit}>{inicial ? 'Salvar' : 'Adicionar'}</Btn>
             </div>
         </Modal>
     );
@@ -1151,8 +1152,8 @@ function ProgramaModal({ cfg, onClose }) {
                 <Field label="Unidade de produção"><Input value={f.unidadeProducao} onChange={(e) => set('unidadeProducao', e.target.value)} /></Field>
             </FormGrid>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.3rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#10b981" onClick={salvar}>Salvar metas</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-success)" onClick={salvar}>Salvar metas</Btn>
             </div>
         </Modal>
     );
@@ -1171,11 +1172,11 @@ const Legenda = ({ color, label }) => (
 );
 const Vazio = () => <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>Sem dados.</div>;
 
-function BigKpi({ icon, label, value, unit, sub, trend, color = '#10b981', info }) {
+function BigKpi({ icon, label, value, unit, sub, trend, color = 'var(--color-success)', info }) {
     return (
         <div className="glass-panel" style={{ padding: '1.1rem 1.2rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: color + '1f', color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: tint(color,'1f'), color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
                 <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>{label}</span>
                 {info && <span style={{ marginLeft: 'auto' }}>{info}</span>}
             </div>
@@ -1184,7 +1185,7 @@ function BigKpi({ icon, label, value, unit, sub, trend, color = '#10b981', info 
                 {unit && <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', fontWeight: 600 }}>{unit}</span>}
             </div>
             {trend && (
-                <div style={{ fontSize: '0.72rem', color: trend.dir === 'down' ? '#10b981' : '#ff4757', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.72rem', color: trend.dir === 'down' ? 'var(--color-success)' : 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
                     {trend.dir === 'down' ? <FaArrowDown size={9} /> : <FaArrowUp size={9} />} {trend.txt}
                 </div>
             )}
@@ -1209,7 +1210,7 @@ function ScoreGauge({ score, size = 170 }) {
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-text-main)', lineHeight: 1 }}>{score}</span>
                 <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>de 100</span>
-                <span style={{ marginTop: 4, fontSize: '0.72rem', fontWeight: 700, color, padding: '1px 10px', borderRadius: 20, background: color + '1f' }}>Rating {scoreRating(score)}</span>
+                <span style={{ marginTop: 4, fontSize: '0.72rem', fontWeight: 700, color, padding: '1px 10px', borderRadius: 20, background: tint(color,'1f') }}>Rating {scoreRating(score)}</span>
             </div>
         </div>
     );

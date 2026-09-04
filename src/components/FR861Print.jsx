@@ -53,7 +53,7 @@ export default function FR861Print({ data, onClose }) {
                 <div className="fr861-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1.2rem', borderBottom: '1px solid #ddd', background: '#f8f8f8' }}>
                     <span style={{ fontWeight: 700, color: '#333', fontSize: '0.9rem' }}>FR 861 Rev.00 — Solicitação de Dedetização</span>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button onClick={() => window.print()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.5rem 1rem', borderRadius: 8, background: '#10b981', color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
+                        <button onClick={() => window.print()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.5rem 1rem', borderRadius: 8, background: 'var(--color-success)', color: 'var(--color-on-accent)', border: 'none', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
                             <FaPrint size={13} /> Imprimir
                         </button>
                         <button onClick={onClose} style={{ display: 'inline-flex', alignItems: 'center', padding: '0.5rem 0.7rem', borderRadius: 8, background: '#e5e5e5', color: '#333', border: 'none', cursor: 'pointer' }}>

@@ -6,7 +6,7 @@ import { UNIDADES, STATUS_AUTORIZACAO, DIAS_OPERACAO } from '../lib/constants';
 import ProcessGuide from '../components/ProcessGuide';
 import FR231Print from '../components/FR231Print';
 
-const STATUS_COLORS = { Pendente: '#ffb700', Autorizada: '#54a0ff', Liberada: '#10b981', Recusada: '#ff4757' };
+const STATUS_COLORS = { Pendente: 'var(--color-warning)', Autorizada: 'var(--color-info)', Liberada: 'var(--color-success)', Recusada: 'var(--color-danger)' };
 
 // ── Fluxograma: Liberação de Resíduos para Fornecedor ──
 const LIBERACAO_STEPS = [
@@ -22,7 +22,7 @@ const LIBERACAO_STEPS = [
         branches: [
             {
                 label: 'Não confirmado — Aguardar',
-                color: '#ff4757',
+                color: 'var(--color-danger)',
                 description: 'A última coleta não foi confirmada. O fornecedor deve aguardar a regularização antes de prosseguir.',
                 steps: [
                     'Informar ao fornecedor que ele não está liberado',
@@ -32,7 +32,7 @@ const LIBERACAO_STEPS = [
             },
             {
                 label: 'Liberado — Prosseguir',
-                color: '#10b981',
+                color: 'var(--color-success)',
                 description: 'O fornecedor está com a situação regularizada. Confirme ao empilhador para iniciar o carregamento.',
                 steps: [
                     'Confirmar ao empilhador que o fornecedor está liberado',
@@ -136,9 +136,9 @@ function AutorizacaoSaidaView({ onBack }) {
         {
             key: 'acoes', label: '', align: 'right', render: (r) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    {r.status === 'Pendente' && <RowAction icon={<FaCheck size={13} />} color="#10b981" title="Liberar" onClick={() => update(r.id, { status: 'Liberada' })} />}
+                    {r.status === 'Pendente' && <RowAction icon={<FaCheck size={13} />} color="var(--color-success)" title="Liberar" onClick={() => update(r.id, { status: 'Liberada' })} />}
                     <RowAction icon={<FaPrint size={13} />} title="Imprimir autorização" onClick={() => setPrintItem(r)} />
-                    <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => window.confirm('Excluir autorização?') && remove(r.id)} />
+                    <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm('Excluir autorização?') && remove(r.id)} />
                 </div>
             ),
         },
@@ -153,13 +153,13 @@ function AutorizacaoSaidaView({ onBack }) {
             subtitle="Preenchimento diário · segunda a sábado"
             onBack={onBack}
             actions={<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
-                <FaCalendarDay color="#00ff9d" /> {hoje} autorização(ões) hoje
+                <FaCalendarDay color="var(--color-primary)" /> {hoje} autorização(ões) hoje
             </div>}
         >
             {/* Guia de Processo — Fluxo de Liberação de Resíduos para Fornecedor */}
             <ProcessGuide
                 title="📋 Fluxo de Liberação de Resíduos para Fornecedor"
-                color="#00ff9d"
+                color="var(--color-primary)"
                 steps={LIBERACAO_STEPS}
                 notes={LIBERACAO_NOTES}
             />
@@ -167,7 +167,7 @@ function AutorizacaoSaidaView({ onBack }) {
             {/* Formulário */}
             <Card style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FaPlus size={13} color="#00ff9d" /> Nova Autorização
+                    <FaPlus size={13} color="var(--color-primary)" /> Nova Autorização
                 </h3>
                 <form onSubmit={handleSubmit}>
                     <FormGrid cols={3}>

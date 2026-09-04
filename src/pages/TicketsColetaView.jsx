@@ -5,7 +5,7 @@ import { useCollection, COL } from '../lib/store';
 import { STATUS_TICKET, UNIDADES } from '../lib/constants';
 import { exportToExcel } from '../lib/excel';
 
-const STATUS_COLORS = { 'Aguardando Coleta': '#ffb700', Coletado: '#54a0ff', Conferido: '#10b981' };
+const STATUS_COLORS = { 'Aguardando Coleta': 'var(--color-warning)', Coletado: 'var(--color-info)', Conferido: 'var(--color-success)' };
 
 function TicketsColetaView({ onBack }) {
     const { items, add, update, remove } = useCollection(COL.TICKETS);
@@ -32,9 +32,9 @@ function TicketsColetaView({ onBack }) {
         {
             key: 'acoes', label: '', align: 'right', render: (r) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <RowAction icon={<FaWeightHanging size={13} />} color="#54a0ff" title="Aferir peso / preencher" onClick={() => setEditing(r)} />
-                    {r.status !== 'Conferido' && <RowAction icon={<FaCheckDouble size={13} />} color="#10b981" title="Marcar conferido" onClick={() => update(r.id, { status: 'Conferido' })} />}
-                    <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => window.confirm('Excluir ticket?') && remove(r.id)} />
+                    <RowAction icon={<FaWeightHanging size={13} />} color="var(--color-info)" title="Aferir peso / preencher" onClick={() => setEditing(r)} />
+                    {r.status !== 'Conferido' && <RowAction icon={<FaCheckDouble size={13} />} color="var(--color-success)" title="Marcar conferido" onClick={() => update(r.id, { status: 'Conferido' })} />}
+                    <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm('Excluir ticket?') && remove(r.id)} />
                 </div>
             ),
         },
@@ -44,17 +44,17 @@ function TicketsColetaView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaTicketAlt size={20} />} color="#ff9f43"
+            icon={<FaTicketAlt size={20} />} color="var(--color-orange)"
             title="Tickets de Coleta de Resíduos"
             subtitle="Preenchidos a partir dos manifestos (MTR) criados"
             onBack={onBack}
             actions={<>
                 <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginRight: '0.4rem' }}>{pendentes} aguardando coleta</span>
-                <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar Excel</Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => setNovo(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Ticket manual</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Exportar Excel</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setNovo(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Ticket manual</Btn>
             </>}
         >
-            <Card style={{ marginBottom: '1.5rem', borderLeft: '3px solid #ff9f43' }}>
+            <Card style={{ marginBottom: '1.5rem', borderLeft: '3px solid var(--color-orange)' }}>
                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
                     Os tickets são gerados automaticamente na tela de <strong>Manifesto MTR</strong> (ícone de ticket) e aparecem aqui
                     para o preenchimento do <strong>peso aferido na balança</strong> e a conferência final da coleta.
@@ -92,8 +92,8 @@ function AferirModal({ ticket, onClose, onSave }) {
                 </Field>
             </FormGrid>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.2rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#54a0ff" onClick={() => onSave({ pesoAferido: peso === '' ? null : Number(peso), obs, status })}>Salvar</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-info)" onClick={() => onSave({ pesoAferido: peso === '' ? null : Number(peso), obs, status })}>Salvar</Btn>
             </div>
         </Modal>
     );
@@ -111,8 +111,8 @@ function NovoModal({ manifestos, onClose, onSave, count }) {
                 </Select>
             </Field>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.2rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#ff9f43" onClick={() => {
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-orange)" onClick={() => {
                     if (!m) return alert('Selecione um manifesto.');
                     onSave({
                         numero: 'TK-' + String(1000 + count + 1), manifestoId: m.id, numeroMTR: m.numeroMTR,

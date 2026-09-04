@@ -4,9 +4,10 @@
 import { Children, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FaArrowLeft, FaTimes, FaChevronDown, FaCheck, FaSearch } from 'react-icons/fa';
+import { tint } from '../lib/color';
 
 // ─── Casca de página com cabeçalho ───
-export function PageShell({ icon, color = '#00ff9d', title, subtitle, onBack, actions, maxWidth = 1200, children }) {
+export function PageShell({ icon, color = 'var(--color-primary)', title, subtitle, onBack, actions, maxWidth = 1200, children }) {
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{
@@ -22,7 +23,7 @@ export function PageShell({ icon, color = '#00ff9d', title, subtitle, onBack, ac
                     )}
                     <div style={{
                         width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', background: `${color}18`, color, flexShrink: 0,
+                        justifyContent: 'center', background: `${tint(color,'18')}`, color, flexShrink: 0,
                     }}>
                         {icon}
                     </div>
@@ -47,7 +48,7 @@ const iconBtn = {
 };
 
 // ─── Botão de ação ───
-export function Btn({ children, color = '#00ff9d', variant = 'solid', onClick, type = 'button', style }) {
+export function Btn({ children, color = 'var(--color-primary)', variant = 'solid', onClick, type = 'button', style }) {
     const solid = variant === 'solid';
     return (
         <button
@@ -58,11 +59,11 @@ export function Btn({ children, color = '#00ff9d', variant = 'solid', onClick, t
                 borderRadius: 10, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
                 transition: 'all 0.18s', whiteSpace: 'nowrap',
                 background: solid ? color : 'transparent',
-                color: solid ? '#0f1014' : color,
-                border: `1px solid ${solid ? color : color + '55'}`,
+                color: solid ? 'var(--color-on-accent)' : color,
+                border: `1px solid ${solid ? color : tint(color,'55')}`,
                 ...style,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; if (!solid) e.currentTarget.style.background = color + '15'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; if (!solid) e.currentTarget.style.background = tint(color,'15'); }}
             onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; if (!solid) e.currentTarget.style.background = 'transparent'; }}
         >
             {children}
@@ -207,11 +208,11 @@ export function FormGrid({ children, cols = 2 }) {
 
 // ─── Badge de status colorido ───
 export function StatusBadge({ status, map }) {
-    const color = (map && map[status]) || '#8b9bb4';
+    const color = (map && map[status]) || 'var(--color-text-muted)';
     return (
         <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '3px 10px',
-            borderRadius: 6, fontSize: '0.65rem', fontWeight: 600, background: color + '1f', color,
+            borderRadius: 6, fontSize: '0.65rem', fontWeight: 600, background: tint(color,'1f'), color,
             whiteSpace: 'nowrap',
         }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
@@ -307,7 +308,7 @@ export function Modal({ title, onClose, children, width = 560 }) {
 }
 
 // ─── Mini KPI ───
-export function Kpi({ icon, label, value, sub, color = '#00ff9d', onClick, active }) {
+export function Kpi({ icon, label, value, sub, color = 'var(--color-primary)', onClick, active }) {
     return (
         <div 
             className="glass-panel" 
@@ -316,15 +317,15 @@ export function Kpi({ icon, label, value, sub, color = '#00ff9d', onClick, activ
                 padding: '0.55rem 0.65rem', display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '0.2rem',
                 cursor: onClick ? 'pointer' : 'default',
-                border: active ? `1px solid ${color}aa` : '1px solid var(--border-color-soft)',
-                background: active ? `${color}11` : 'var(--bg-card)',
+                border: active ? `1px solid ${tint(color,'aa')}` : '1px solid var(--border-color-soft)',
+                background: active ? `${tint(color,'11')}` : 'var(--bg-card)',
                 transition: 'all 0.2s'
             }}
-            onMouseEnter={(e) => { if (onClick && !active) e.currentTarget.style.borderColor = color + '55'; }}
+            onMouseEnter={(e) => { if (onClick && !active) e.currentTarget.style.borderColor = tint(color,'55'); }}
             onMouseLeave={(e) => { if (onClick && !active) e.currentTarget.style.borderColor = 'var(--border-color-soft)'; }}
         >
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                <div style={{ width: 20, height: 20, borderRadius: 6, background: color + '1f', color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: tint(color,'1f'), color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {icon}
                 </div>
                 <span style={{ fontSize: '0.55rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>{label}</span>

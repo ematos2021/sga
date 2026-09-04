@@ -73,16 +73,16 @@ function FumacaPretaView({ onBack }) {
             key: 'conf', label: 'Resultado', render: (r) => {
                 const nc = naoConformesDoRelatorio(r);
                 return nc === 0
-                    ? <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, fontSize: '0.8rem' }}><FaCheckCircle size={12} /> Conforme</span>
-                    : <span style={{ color: '#ff4757', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, fontSize: '0.8rem' }}><FaExclamationTriangle size={12} /> {nc} não conforme(s)</span>;
+                    ? <span style={{ color: 'var(--color-success)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, fontSize: '0.8rem' }}><FaCheckCircle size={12} /> Conforme</span>
+                    : <span style={{ color: 'var(--color-danger)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, fontSize: '0.8rem' }}><FaExclamationTriangle size={12} /> {nc} não conforme(s)</span>;
             },
         },
         {
             key: 'acoes', label: '', align: 'right', render: (r) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <RowAction icon={<FaEye size={13} />} color="#00ccff" title="Visualizar / Imprimir" onClick={() => visualizar(r)} />
+                    <RowAction icon={<FaEye size={13} />} color="var(--color-secondary)" title="Visualizar / Imprimir" onClick={() => visualizar(r)} />
                     <RowAction icon={<FaEdit size={13} />} title="Editar" onClick={() => editar(r)} />
-                    <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => window.confirm('Excluir relatório?') && remove(r.id)} />
+                    <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm('Excluir relatório?') && remove(r.id)} />
                 </div>
             ),
         },
@@ -90,19 +90,19 @@ function FumacaPretaView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaSmog size={20} />} color="#a78bfa"
+            icon={<FaSmog size={20} />} color="var(--color-purple)"
             title="Medição de Fumaça Preta — Geradores"
             subtitle="Relatório FR 658 · Escala Ringelmann Reduzida · NBR ISO 14001"
             onBack={onBack}
             actions={<>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => setShowGlossario(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaBookOpen size={10} /> Glossário</Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={abrirNovo} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Novo Relatório</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setShowGlossario(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaBookOpen size={10} /> Glossário</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={abrirNovo} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Novo Relatório</Btn>
             </>}
         >
-            <ExplicaBox titulo="Como funciona a medição de fumaça preta" color="#a78bfa">
+            <ExplicaBox titulo="Como funciona a medição de fumaça preta" color="var(--color-purple)">
                 <p style={{ margin: '0 0 0.5rem' }}>
                     Mede-se a <strong>opacidade da fumaça</strong> dos geradores a diesel comparando-a visualmente com a
-                    {' '}<InfoTip title="Escala de Ringelmann" color="#a78bfa">Cartela com padrões de cinza de 0% a 100% de enegrecimento (graus 0 a 5). Quanto mais escura a fumaça, maior a concentração de fuligem.</InfoTip> <strong>Escala de Ringelmann</strong>.
+                    {' '}<InfoTip title="Escala de Ringelmann" color="var(--color-purple)">Cartela com padrões de cinza de 0% a 100% de enegrecimento (graus 0 a 5). Quanto mais escura a fumaça, maior a concentração de fuligem.</InfoTip> <strong>Escala de Ringelmann</strong>.
                     A cartela é segurada a ~30 m do escapamento, contra fundo claro, e registra-se o padrão mais parecido.
                 </p>
                 <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
@@ -113,9 +113,9 @@ function FumacaPretaView({ onBack }) {
             </ExplicaBox>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                <Kpi icon={<FaFileAlt size={15} />} label="Relatórios" value={totalRelatorios} color="#a78bfa" />
-                <Kpi icon={<FaExclamationTriangle size={15} />} label="Não conformidades" value={totalNaoConf} sub="acima de 40% (grau 2)" color={totalNaoConf ? '#ff4757' : '#10b981'} />
-                <Kpi icon={<FaSmog size={15} />} label="Último relatório" value={ultimo ? brDate(ultimo.data) : '—'} sub={ultimo ? `${(ultimo.rounds || []).length} rodada(s)` : ''} color="#00ccff" />
+                <Kpi icon={<FaFileAlt size={15} />} label="Relatórios" value={totalRelatorios} color="var(--color-purple)" />
+                <Kpi icon={<FaExclamationTriangle size={15} />} label="Não conformidades" value={totalNaoConf} sub="acima de 40% (grau 2)" color={totalNaoConf ? 'var(--color-danger)' : 'var(--color-success)'} />
+                <Kpi icon={<FaSmog size={15} />} label="Último relatório" value={ultimo ? brDate(ultimo.data) : '—'} sub={ultimo ? `${(ultimo.rounds || []).length} rodada(s)` : ''} color="var(--color-secondary)" />
             </div>
 
             <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.95rem', color: 'var(--color-text-main)' }}>Relatórios Emitidos</h3>
@@ -156,13 +156,13 @@ function RelatorioEditor({ inicial, geradores, onCancel, onSave }) {
 
     return (
         <PageShell
-            icon={<FaSmog size={20} />} color="#a78bfa"
+            icon={<FaSmog size={20} />} color="var(--color-purple)"
             title={inicial.id ? 'Editar Relatório de Fumaça Preta' : 'Novo Relatório de Fumaça Preta'}
             subtitle="FR 658 · preencha conforme o procedimento"
             onBack={onCancel}
             actions={<>
-                <Btn variant="outline" color="#8b9bb4" onClick={onCancel} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaArrowLeft size={10} /> Cancelar</Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => onSave({ ...rel, status: 'Concluído' })} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>Salvar Relatório</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onCancel} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaArrowLeft size={10} /> Cancelar</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => onSave({ ...rel, status: 'Concluído' })} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>Salvar Relatório</Btn>
             </>}
         >
             {/* Cabeçalho */}
@@ -188,10 +188,10 @@ function RelatorioEditor({ inicial, geradores, onCancel, onSave }) {
             <Card style={{ marginBottom: '1.2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <SecTitle style={{ margin: 0 }}>2. Rodadas de Medição</SecTitle>
-                    <Btn variant="outline" color="#a78bfa" onClick={addRodada}><FaPlus size={11} /> Adicionar rodada</Btn>
+                    <Btn variant="outline" color="var(--color-purple)" onClick={addRodada}><FaPlus size={11} /> Adicionar rodada</Btn>
                 </div>
                 {geradores.length === 0 && (
-                    <div style={{ color: '#ffb700', fontSize: '0.8rem', padding: '0.5rem 0' }}>
+                    <div style={{ color: 'var(--color-warning)', fontSize: '0.8rem', padding: '0.5rem 0' }}>
                         Cadastre os geradores em <strong>Cadastros → Geradores</strong> antes de medir.
                     </div>
                 )}
@@ -203,7 +203,7 @@ function RelatorioEditor({ inicial, geradores, onCancel, onSave }) {
                     {(rel.rounds || []).map((r, ri) => (
                         <div key={r.id} style={{ border: '1px solid var(--border-color)', borderRadius: 12, padding: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.8rem', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#a78bfa' }}>Rodada {ri + 1}</span>
+                                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-purple)' }}>Rodada {ri + 1}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                     <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)' }}>Hora</span>
                                     <Input type="time" value={r.hora} onChange={(e) => setRodada(r.id, { hora: e.target.value })} style={{ width: 120 }} />
@@ -214,7 +214,7 @@ function RelatorioEditor({ inicial, geradores, onCancel, onSave }) {
                                         {FASES_MEDICAO.map((f) => <option key={f}>{f}</option>)}
                                     </Select>
                                 </div>
-                                <button onClick={() => removeRodada(r.id)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#ff4757', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <button onClick={() => removeRodada(r.id)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                                     <FaTrash size={11} /> remover
                                 </button>
                             </div>
@@ -257,7 +257,7 @@ function RelatorioEditor({ inicial, geradores, onCancel, onSave }) {
             <Card>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <SecTitle style={{ margin: 0 }}>3. Parecer e Assinatura</SecTitle>
-                    <Btn variant="outline" color="#00ccff" onClick={sugerirParecer}><FaMagic size={11} /> Sugerir parecer</Btn>
+                    <Btn variant="outline" color="var(--color-secondary)" onClick={sugerirParecer}><FaMagic size={11} /> Sugerir parecer</Btn>
                 </div>
                 <div style={{ marginTop: '0.8rem' }}>
                     <Field label="Parecer técnico"><Textarea rows={4} value={rel.parecer} onChange={(e) => set('parecer', e.target.value)} /></Field>
@@ -290,13 +290,13 @@ function RelatorioView({ rel, onBack, onEdit }) {
 
     return (
         <PageShell
-            icon={<FaEye size={20} />} color="#00ccff"
+            icon={<FaEye size={20} />} color="var(--color-secondary)"
             title="Visualização do Relatório" subtitle={`${rel.numeroFR} · ${brDate(rel.data)}`}
             onBack={onBack}
             actions={<>
-                <Btn variant="outline" color="#8b9bb4" onClick={onEdit} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaEdit size={10} /> Editar</Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Excel</Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => window.print()} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPrint size={10} /> Imprimir / PDF</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onEdit} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaEdit size={10} /> Editar</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={exportar} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaFileExcel size={10} /> Excel</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => window.print()} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPrint size={10} /> Imprimir / PDF</Btn>
             </>}
         >
             <RelatorioDocumento rel={rel} />

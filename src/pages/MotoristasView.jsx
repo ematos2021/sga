@@ -20,11 +20,11 @@ function MotoristasView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaUsers size={20} />} color="#06b6d4"
+            icon={<FaUsers size={20} />} color="var(--color-cyan)"
             title="Motoristas & Logística"
             subtitle="Contatos das transportadoras e comunicação de coletas"
             onBack={onBack}
-            actions={<Btn variant="outline" color="#8b9bb4" onClick={() => setEditing(empty())} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Novo Contato</Btn>}
+            actions={<Btn variant="outline" color="var(--color-text-muted)" onClick={() => setEditing(empty())} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}><FaPlus size={10} /> Novo Contato</Btn>}
         >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
                 {items.length === 0 && (
@@ -43,12 +43,12 @@ function MotoristasView({ onBack }) {
                             </div>
                             <div style={{ display: 'flex', gap: 2 }}>
                                 <RowAction icon={<FaEdit size={13} />} title="Editar" onClick={() => setEditing(m)} />
-                                <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => window.confirm('Excluir contato?') && remove(m.id)} />
+                                <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir" onClick={() => window.confirm('Excluir contato?') && remove(m.id)} />
                             </div>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', color: 'var(--color-text-main)' }}>
-                            <FaPhone size={11} color="#06b6d4" /> {m.telefone || '—'}
+                            <FaPhone size={11} color="var(--color-cyan)" /> {m.telefone || '—'}
                             {m.placa && <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'var(--color-text-subtle)', border: '1px solid var(--border-color)', borderRadius: 6, padding: '1px 7px' }}>{m.placa}</span>}
                         </div>
 
@@ -58,7 +58,7 @@ function MotoristasView({ onBack }) {
                             <Btn color="#25D366" variant="outline" style={{ flex: 1, justifyContent: 'center' }} onClick={() => openWhats(m, '')}>
                                 <FaWhatsapp size={14} /> WhatsApp
                             </Btn>
-                            <Btn color="#06b6d4" variant="outline" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setMsgFor(m)}>
+                            <Btn color="var(--color-cyan)" variant="outline" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setMsgFor(m)}>
                                 <FaCommentDots size={13} /> Avisar coleta
                             </Btn>
                         </div>
@@ -98,8 +98,8 @@ function ContatoModal({ initial, onClose, onSave }) {
                 <Field label="Observações (agenda, restrições)" span={2}><Textarea rows={2} value={f.obs} onChange={(e) => set('obs', e.target.value)} /></Field>
             </FormGrid>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.2rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
-                <Btn color="#06b6d4" onClick={() => { if (!f.nome) return alert('Informe o nome.'); onSave(f); }}>Salvar</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
+                <Btn color="var(--color-cyan)" onClick={() => { if (!f.nome) return alert('Informe o nome.'); onSave(f); }}>Salvar</Btn>
             </div>
         </Modal>
     );
@@ -122,7 +122,7 @@ function MensagemModal({ motorista, autorizacoes, onClose, onSend }) {
             </div>
             <Textarea rows={9} value={text} onChange={(e) => setText(e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.2rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
                 <Btn color="#25D366" onClick={() => onSend(text)}><FaWhatsapp size={14} /> Enviar pelo WhatsApp</Btn>
             </div>
         </Modal>

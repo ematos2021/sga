@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FaTruckMoving, FaPlus, FaTrash, FaFileExcel, FaExternalLinkAlt, FaEdit, FaForward, FaPrint, FaClipboardList, FaSave, FaTimes, FaDollarSign, FaBan, FaUndoAlt, FaWeightHanging } from 'react-icons/fa';
+import { FaTruckMoving, FaPlus, FaTrash, FaFileExcel, FaExternalLinkAlt, FaEdit, FaForward, FaPrint, FaClipboardList, FaSave, FaTimes, FaDollarSign, FaBan, FaUndoAlt, FaWeightHanging, FaFilter } from 'react-icons/fa';
 import { PageShell, Btn, Card, Field, Input, Select, Textarea, FormGrid, DataTable, RowAction, Modal, Kpi } from '../components/ui';
 import { uid } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +13,7 @@ import { useCashFlow } from '../lib/cashFlowRepo';
 import ProcessGuide from '../components/ProcessGuide';
 import FichaPicker from '../components/FichaPicker';
 import FR231Print from '../components/FR231Print';
+import { tint } from '../lib/color';
 
 // ── Fluxograma: Solicitação de Manifesto ──
 const MANIFESTO_STEPS = [
@@ -43,7 +44,7 @@ const MANIFESTO_STEPS = [
         branches: [
             {
                 label: 'Apenas 1 MTR',
-                color: '#10b981',
+                color: 'var(--color-success)',
                 description: 'Fluxo padrão com um único manifesto:',
                 steps: [
                     'Entrar no login da MK BR ou NE',
@@ -53,7 +54,7 @@ const MANIFESTO_STEPS = [
             },
             {
                 label: 'São 2 MTRs',
-                color: '#54a0ff',
+                color: 'var(--color-info)',
                 description: 'Dois manifestos são necessários (ex.: MK BR + Sanches):',
                 steps: [
                     'Entrar primeiro no login da MK BR para cadastrar o resíduo e emitir o MTR',
@@ -324,18 +325,29 @@ function ManifestoMTRView({ onBack }) {
     const tiposResiduo = [...new Set(items.map((m) => m.residuo).filter(Boolean))].sort();
     const destinadores = [...new Set(items.map((m) => m.destinador).filter(Boolean))].sort();
 
-    const filtrados = items.filter((m) => {
-        let matchCard = true;
-        if (fCard === 'reciclagem') matchCard = m.destinacao === 'Reciclagem' || m.destinacao === 'Reutilização';
-        else if (fCard === 'aterro') matchCard = m.destinacao === 'Aterro Industrial' || m.destinacao === 'Aterro Sanitário';
-        else if (fCard === 'outros') matchCard = m.destinacao !== 'Reciclagem' && m.destinacao !== 'Reutilização' && m.destinacao !== 'Aterro Industrial' && m.destinacao !== 'Aterro Sanitário';
-
-        return matchCard &&
+    // Filtros de recorte (busca, mês, resíduo, destinador). É esta a base que
+    // alimenta os indicadores — eles precisam acompanhar o filtro.
+    const baseFiltrada = useMemo(() => {
+        const q = busca.trim().toLowerCase();
+        return items.filter((m) =>
             (fMes === 'todos' || mesDe(m) === fMes) &&
             (fResiduo === 'todos' || m.residuo === fResiduo) &&
             (fDestinador === 'todos' || m.destinador === fDestinador) &&
-            (!busca || `${m.numeroMTR} ${m.residuo} ${m.solicitante} ${m.motorista} ${m.placa} ${m.destinador} ${m.setorColeta}`.toLowerCase().includes(busca.toLowerCase()));
-    });
+            (!q || `${m.numeroMTR} ${m.residuo} ${m.solicitante} ${m.motorista} ${m.placa} ${m.destinador} ${m.setorColeta}`.toLowerCase().includes(q))
+        );
+    }, [items, fMes, fResiduo, fDestinador, busca]);
+
+    // O card clicado recorta só a TABELA. Se recortasse também os indicadores,
+    // ao clicar em "Aterro" os demais cards zerariam e não haveria como voltar.
+    const filtrados = useMemo(() => baseFiltrada.filter((m) => {
+        if (fCard === 'reciclagem') return m.destinacao === 'Reciclagem' || m.destinacao === 'Reutilização';
+        if (fCard === 'aterro') return m.destinacao === 'Aterro Industrial' || m.destinacao === 'Aterro Sanitário';
+        if (fCard === 'outros') return m.destinacao !== 'Reciclagem' && m.destinacao !== 'Reutilização' && m.destinacao !== 'Aterro Industrial' && m.destinacao !== 'Aterro Sanitário';
+        return true;
+    }), [baseFiltrada, fCard]);
+
+    // Há recorte ativo? (o card não conta — ele não muda os indicadores)
+    const filtroAtivo = fMes !== 'todos' || fResiduo !== 'todos' || fDestinador !== 'todos' || busca.trim() !== '';
 
     // Volta para a 1ª página sempre que filtros/busca/tamanho mudam
     useEffect(() => { setPage(1); }, [busca, fMes, fResiduo, fDestinador, fCard, pageSize]);
@@ -371,11 +383,12 @@ function ManifestoMTRView({ onBack }) {
         return [...new Set(base.map((f) => f.destinator_name).filter(Boolean))].sort();
     }, [fichas, form.residuo]);
 
-    // KPIs — baseados em TODOS os itens (não filtrados), excluindo cancelados
+    // KPIs — leem a base filtrada (busca/mês/resíduo/destinador), excluindo
+    // cancelados. Sem filtro, a base é o conjunto inteiro e o número é o total.
     const kpis = useMemo(() => {
-        const ativos = items.filter((m) => m.status !== 'Cancelado');
+        const ativos = baseFiltrada.filter((m) => m.status !== 'Cancelado');
         const total = ativos.length;
-        const cancelados = items.length - total;
+        const cancelados = baseFiltrada.length - total;
         const recic = ativos.filter((m) =>
             m.destinacao === 'Reciclagem' || m.destinacao === 'Reutilização'
         ).length;
@@ -386,13 +399,16 @@ function ManifestoMTRView({ onBack }) {
         const taxaRecic = total ? Math.round((recic / total) * 100) : 0;
         const destCount = new Set(ativos.map((m) => m.destinador).filter(Boolean)).size;
         return { total, recic, aterro, outros, taxaRecic, destinadores: destCount, cancelados };
-    }, [items]);
+    }, [baseFiltrada]);
 
     // Peso recebido pelos fornecedores (relatório mensal de pesagem) e, se
     // preenchido, o valor associado — o peso é o que de fato se controla aqui.
     const totalPesoRecebido = useMemo(() => {
-        return allRefunds.reduce((acc, curr) => acc + Number(curr.quantity || 0), 0);
-    }, [allRefunds]);
+        // Sem filtro, soma tudo. Com filtro, só as pesagens dos manifestos do recorte.
+        if (!filtroAtivo) return allRefunds.reduce((acc, r) => acc + Number(r.quantity || 0), 0);
+        const ids = new Set(baseFiltrada.map((m) => String(m.id)));
+        return allRefunds.reduce((acc, r) => ids.has(String(r.manifest_id)) ? acc + Number(r.quantity || 0) : acc, 0);
+    }, [allRefunds, baseFiltrada, filtroAtivo]);
 
     const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
 
@@ -411,6 +427,7 @@ function ManifestoMTRView({ onBack }) {
     const columns = [
         { key: 'data', label: 'Data', align: 'center', render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{brData(r.data)}{r.hora ? <span style={{ color: 'var(--color-text-subtle)', display: 'block', fontSize: '0.62rem' }}>{r.hora}</span> : ''}</span> },
         { key: 'numeroMTR', label: 'Manifesto', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{r.numeroMTR || '—'}{r.manifestoSupertrans ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem' }}>ST {r.manifestoSupertrans}</div> : null}</span> },
+        { key: 'ticketSustentare', label: 'Ticket Sustentare', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{r.ticketSustentare || '—'}</span> },
         {
             key: 'residuo',
             label: 'Resíduo',
@@ -431,7 +448,7 @@ function ManifestoMTRView({ onBack }) {
                                 fontSize: '0.6rem',
                                 fontWeight: 700,
                                 background: 'rgba(0, 204, 255, 0.12)',
-                                color: '#00ccff',
+                                color: 'var(--color-secondary)',
                                 padding: '1px 5px',
                                 borderRadius: '10px',
                                 display: 'inline-flex',
@@ -458,7 +475,7 @@ function ManifestoMTRView({ onBack }) {
                 const refundItems = allRefunds.filter(x => String(x.manifest_id) === String(r.id));
                 const peso = refundItems.reduce((acc, curr) => acc + Number(curr.quantity || 0), 0);
                 if (peso === 0) return <span style={{ color: 'var(--color-text-subtle)' }}>—</span>;
-                return <span style={{ color: '#10b981', fontWeight: 600 }}>{peso.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg</span>;
+                return <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>{peso.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg</span>;
             }
         },
         {
@@ -468,17 +485,17 @@ function ManifestoMTRView({ onBack }) {
                     const titleText = `Cancelado por ${r.cancelledBy || '—'} em ${brCancelDate}${r.cancelReason ? `\nMotivo: ${r.cancelReason}` : ''}`;
                     return (
                         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }} title={titleText}>
-                            <span style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color: '#ff4757', background: '#ff475712', border: '1px solid #ff475740', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color: 'var(--color-danger)', background: `${tint('var(--color-danger)','12')}`, border: `1px solid ${tint('var(--color-danger)','40')}`, borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 <FaBan size={9} /> Cancelado
                             </span>
                         </div>
                     );
                 }
-                const cor = r.status === 'Emitido' ? '#10b981' : '#ffb700';
+                const cor = r.status === 'Emitido' ? 'var(--color-success)' : 'var(--color-warning)';
                 return (
                     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                         <Select value={r.status} onChange={(e) => update(r.id, { status: e.target.value })}
-                            style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', width: '120px', minWidth: '120px', color: cor, background: cor + '12', borderColor: cor + '40', borderRadius: 20, justifyContent: 'center', textAlign: 'center', gap: '6px' }}>
+                            style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', width: '120px', minWidth: '120px', color: cor, background: tint(cor,'12'), borderColor: tint(cor,'40'), borderRadius: 20, justifyContent: 'center', textAlign: 'center', gap: '6px' }}>
                             {STATUS_MANIFESTO.filter(s => s !== 'Cancelado').map((s) => <option key={s} value={s}>{s}</option>)}
                         </Select>
                     </div>
@@ -489,20 +506,20 @@ function ManifestoMTRView({ onBack }) {
             key: 'acoes', label: '', align: 'center', render: (r) => (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                     {isGestorOuAnalista && r.status !== 'Cancelado' && (
-                        <RowAction icon={<FaWeightHanging size={13} />} color="#10b981" title="Peso recebido do fornecedor" onClick={() => setRefundModalItem(r)} />
+                        <RowAction icon={<FaWeightHanging size={13} />} color="var(--color-success)" title="Peso recebido do fornecedor" onClick={() => setRefundModalItem(r)} />
                     )}
                     {r.status !== 'Cancelado' && (
-                        <RowAction icon={<FaPrint size={13} />} color="#54a0ff" title="Imprimir FR 231" onClick={() => setPrintItem(r)} />
+                        <RowAction icon={<FaPrint size={13} />} color="var(--color-info)" title="Imprimir FR 231" onClick={() => setPrintItem(r)} />
                     )}
                     {r.status !== 'Cancelado' && (
-                        <RowAction icon={<FaEdit size={13} />} color="#10b981" title="Editar manifesto" onClick={() => editarManifesto(r)} />
+                        <RowAction icon={<FaEdit size={13} />} color="var(--color-success)" title="Editar manifesto" onClick={() => editarManifesto(r)} />
                     )}
                     {r.status !== 'Cancelado' ? (
-                        <RowAction icon={<FaBan size={13} />} color="#ff9f43" title="Cancelar manifesto" onClick={() => { setConfirmCancel(r); setCancelReason(''); }} />
+                        <RowAction icon={<FaBan size={13} />} color="var(--color-orange)" title="Cancelar manifesto" onClick={() => { setConfirmCancel(r); setCancelReason(''); }} />
                     ) : (
-                        <RowAction icon={<FaUndoAlt size={13} />} color="#8b9bb4" title="Desfazer cancelamento" onClick={() => update(r.id, { cancelledAt: null, cancelledBy: null, status: 'Emitido' })} />
+                        <RowAction icon={<FaUndoAlt size={13} />} color="var(--color-text-muted)" title="Desfazer cancelamento" onClick={() => update(r.id, { cancelledAt: null, cancelledBy: null, status: 'Emitido' })} />
                     )}
-                    <RowAction icon={<FaTrash size={13} />} color="#ff4757" title="Excluir" onClick={() => setConfirmDel(r)} />
+                    <RowAction icon={<FaTrash size={13} />} color="var(--color-danger)" title="Excluir" onClick={() => setConfirmDel(r)} />
                 </div>
             ),
         },
@@ -514,21 +531,21 @@ function ManifestoMTRView({ onBack }) {
 
     return (
         <PageShell
-            icon={<FaTruckMoving size={20} />} color="#54a0ff"
+            icon={<FaTruckMoving size={20} />} color="var(--color-info)"
             title="Manifesto de Transporte de Resíduos (MTR)"
             subtitle="Emissão via SINIR · controle consolidado"
             onBack={onBack}
             maxWidth="100%"
             actions={<>
                 {isGestorOuAnalista && (
-                    <Btn variant="outline" color="#ff9f43" onClick={() => setShowCashFlowModal(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                    <Btn variant="outline" color="var(--color-orange)" onClick={() => setShowCashFlowModal(true)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                         <FaDollarSign size={10} /> Fluxo de Caixa
                     </Btn>
                 )}
-                <Btn variant="outline" color="#8b9bb4" onClick={() => window.open(SINIR_URL, '_blank')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => window.open(SINIR_URL, '_blank')} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaExternalLinkAlt size={10} /> Abrir SINIR
                 </Btn>
-                <Btn variant="outline" color="#8b9bb4" onClick={() => setShowGuide((s) => !s)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setShowGuide((s) => !s)} style={{ padding: '0.4rem 0.7rem', fontSize: '0.7rem' }}>
                     <FaClipboardList size={11} /> Fluxo
                 </Btn>
             </>}
@@ -543,7 +560,7 @@ function ManifestoMTRView({ onBack }) {
                     `}</style>
                     <ProcessGuide
                         title="Fluxo de Solicitação de Manifesto"
-                        color="#8b9bb4"
+                        color="var(--color-text-muted)"
                         steps={MANIFESTO_STEPS}
                         notes={MANIFESTO_NOTES}
                         defaultOpen
@@ -551,19 +568,32 @@ function ManifestoMTRView({ onBack }) {
                 </div>
             )}
 
-            {/* KPIs */}
+            {/* KPIs — acompanham busca/mês/resíduo/destinador */}
+            {filtroAtivo && (
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.45rem',
+                    fontSize: '0.64rem', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase',
+                    color: 'var(--color-info)',
+                }}>
+                    <FaFilter size={9} />
+                    Indicadores apurados sobre o filtro ativo
+                    <span style={{ color: 'var(--color-text-subtle)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>
+                        ({kpis.total} de {items.length} manifestos)
+                    </span>
+                </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.55rem', marginBottom: '1rem' }}>
-                <Kpi icon={<FaTruckMoving size={12} />} label="Manifestos" value={kpis.total} sub="total registrados" color="#54a0ff" onClick={() => setFCard('todos')} active={fCard === 'todos'} />
-                <Kpi icon={<FaFileExcel size={12} />} label="Reciclagem" value={kpis.recic} sub={`${kpis.taxaRecic}% do total`} color="#10b981" onClick={() => setFCard('reciclagem')} active={fCard === 'reciclagem'} />
-                <Kpi icon={<FaTrash size={12} />} label="Aterro" value={kpis.aterro} sub={`${kpis.total ? Math.round((kpis.aterro / kpis.total) * 100) : 0}% do total`} color={kpis.aterro ? '#ffb700' : '#10b981'} onClick={() => setFCard('aterro')} active={fCard === 'aterro'} />
-                <Kpi icon={<FaForward size={12} />} label="Outros destinos" value={kpis.outros} sub="copro · incin · trat" color="#a78bfa" onClick={() => setFCard('outros')} active={fCard === 'outros'} />
-                <Kpi icon={<FaForward size={12} />} label="Destinadores" value={kpis.destinadores} sub="parceiros distintos" color="#00ccff" onClick={() => setFCard('todos')} />
+                <Kpi icon={<FaTruckMoving size={12} />} label="Manifestos" value={kpis.total} sub={filtroAtivo ? `de ${items.length} · filtrado` : 'total registrados'} color="var(--color-info)" onClick={() => setFCard('todos')} active={fCard === 'todos'} />
+                <Kpi icon={<FaFileExcel size={12} />} label="Reciclagem" value={kpis.recic} sub={`${kpis.taxaRecic}% do total`} color="var(--color-success)" onClick={() => setFCard('reciclagem')} active={fCard === 'reciclagem'} />
+                <Kpi icon={<FaTrash size={12} />} label="Aterro" value={kpis.aterro} sub={`${kpis.total ? Math.round((kpis.aterro / kpis.total) * 100) : 0}% do total`} color={kpis.aterro ? 'var(--color-warning)' : 'var(--color-success)'} onClick={() => setFCard('aterro')} active={fCard === 'aterro'} />
+                <Kpi icon={<FaForward size={12} />} label="Outros destinos" value={kpis.outros} sub="copro · incin · trat" color="var(--color-purple)" onClick={() => setFCard('outros')} active={fCard === 'outros'} />
+                <Kpi icon={<FaForward size={12} />} label="Destinadores" value={kpis.destinadores} sub="parceiros distintos" color="var(--color-secondary)" />
                 {isGestorOuAnalista && (
-                    <Kpi icon={<FaWeightHanging size={12} />} label="Peso Recebido" value={`${totalPesoRecebido.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg`} sub="acumulado · fechamento mensal" color="#10b981" onClick={() => {}} />
+                    <Kpi icon={<FaWeightHanging size={12} />} label="Peso Recebido" value={`${totalPesoRecebido.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg`} sub={filtroAtivo ? 'pesagens do filtro' : 'acumulado · fechamento mensal'} color="var(--color-success)" />
                 )}
             </div>
 
-            <Card style={{ marginBottom: '1rem', borderLeft: '3px solid #54a0ff', padding: '0.6rem 0.9rem' }}>
+            <Card style={{ marginBottom: '1rem', borderLeft: '3px solid var(--color-info)', padding: '0.6rem 0.9rem' }}>
                 <div
                     onClick={() => setShowForm(!showForm)}
                     style={{
@@ -700,7 +730,7 @@ function ManifestoMTRView({ onBack }) {
                                         <input type="checkbox" checked={form.sinir} onChange={(e) => set('sinir', e.target.checked)} />
                                         Emitido no SINIR
                                     </label>
-                                    <Btn type="submit" color="#54a0ff"><FaPlus size={12} /> Registrar Manifesto</Btn>
+                                    <Btn type="submit" color="var(--color-info)"><FaPlus size={12} /> Registrar Manifesto</Btn>
                                 </div>
                             </div>
                         </form>
@@ -728,7 +758,7 @@ function ManifestoMTRView({ onBack }) {
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n} / página</option>)}
                 </Select>
                 {(fMes !== 'todos' || fResiduo !== 'todos' || fDestinador !== 'todos' || busca !== '' || fCard !== 'todos') && (
-                    <Btn variant="outline" color="#ff4757" onClick={() => {
+                    <Btn variant="outline" color="var(--color-danger)" onClick={() => {
                         setFMes('todos');
                         setFResiduo('todos');
                         setFDestinador('todos');
@@ -740,7 +770,7 @@ function ManifestoMTRView({ onBack }) {
                 )}
             </div>
             {error && (
-                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: '#ff47571a', border: '1px solid #ff475755', fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
+                <div style={{ padding: '0.7rem 0.9rem', borderRadius: 10, background: `${tint('var(--color-danger)','1a')}`, border: `1px solid ${tint('var(--color-danger)','55')}`, fontSize: '0.8rem', color: 'var(--color-text-main)', marginBottom: '0.8rem' }}>
                     Falha ao carregar do Supabase: {error}
                 </div>
             )}
@@ -766,9 +796,9 @@ function ManifestoMTRView({ onBack }) {
                     <span>
                         {(pageSafe - 1) * pageSize + 1}–{Math.min(pageSafe * pageSize, filtrados.length)} de {filtrados.length}
                     </span>
-                    <Btn variant="outline" color="#54a0ff" onClick={() => setPage(Math.max(1, pageSafe - 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe <= 1 ? 0.4 : 1, pointerEvents: pageSafe <= 1 ? 'none' : 'auto' }}>Anterior</Btn>
+                    <Btn variant="outline" color="var(--color-info)" onClick={() => setPage(Math.max(1, pageSafe - 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe <= 1 ? 0.4 : 1, pointerEvents: pageSafe <= 1 ? 'none' : 'auto' }}>Anterior</Btn>
                     <span>Página {pageSafe} de {totalPages}</span>
-                    <Btn variant="outline" color="#54a0ff" onClick={() => setPage(Math.min(totalPages, pageSafe + 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe >= totalPages ? 0.4 : 1, pointerEvents: pageSafe >= totalPages ? 'none' : 'auto' }}>Próxima</Btn>
+                    <Btn variant="outline" color="var(--color-info)" onClick={() => setPage(Math.min(totalPages, pageSafe + 1))} style={{ padding: '0.35rem 0.7rem', fontSize: '0.74rem', opacity: pageSafe >= totalPages ? 0.4 : 1, pointerEvents: pageSafe >= totalPages ? 'none' : 'auto' }}>Próxima</Btn>
                 </div>
             )}
 
@@ -825,8 +855,8 @@ function ManifestoMTRView({ onBack }) {
                         onClick={(e) => e.stopPropagation()}
                         style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 16, maxWidth: 420, width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,0.55)', padding: '1.6rem', textAlign: 'center', animation: 'fadeIn 0.15s ease-out' }}
                     >
-                        <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#ff47571a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                            <FaTrash size={22} color="#ff4757" />
+                        <div style={{ width: 54, height: 54, borderRadius: '50%', background: `${tint('var(--color-danger)','1a')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                            <FaTrash size={22} color="var(--color-danger)" />
                         </div>
                         <h3 style={{ margin: '0 0 0.4rem', fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text-main)' }}>Excluir manifesto?</h3>
                         <p style={{ margin: '0 0 1.4rem', fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
@@ -835,8 +865,8 @@ function ManifestoMTRView({ onBack }) {
                             {confirmDel.data ? ` (${brData(confirmDel.data)})` : ''} será removido permanentemente.
                         </p>
                         <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center' }}>
-                            <Btn variant="outline" color="#8b9bb4" onClick={() => setConfirmDel(null)}>Cancelar</Btn>
-                            <Btn color="#ff4757" onClick={() => { remove(confirmDel.id); setConfirmDel(null); }}><FaTrash size={12} /> Excluir</Btn>
+                            <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setConfirmDel(null)}>Cancelar</Btn>
+                            <Btn color="var(--color-danger)" onClick={() => { remove(confirmDel.id); setConfirmDel(null); }}><FaTrash size={12} /> Excluir</Btn>
                         </div>
                     </div>
                 </div>
@@ -852,8 +882,8 @@ function ManifestoMTRView({ onBack }) {
                         onClick={(e) => e.stopPropagation()}
                         style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 16, maxWidth: 440, width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,0.55)', padding: '1.6rem', textAlign: 'center', animation: 'fadeIn 0.15s ease-out' }}
                     >
-                        <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#ff9f431a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                            <FaBan size={22} color="#ff9f43" />
+                        <div style={{ width: 54, height: 54, borderRadius: '50%', background: `${tint('var(--color-orange)','1a')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                            <FaBan size={22} color="var(--color-orange)" />
                         </div>
                         <h3 style={{ margin: '0 0 0.4rem', fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text-main)' }}>Cancelar manifesto?</h3>
                         <p style={{ margin: '0 0 0.6rem', fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
@@ -866,7 +896,7 @@ function ManifestoMTRView({ onBack }) {
                         </p>
                         <div style={{ marginBottom: '1.4rem', textAlign: 'left' }}>
                             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '0.4rem' }}>
-                                Motivo do Cancelamento <span style={{ color: '#ff4757' }}>*</span>
+                                Motivo do Cancelamento <span style={{ color: 'var(--color-danger)' }}>*</span>
                             </label>
                             <textarea
                                 value={cancelReason}
@@ -887,8 +917,8 @@ function ManifestoMTRView({ onBack }) {
                             />
                         </div>
                         <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center' }}>
-                            <Btn variant="outline" color="#8b9bb4" onClick={() => setConfirmCancel(null)}>Voltar</Btn>
-                            <Btn color="#ff9f43" disabled={!cancelReason.trim()} onClick={() => {
+                            <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setConfirmCancel(null)}>Voltar</Btn>
+                            <Btn color="var(--color-orange)" disabled={!cancelReason.trim()} onClick={() => {
                                 update(confirmCancel.id, {
                                     cancelledAt: new Date().toISOString(),
                                     cancelledBy: nomeUsuario,
@@ -910,7 +940,7 @@ function ManifestoMTRView({ onBack }) {
 function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
     const brData = (d) => (d ? d.split('-').reverse().join('/') : '—');
     const partesResiduos = (manifesto.residuo || '').split(/\s*\|\s*/).filter(Boolean);
-    const corStatus = manifesto.status === 'Cancelado' ? '#ff4757' : manifesto.status === 'Emitido' ? '#10b981' : '#ffb700';
+    const corStatus = manifesto.status === 'Cancelado' ? 'var(--color-danger)' : manifesto.status === 'Emitido' ? 'var(--color-success)' : 'var(--color-warning)';
     const isCancelado = manifesto.status === 'Cancelado';
 
     const { items: refundItems, loading: refundLoading } = useRefunds(manifesto.id);
@@ -932,8 +962,8 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                 borderRadius: 12, background: isCancelado ? 'rgba(255, 71, 87, 0.04)' : 'rgba(255, 255, 255, 0.02)', border: `1px solid ${isCancelado ? 'rgba(255,71,87,0.2)' : 'var(--border-color-soft)'}`,
                 marginBottom: '1.5rem', flexWrap: 'wrap'
             }}>
-                <div style={{ minWidth: 36, width: 'auto', padding: '0 0.55rem', height: 36, borderRadius: 10, background: isCancelado ? '#ff475718' : '#10b98118', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0, gap: '4px' }}>
-                    {isCancelado ? <FaBan size={16} color="#ff4757" /> : iconeResiduo(manifesto.residuo)}
+                <div style={{ minWidth: 36, width: 'auto', padding: '0 0.55rem', height: 36, borderRadius: 10, background: isCancelado ? `${tint('var(--color-danger)','18')}` : `${tint('var(--color-success)','18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0, gap: '4px' }}>
+                    {isCancelado ? <FaBan size={16} color="var(--color-danger)" /> : iconeResiduo(manifesto.residuo)}
                 </div>
                 <div style={{ flex: '1 1 200px' }}>
                     <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Manifesto MTR</div>
@@ -945,7 +975,7 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                     <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600, textAlign: 'right' }}>Status</div>
                     <div style={{
                         display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.2rem 0.7rem', fontSize: '0.66rem', fontWeight: 700,
-                        color: corStatus, background: corStatus + '15', border: `1px solid ${corStatus}35`, borderRadius: 20, textAlign: 'right', marginTop: '2px'
+                        color: corStatus, background: tint(corStatus,'15'), border: `1px solid ${tint(corStatus,'35')}`, borderRadius: 20, textAlign: 'right', marginTop: '2px'
                     }}>
                         {isCancelado && <FaBan size={9} />}
                         {manifesto.status}
@@ -960,16 +990,16 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                     borderRadius: 10, background: 'rgba(255, 71, 87, 0.06)', border: '1px solid rgba(255, 71, 87, 0.18)',
                     marginBottom: '1.2rem', fontSize: '0.72rem', color: 'var(--color-text-muted)'
                 }}>
-                    <div style={{ marginTop: '2px' }}><FaBan size={12} color="#ff4757" style={{ flexShrink: 0 }} /></div>
+                    <div style={{ marginTop: '2px' }}><FaBan size={12} color="var(--color-danger)" style={{ flexShrink: 0 }} /></div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', width: '100%' }}>
                         <div>
-                            <span style={{ fontWeight: 600, color: '#ff4757' }}>Manifesto cancelado</span>
+                            <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>Manifesto cancelado</span>
                             {manifesto.cancelledBy && <> por <strong style={{ color: 'var(--color-text-main)' }}>{manifesto.cancelledBy}</strong></>}
                             {brCancelDate && <> em <strong style={{ color: 'var(--color-text-main)' }}>{brCancelDate}</strong></>}
                         </div>
                         {manifesto.cancelReason && (
                             <div style={{ fontSize: '0.75rem', color: 'var(--color-text-main)', borderTop: '1px dashed rgba(255, 71, 87, 0.2)', paddingTop: '0.3rem', marginTop: '0.1rem' }}>
-                                <strong style={{ color: '#ff4757' }}>Motivo:</strong> {manifesto.cancelReason}
+                                <strong style={{ color: 'var(--color-danger)' }}>Motivo:</strong> {manifesto.cancelReason}
                             </div>
                         )}
                     </div>
@@ -981,7 +1011,7 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                 
                 {/* Bloco 1: Informações Gerais */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem' }}>
-                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#54a0ff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-info)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         📋 Informações Gerais
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -994,7 +1024,7 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
 
                 {/* Bloco 2: Logística e Transporte */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem' }}>
-                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-success)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         🚚 Transporte e Destino
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -1007,7 +1037,7 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
 
                 {/* Bloco 3: Documentação e Emissão */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem', gridColumn: 'span 1' }}>
-                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#ffb700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-warning)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         📑 Documentos e Controle
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -1021,7 +1051,7 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
 
                 {/* Bloco 4: Resíduos Transportados */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem' }}>
-                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-purple)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         ♻️ Resíduos Vinculados ({partesResiduos.length})
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1044,11 +1074,11 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                 {isGestorOuAnalista && (
                     <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--border-color-soft)', borderRadius: 12, padding: '1rem', gridColumn: 'span 2' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                            <h3 style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <h3 style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-success)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 ⚖️ Peso Recebido do Fornecedor
                             </h3>
                             {totalPeso > 0 && (
-                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#10b981' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-success)' }}>
                                     Total: {totalPeso.toLocaleString('pt-BR')} kg{totalReembolso > 0 ? ` · R$ ${totalReembolso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : ''}
                                 </span>
                             )}
@@ -1077,10 +1107,10 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                                         {refundItems.map((it) => (
                                             <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
                                                 <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-main)', fontWeight: 500, whiteSpace: 'normal', wordBreak: 'break-word' }}>{it.description}</td>
-                                                <td style={{ padding: '0.4rem 0.6rem', color: '#10b981', fontWeight: 600, textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
+                                                <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-success)', fontWeight: 600, textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
                                                 <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>{it.unit}</td>
                                                 <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>{Number(it.unit_price) > 0 ? `R$ ${Number(it.unit_price).toFixed(2)}` : '—'}</td>
-                                                <td style={{ padding: '0.4rem 0.6rem', color: Number(it.total_price) > 0 ? '#ff9f43' : 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>{Number(it.total_price) > 0 ? `R$ ${Number(it.total_price).toFixed(2)}` : '—'}</td>
+                                                <td style={{ padding: '0.4rem 0.6rem', color: Number(it.total_price) > 0 ? 'var(--color-orange)' : 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>{Number(it.total_price) > 0 ? `R$ ${Number(it.total_price).toFixed(2)}` : '—'}</td>
                                                 <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.62rem' }}>
                                                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
                                                         <span>👤</span>
@@ -1099,7 +1129,7 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem' }}>
-                <Btn onClick={onClose} color="#8b9bb4" variant="outline"><FaTimes size={11} /> Fechar</Btn>
+                <Btn onClick={onClose} color="var(--color-text-muted)" variant="outline"><FaTimes size={11} /> Fechar</Btn>
             </div>
         </Modal>
     );
@@ -1244,19 +1274,19 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.2rem' }}>
                 <div style={{ padding: '0.8rem 1rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 12 }}>
                     <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Entradas (Receitas)</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981', marginTop: '4px' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-success)', marginTop: '4px' }}>
                         R$ {totais.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
                 <div style={{ padding: '0.8rem 1rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: 12 }}>
                     <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Saídas (Custo/Despesas)</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ef4444', marginTop: '4px' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-danger)', marginTop: '4px' }}>
                         R$ {totais.saidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
                 <div style={{ padding: '0.8rem 1rem', background: totais.saldo >= 0 ? 'rgba(84, 160, 255, 0.08)' : 'rgba(239, 68, 68, 0.08)', border: `1px solid ${totais.saldo >= 0 ? 'rgba(84, 160, 255, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`, borderRadius: 12 }}>
                     <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Saldo Líquido</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: totais.saldo >= 0 ? '#54a0ff' : '#ef4444', marginTop: '4px' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: totais.saldo >= 0 ? 'var(--color-info)' : 'var(--color-danger)', marginTop: '4px' }}>
                         R$ {totais.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
@@ -1320,7 +1350,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                         </Field>
                     </FormGrid>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.8rem' }}>
-                        <Btn type="submit" color="#ff9f43" style={{ padding: '0.45rem 1rem' }}>
+                        <Btn type="submit" color="var(--color-orange)" style={{ padding: '0.45rem 1rem' }}>
                             <FaPlus size={10} /> Registrar Lançamento
                         </Btn>
                     </div>
@@ -1401,7 +1431,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                 {(filtroDia !== '' || filtroMes !== 'todos' || filtroAno !== 'todos') && (
                     <Btn
                         variant="outline"
-                        color="#ff4757"
+                        color="var(--color-danger)"
                         onClick={() => {
                             setFiltroDia('');
                             setFiltroMes('todos');
@@ -1441,14 +1471,14 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                         </thead>
                         <tbody>
                             {filtradosCaixa.map((it) => {
-                                const corTipo = it.type === 'entrada' ? '#10b981' : '#ef4444';
+                                const corTipo = it.type === 'entrada' ? 'var(--color-success)' : 'var(--color-danger)';
                                 return (
                                     <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
                                         <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-muted)' }}>{brData(it.date)}</td>
                                         <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
                                             <span style={{
                                                 display: 'inline-block', padding: '0.1rem 0.45rem', fontSize: '0.58rem', fontWeight: 800,
-                                                color: corTipo, background: corTipo + '12', border: `1px solid ${corTipo}25`, borderRadius: 10, textTransform: 'uppercase'
+                                                color: corTipo, background: tint(corTipo,'12'), border: `1px solid ${tint(corTipo,'25')}`, borderRadius: 10, textTransform: 'uppercase'
                                             }}>
                                                 {it.type === 'entrada' ? 'Receita' : 'Custo'}
                                             </span>
@@ -1486,7 +1516,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Btn onClick={onClose} color="#8b9bb4" variant="outline"><FaTimes size={11} /> Fechar</Btn>
+                <Btn onClick={onClose} color="var(--color-text-muted)" variant="outline"><FaTimes size={11} /> Fechar</Btn>
             </div>
         </Modal>
     );
@@ -1620,7 +1650,7 @@ function RefundsManagerModal({ manifesto, currentUser, onClose }) {
                                         autoFocus
                                         required
                                     />
-                                    <Btn variant="outline" color="#8b9bb4" onClick={() => { setDescLivre(false); setDescDigitada(''); }} style={{ padding: '0.35rem 0.6rem' }}>
+                                    <Btn variant="outline" color="var(--color-text-muted)" onClick={() => { setDescLivre(false); setDescDigitada(''); }} style={{ padding: '0.35rem 0.6rem' }}>
                                         Voltar
                                     </Btn>
                                 </div>
@@ -1674,12 +1704,12 @@ function RefundsManagerModal({ manifesto, currentUser, onClose }) {
                         <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
                             {itemTotal > 0 && (
                                 <span>
-                                    Cálculo da prévia: {Number(form.quantity).toLocaleString('pt-BR')} {form.unit} × R$ {Number(form.unit_price).toFixed(2)} = <strong style={{ color: '#ff9f43' }}>R$ {itemTotal.toFixed(2)}</strong>
+                                    Cálculo da prévia: {Number(form.quantity).toLocaleString('pt-BR')} {form.unit} × R$ {Number(form.unit_price).toFixed(2)} = <strong style={{ color: 'var(--color-orange)' }}>R$ {itemTotal.toFixed(2)}</strong>
                                 </span>
                             )}
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-                            <Btn type="submit" color="#10b981" style={{ padding: '0.45rem 1rem' }}>
+                            <Btn type="submit" color="var(--color-success)" style={{ padding: '0.45rem 1rem' }}>
                                 <FaPlus size={10} /> Adicionar Peso
                             </Btn>
                         </div>
@@ -1714,10 +1744,10 @@ function RefundsManagerModal({ manifesto, currentUser, onClose }) {
                             {items.map((it) => (
                                 <tr key={it.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
                                     <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-main)', fontWeight: 500, whiteSpace: 'normal', wordBreak: 'break-word' }}>{it.description}</td>
-                                    <td style={{ padding: '0.5rem 0.7rem', color: '#10b981', fontWeight: 600, textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
+                                    <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-success)', fontWeight: 600, textAlign: 'right' }}>{Number(it.quantity).toLocaleString('pt-BR')}</td>
                                     <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>{it.unit}</td>
                                     <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>{Number(it.unit_price) > 0 ? `R$ ${Number(it.unit_price).toFixed(2)}` : '—'}</td>
-                                    <td style={{ padding: '0.5rem 0.7rem', color: Number(it.total_price) > 0 ? '#ff9f43' : 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>{Number(it.total_price) > 0 ? `R$ ${Number(it.total_price).toFixed(2)}` : '—'}</td>
+                                    <td style={{ padding: '0.5rem 0.7rem', color: Number(it.total_price) > 0 ? 'var(--color-orange)' : 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>{Number(it.total_price) > 0 ? `R$ ${Number(it.total_price).toFixed(2)}` : '—'}</td>
                                     <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
                                         <button
                                             type="button"
@@ -1732,8 +1762,8 @@ function RefundsManagerModal({ manifesto, currentUser, onClose }) {
                             ))}
                             <tr style={{ background: 'rgba(255,255,255,0.015)' }}>
                                 <td style={{ padding: '0.6rem 0.7rem', fontWeight: 700, color: 'var(--color-text-main)', textAlign: 'right' }}>TOTAL:</td>
-                                <td style={{ padding: '0.6rem 0.7rem', fontWeight: 800, color: '#10b981', textAlign: 'right', fontSize: '0.82rem' }}>{modalPeso.toLocaleString('pt-BR')} kg</td>
-                                <td colSpan={2} style={{ padding: '0.6rem 0.7rem', fontWeight: 700, color: modalTotal > 0 ? '#ff9f43' : 'var(--color-text-subtle)', textAlign: 'right' }}>{modalTotal > 0 ? `R$ ${modalTotal.toFixed(2)}` : ''}</td>
+                                <td style={{ padding: '0.6rem 0.7rem', fontWeight: 800, color: 'var(--color-success)', textAlign: 'right', fontSize: '0.82rem' }}>{modalPeso.toLocaleString('pt-BR')} kg</td>
+                                <td colSpan={2} style={{ padding: '0.6rem 0.7rem', fontWeight: 700, color: modalTotal > 0 ? 'var(--color-orange)' : 'var(--color-text-subtle)', textAlign: 'right' }}>{modalTotal > 0 ? `R$ ${modalTotal.toFixed(2)}` : ''}</td>
                                 <td></td>
                             </tr>
                         </tbody>
@@ -1742,7 +1772,7 @@ function RefundsManagerModal({ manifesto, currentUser, onClose }) {
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                <Btn onClick={onClose} color="#8b9bb4" variant="outline"><FaTimes size={11} /> Fechar</Btn>
+                <Btn onClick={onClose} color="var(--color-text-muted)" variant="outline"><FaTimes size={11} /> Fechar</Btn>
             </div>
         </Modal>
     );
@@ -1794,10 +1824,10 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
             {/* Resumo do manifesto em edição */}
             <div style={{
                 display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.7rem 0.9rem',
-                borderRadius: 12, background: '#10b9810d', border: '1px solid #10b98122',
+                borderRadius: 12, background: `${tint('var(--color-success)','0d')}`, border: `1px solid ${tint('var(--color-success)','22')}`,
                 marginBottom: '1.2rem', flexWrap: 'wrap'
             }}>
-                <div style={{ minWidth: 36, width: 'auto', padding: '0 0.55rem', height: 36, borderRadius: 10, background: '#10b98118', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0, gap: '4px' }}>
+                <div style={{ minWidth: 36, width: 'auto', padding: '0 0.55rem', height: 36, borderRadius: 10, background: `${tint('var(--color-success)','18')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0, gap: '4px' }}>
                     {iconeResiduo(f.residuo)}
                 </div>
                 <div style={{ flex: 1, minWidth: 180 }}>
@@ -1922,8 +1952,8 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
                         Emitido no SINIR
                     </label>
                     <div style={{ display: 'flex', gap: '0.6rem' }}>
-                        <Btn type="button" variant="outline" color="#8b9bb4" onClick={onClose}><FaTimes size={11} /> Cancelar</Btn>
-                        <Btn type="submit" color="#10b981"><FaSave size={12} /> Salvar alterações</Btn>
+                        <Btn type="button" variant="outline" color="var(--color-text-muted)" onClick={onClose}><FaTimes size={11} /> Cancelar</Btn>
+                        <Btn type="submit" color="var(--color-success)"><FaSave size={12} /> Salvar alterações</Btn>
                     </div>
                 </div>
             </form>
@@ -1953,7 +1983,7 @@ function ImportModal({ onClose, onImport }) {
                 placeholder="INSERT INTO waste_manifests (date, month, time, requester, waste_type, ...) VALUES (...);" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.72rem' }} />
 
             {previa && (
-                <div style={{ marginTop: '0.8rem', padding: '0.7rem 0.9rem', borderRadius: 10, background: previa.length ? '#10b9811a' : '#ff47571a', border: `1px solid ${previa.length ? '#10b98155' : '#ff475755'}`, fontSize: '0.8rem', color: 'var(--color-text-main)' }}>
+                <div style={{ marginTop: '0.8rem', padding: '0.7rem 0.9rem', borderRadius: 10, background: previa.length ? `${tint('var(--color-success)','1a')}` : `${tint('var(--color-danger)','1a')}`, border: `1px solid ${previa.length ? `${tint('var(--color-success)','55')}` : `${tint('var(--color-danger)','55')}`}`, fontSize: '0.8rem', color: 'var(--color-text-main)' }}>
                     {previa.length
                         ? <>Reconhecidos <strong>{previa.length}</strong> manifesto(s). Ex.: <em>{previa[0].data} · {previa[0].residuo} · {previa[0].destinador || '—'}</em></>
                         : 'Nenhum registro reconhecido. Verifique se colou os comandos INSERT completos.'}
@@ -1961,10 +1991,10 @@ function ImportModal({ onClose, onImport }) {
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '1.2rem' }}>
-                <Btn variant="outline" color="#8b9bb4" onClick={onClose}>Cancelar</Btn>
+                <Btn variant="outline" color="var(--color-text-muted)" onClick={onClose}>Cancelar</Btn>
                 {!previa
-                    ? <Btn color="#a78bfa" onClick={processar}><FaFileImport size={12} /> Processar</Btn>
-                    : <Btn color="#10b981" onClick={confirmar} ><FaPlus size={12} /> Importar {previa.length || ''}</Btn>}
+                    ? <Btn color="var(--color-purple)" onClick={processar}><FaFileImport size={12} /> Processar</Btn>
+                    : <Btn color="var(--color-success)" onClick={confirmar} ><FaPlus size={12} /> Importar {previa.length || ''}</Btn>}
             </div>
         </Modal>
     );

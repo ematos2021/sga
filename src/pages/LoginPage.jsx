@@ -25,10 +25,10 @@ function LoginPage({ onLoginSuccess }) {
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <div style={{
                         width: 64, height: 64, borderRadius: 18, margin: '0 auto 1rem',
-                        background: 'linear-gradient(135deg, #00ff9d, #10b981)', display: 'flex',
+                        background: 'linear-gradient(135deg, var(--color-primary), var(--color-success))', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,255,157,0.3)',
                     }}>
-                        <FaLeaf size={30} color="#0f1014" />
+                        <FaLeaf size={30} color="var(--color-on-accent)" />
                     </div>
                     <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-main)' }}>SGA</h1>
                     <p style={{ margin: '0.3rem 0 0', fontSize: '0.82rem', color: 'var(--color-text-subtle)', letterSpacing: '0.5px' }}>
