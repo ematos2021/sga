@@ -9,12 +9,7 @@
 // Classifica a destinação a partir do tipo de resíduo (para indicadores ESG)
 export function classificaDestinacao(wasteType = '') {
     const t = wasteType.toUpperCase();
-    // Aterro: a categoria só é afirmada como engradado quando o próprio nome do
-    // resíduo diz isso. Sem essa pista entra como comum — quem souber o contrário
-    // corrige no formulário, que grava em disposal_type.
-    if (/ATERRO|ENTULHO|CONTAMINAD|REJEITO|LIXO/.test(t)) {
-        return /ENGRAD/.test(t) ? 'Aterro Engradado' : 'Aterro Comum';
-    }
+    if (/ATERRO|ENTULHO|CONTAMINAD|REJEITO|LIXO/.test(t)) return 'Aterro Sanitário';
     if (/EFLUENTE|FOSSA|SANITARI/.test(t)) return 'Tratamento';
     if (/OLEO|ÓLEO|LUBRIFICANTE/.test(t)) return 'Coprocessamento';
     if (/PAPEL|PAPELÃO|PAPELAO|PLÁSTICO|PLASTICO|ISOPOR|SUCATA|METÁL|METAL|PALLET|LENHA|MADEIRA|TUBETE|EMBAL|VIDRO|ORGÂNICO|ORGANICO/.test(t)) return 'Reciclagem';
