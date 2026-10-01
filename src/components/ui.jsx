@@ -148,7 +148,7 @@ export function Select({ children, value, onChange, style, disabled, placeholder
                 ref={ref} type="button" onClick={abrir} disabled={disabled} className="input-dark"
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', cursor: disabled ? 'default' : 'pointer', textAlign: 'left', width: '100%', borderColor: open ? 'var(--color-primary)' : undefined, opacity: disabled ? 0.6 : 1, ...style }}
             >
-                <span style={{ color: isPlaceholder ? 'var(--color-text-subtle)' : 'var(--color-text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span title={isPlaceholder ? ph : selected.labelText} style={{ color: isPlaceholder ? 'var(--color-text-subtle)' : 'var(--color-text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {isPlaceholder ? ph : selected.label}
                 </span>
                 <FaChevronDown size={10} style={{ color: 'var(--color-text-subtle)', flexShrink: 0, transition: 'transform 0.18s', transform: open ? 'rotate(180deg)' : 'none' }} />
@@ -157,7 +157,7 @@ export function Select({ children, value, onChange, style, disabled, placeholder
             {open && rect && createPortal(
                 <>
                     <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-                    <div style={{ position: 'fixed', left: rect.left, top: rect.top, width: Math.max(rect.width, 170), maxWidth: '90vw', zIndex: 9999, background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 10, boxShadow: '0 18px 44px rgba(0,0,0,0.45)', overflow: 'hidden', animation: 'fadeIn 0.12s ease-out' }}>
+                    <div style={{ position: 'fixed', left: rect.left, top: rect.top, minWidth: Math.max(rect.width, 170), width: 'max-content', maxWidth: 'min(460px, calc(100vw - ' + rect.left + 'px - 12px))', zIndex: 9999, background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 10, boxShadow: '0 18px 44px rgba(0,0,0,0.45)', overflow: 'hidden', animation: 'fadeIn 0.12s ease-out' }}>
                         {canSearch && (
                             <div style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color-soft)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                                 <FaSearch size={11} style={{ color: 'var(--color-text-subtle)' }} />
@@ -189,7 +189,7 @@ function Opcao({ o, ativo, muted, onClick }) {
             onMouseEnter={(e) => { if (!ativo) e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
             onMouseLeave={(e) => { if (!ativo) e.currentTarget.style.background = 'transparent'; }}
         >
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
+            <span style={{ whiteSpace: 'normal', overflowWrap: 'anywhere', lineHeight: 1.35 }}>{o.label}</span>
             {ativo && !muted && <FaCheck size={10} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />}
         </div>
     );

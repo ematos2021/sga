@@ -785,7 +785,7 @@ function ManifestoMTRView({ onBack }) {
                 </Select>
                 <Select value={fResiduo} onChange={(e) => setFResiduo(e.target.value)} style={{ width: 170 }}>
                     <option value="todos">Resíduo</option>
-                    {tiposResiduo.map((r) => <option key={r} value={r}>{r.length > 24 ? r.slice(0, 24) + '…' : r}</option>)}
+                    {tiposResiduo.map((r) => <option key={r} value={r}>{r}</option>)}
                 </Select>
                 <Select value={fDestinador} onChange={(e) => setFDestinador(e.target.value)} style={{ width: 150 }}>
                     <option value="todos">Transportador</option>

@@ -235,11 +235,11 @@ function FichaResiduosView({ onBack }) {
                 <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" style={{ width: 170, fontSize: '0.68rem', padding: '0.3rem 0.55rem' }} />
                 <Select value={fTipo} onChange={(e) => setFTipo(e.target.value)} style={{ width: 120, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Tipo</option>
-                    {tipos.map((t) => <option key={t} value={t}>{t.length > 22 ? t.slice(0, 22) + '…' : t}</option>)}
+                    {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
                 </Select>
                 <Select value={fTratamento} onChange={(e) => setFTratamento(e.target.value)} style={{ width: 130, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Tratamento</option>
-                    {tratamentos.map((t) => <option key={t} value={t}>{t.length > 24 ? t.slice(0, 24) + '…' : t}</option>)}
+                    {tratamentos.map((t) => <option key={t} value={t}>{t}</option>)}
                 </Select>
                 <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n}/pág</option>)}
