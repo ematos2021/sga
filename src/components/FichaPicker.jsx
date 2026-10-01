@@ -33,6 +33,7 @@ const corTratamento = (tr = '') => {
     const t = tr.toUpperCase();
     if (/RECICLA|REREFINO|REUTILIZ/.test(t)) return 'var(--color-success)';
     if (/ATERRO CLASSE I\b|ATERRO CLASSE 1/.test(t)) return 'var(--color-danger)';
+    if (/ENGRAD/.test(t)) return 'var(--color-orange)';
     if (/ATERRO/.test(t)) return 'var(--color-warning)';
     if (/INCINER/.test(t)) return 'var(--color-danger)';
     if (/AUTOCLAVE|DESCONTAMINA/.test(t)) return 'var(--color-purple)';

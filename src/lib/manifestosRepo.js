@@ -5,8 +5,10 @@
 //
 //  A tabela usa nomes em inglês; o app usa o modelo em português. O
 //  mapeamento abaixo converte nos dois sentidos. Campos derivados
-//  (status, destinacao, classe, sinir) NÃO têm coluna no banco — são
-//  calculados na leitura e só persistem em memória durante a sessão.
+//  (status, classe, sinir) NÃO têm coluna no banco — são calculados na
+//  leitura e só persistem em memória durante a sessão. A destinação, desde
+//  a especificação do aterro (comum × engradado), TEM coluna própria
+//  (disposal_type); vazia, cai na classificação pelo nome do resíduo.
 // ════════════════════════════════════════════════════════════════
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from './supabase';
@@ -31,6 +33,7 @@ const FIELD_TO_COL = {
     destinador: 'receiver',
     destinadorFinal: 'destinator',
     setorColeta: 'collection_sector',
+    destinacao: 'disposal_type',
     tipoRecebedor: 'recebedor_tipo',
     cancelledAt: 'cancelled_at',
     cancelledBy: 'cancelled_by',
@@ -59,7 +62,9 @@ function rowToManifesto(row) {
         destinadorFinal: limpa(row.destinator),
         setorColeta: limpa(row.collection_sector),
         tipoRecebedor: limpa(row.recebedor_tipo) || 'Fornecedor',
-        destinacao: classificaDestinacao(residuo),
+        // O que o usuário escolheu manda; sem coluna preenchida (histórico
+        // importado antes da especificação), deduz pelo nome do resíduo.
+        destinacao: limpa(row.disposal_type) || classificaDestinacao(residuo),
         classe: classificaClasse(residuo),
         status: row.cancelled_at ? 'Cancelado' : 'Emitido',
         sinir: !ehVazio(row.mondial_manifest_number),

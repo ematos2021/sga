@@ -19,10 +19,20 @@ export const TIPOS_DESTINACAO = [
     'Coprocessamento',
     'Compostagem',
     'Incineração',
-    'Aterro Industrial',
-    'Aterro Sanitário',
+    'Aterro Comum',
+    'Aterro Engradado',
     'Tratamento',
 ];
+
+// As duas categorias de aterro praticadas pelo destinador. O manuseio e a
+// cobrança diferem entre elas, por isso a destinação já nasce especificada em
+// vez de registrar um "Aterro" genérico.
+export const TIPOS_ATERRO = ['Aterro Comum', 'Aterro Engradado'];
+
+// Fonte única para "este manifesto foi para aterro?" — usada por KPIs, filtros
+// e gráficos. O prefixo também reconhece os rótulos anteriores à especificação
+// ('Aterro Industrial' / 'Aterro Sanitário') que ainda aparecem no histórico.
+export const ehAterro = (d = '') => /^Aterro\b/.test(d);
 
 // Escala de Ringelmann — densidade de fumaça preta (CONAMA / NBR 6016)
 // Limite legal: máx. grau 2 (40%), exceto 5s contínuos na partida (grau 3)

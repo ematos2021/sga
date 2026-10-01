@@ -5,7 +5,7 @@ import { uid } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
 import { useManifestos } from '../lib/manifestosRepo';
 import { useWasteRegistry } from '../lib/wasteRegistryRepo';
-import { STATUS_MANIFESTO, TIPOS_DESTINACAO, SINIR_URL } from '../lib/constants';
+import { STATUS_MANIFESTO, TIPOS_DESTINACAO, SINIR_URL, ehAterro } from '../lib/constants';
 import { exportToExcel } from '../lib/excel';
 import { parseWasteManifestsSQL } from '../lib/importManifestos';
 import { useRefunds, useRefundCatalog } from '../lib/refundsRepo';
@@ -109,8 +109,11 @@ const destinacaoDeTratamento = (t = '') => {
     if (/COPROCESS/.test(s)) return 'Coprocessamento';
     if (/COMPOST/.test(s)) return 'Compostagem';
     if (/INCINER/.test(s)) return 'Incineração';
-    if (/CLASSE I\b|CLASSE 1|ATERRO CLASSE I/.test(s)) return 'Aterro Industrial';
-    if (/CLASSE II|ATERRO/.test(s)) return 'Aterro Sanitário';
+    // A ficha fala em classe (I/II), não em categoria de aterro. Só afirma
+    // engradado quando a ficha diz isso; o resto vem como comum e fica editável
+    // no campo Destinação.
+    if (/ENGRAD/.test(s)) return 'Aterro Engradado';
+    if (/ATERRO|CLASSE I\b|CLASSE 1|CLASSE II/.test(s)) return 'Aterro Comum';
     if (/EFLUENTE|AUTOCLAVE|DESCONTAMINA|TRATAMENTO/.test(s)) return 'Tratamento';
     return '';
 };
@@ -233,6 +236,7 @@ function ManifestoMTRView({ onBack }) {
     const [fMes, setFMes] = useState('todos');
     const [fResiduo, setFResiduo] = useState('todos');
     const [fDestinador, setFDestinador] = useState('todos');
+    const [fDestinacao, setFDestinacao] = useState('todos');
     const [fCard, setFCard] = useState('todos');
     const [busca, setBusca] = useState('');
     const [showImport, setShowImport] = useState(false);
@@ -336,24 +340,25 @@ function ManifestoMTRView({ onBack }) {
             (fMes === 'todos' || mesDe(m) === fMes) &&
             (fResiduo === 'todos' || m.residuo === fResiduo) &&
             (fDestinador === 'todos' || m.destinador === fDestinador) &&
+            (fDestinacao === 'todos' || m.destinacao === fDestinacao) &&
             (!q || `${m.numeroMTR} ${m.residuo} ${m.solicitante} ${m.motorista} ${m.placa} ${m.destinador} ${m.setorColeta}`.toLowerCase().includes(q))
         );
-    }, [items, fMes, fResiduo, fDestinador, busca]);
+    }, [items, fMes, fResiduo, fDestinador, fDestinacao, busca]);
 
     // O card clicado recorta só a TABELA. Se recortasse também os indicadores,
     // ao clicar em "Aterro" os demais cards zerariam e não haveria como voltar.
     const filtrados = useMemo(() => baseFiltrada.filter((m) => {
         if (fCard === 'reciclagem') return m.destinacao === 'Reciclagem' || m.destinacao === 'Reutilização';
-        if (fCard === 'aterro') return m.destinacao === 'Aterro Industrial' || m.destinacao === 'Aterro Sanitário';
-        if (fCard === 'outros') return m.destinacao !== 'Reciclagem' && m.destinacao !== 'Reutilização' && m.destinacao !== 'Aterro Industrial' && m.destinacao !== 'Aterro Sanitário';
+        if (fCard === 'aterro') return ehAterro(m.destinacao);
+        if (fCard === 'outros') return m.destinacao !== 'Reciclagem' && m.destinacao !== 'Reutilização' && !ehAterro(m.destinacao);
         return true;
     }), [baseFiltrada, fCard]);
 
     // Há recorte ativo? (o card não conta — ele não muda os indicadores)
-    const filtroAtivo = fMes !== 'todos' || fResiduo !== 'todos' || fDestinador !== 'todos' || busca.trim() !== '';
+    const filtroAtivo = fMes !== 'todos' || fResiduo !== 'todos' || fDestinador !== 'todos' || fDestinacao !== 'todos' || busca.trim() !== '';
 
     // Volta para a 1ª página sempre que filtros/busca/tamanho mudam
-    useEffect(() => { setPage(1); }, [busca, fMes, fResiduo, fDestinador, fCard, pageSize]);
+    useEffect(() => { setPage(1); }, [busca, fMes, fResiduo, fDestinador, fDestinacao, fCard, pageSize]);
 
     const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));
     const pageSafe = Math.min(page, totalPages);
@@ -395,13 +400,15 @@ function ManifestoMTRView({ onBack }) {
         const recic = ativos.filter((m) =>
             m.destinacao === 'Reciclagem' || m.destinacao === 'Reutilização'
         ).length;
-        const aterro = ativos.filter((m) =>
-            m.destinacao === 'Aterro Industrial' || m.destinacao === 'Aterro Sanitário'
-        ).length;
+        const emAterro = ativos.filter((m) => ehAterro(m.destinacao));
+        const aterro = emAterro.length;
+        // Quebra do aterro por categoria — é o que separa a cobrança do destinador.
+        const aterroEngradado = emAterro.filter((m) => m.destinacao === 'Aterro Engradado').length;
+        const aterroComum = aterro - aterroEngradado;
         const outros = total - recic - aterro; // Coprocessamento, Incineração, Tratamento, Outros…
         const taxaRecic = total ? Math.round((recic / total) * 100) : 0;
         const destCount = new Set(ativos.map((m) => m.destinador).filter(Boolean)).size;
-        return { total, recic, aterro, outros, taxaRecic, destinadores: destCount, cancelados };
+        return { total, recic, aterro, aterroComum, aterroEngradado, outros, taxaRecic, destinadores: destCount, cancelados };
     }, [baseFiltrada]);
 
     // Peso recebido pelos fornecedores (relatório mensal de pesagem) e, se
@@ -589,7 +596,7 @@ function ManifestoMTRView({ onBack }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.55rem', marginBottom: '1rem' }}>
                 <Kpi icon={<FaTruckMoving size={12} />} label="Manifestos" value={kpis.total} sub={filtroAtivo ? `de ${items.length} · filtrado` : 'total registrados'} color="var(--color-info)" onClick={() => setFCard('todos')} active={fCard === 'todos'} />
                 <Kpi icon={<FaFileExcel size={12} />} label="Reciclagem" value={kpis.recic} sub={`${kpis.taxaRecic}% do total`} color="var(--color-success)" onClick={() => setFCard('reciclagem')} active={fCard === 'reciclagem'} />
-                <Kpi icon={<FaTrash size={12} />} label="Aterro" value={kpis.aterro} sub={`${kpis.total ? Math.round((kpis.aterro / kpis.total) * 100) : 0}% do total`} color={kpis.aterro ? 'var(--color-warning)' : 'var(--color-success)'} onClick={() => setFCard('aterro')} active={fCard === 'aterro'} />
+                <Kpi icon={<FaTrash size={12} />} label="Aterro" value={kpis.aterro} sub={kpis.aterro ? `${kpis.aterroComum} comum · ${kpis.aterroEngradado} engradado` : '0% do total'} color={kpis.aterro ? 'var(--color-warning)' : 'var(--color-success)'} onClick={() => setFCard('aterro')} active={fCard === 'aterro'} />
                 <Kpi icon={<FaForward size={12} />} label="Outros destinos" value={kpis.outros} sub="copro · incin · trat" color="var(--color-purple)" onClick={() => setFCard('outros')} active={fCard === 'outros'} />
                 <Kpi icon={<FaForward size={12} />} label="Destinadores" value={kpis.destinadores} sub="parceiros distintos" color="var(--color-secondary)" />
                 {isGestorOuAnalista && (
@@ -784,14 +791,19 @@ function ManifestoMTRView({ onBack }) {
                     <option value="todos">Transportador</option>
                     {destinadores.map((d) => <option key={d} value={d}>{d}</option>)}
                 </Select>
+                <Select value={fDestinacao} onChange={(e) => setFDestinacao(e.target.value)} style={{ width: 150 }}>
+                    <option value="todos">Destinação</option>
+                    {TIPOS_DESTINACAO.map((d) => <option key={d} value={d}>{d}</option>)}
+                </Select>
                 <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 110 }}>
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n} / página</option>)}
                 </Select>
-                {(fMes !== 'todos' || fResiduo !== 'todos' || fDestinador !== 'todos' || busca !== '' || fCard !== 'todos') && (
+                {(fMes !== 'todos' || fResiduo !== 'todos' || fDestinador !== 'todos' || fDestinacao !== 'todos' || busca !== '' || fCard !== 'todos') && (
                     <Btn variant="outline" color="var(--color-danger)" onClick={() => {
                         setFMes('todos');
                         setFResiduo('todos');
                         setFDestinador('todos');
+                        setFDestinacao('todos');
                         setBusca('');
                         setFCard('todos');
                     }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.74rem' }}>
