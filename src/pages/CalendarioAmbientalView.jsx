@@ -429,7 +429,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
                                                         <span style={{
                                                             fontSize: '0.62rem', fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-                                                            background: cat.tint(color,'15'), color: cat.color, border: `1px solid ${cat.color}33`,
+                                                            background: tint(cat.color,'15'), color: cat.color, border: `1px solid ${cat.color}33`,
                                                             display: 'inline-flex', alignItems: 'center', gap: '4px'
                                                         }}>
                                                             {getCategoryIcon(evt.categoria)}

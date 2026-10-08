@@ -231,7 +231,7 @@ function UsuariosView({ onBack }) {
                                                             padding: '0.3rem 0.6rem', borderRadius: 8, cursor: 'pointer',
                                                             fontSize: '0.72rem', fontWeight: 600, transition: 'all 0.15s',
                                                             background: checked ? `${page.color}15` : 'rgba(255,255,255,0.02)',
-                                                            border: `1px solid ${checked ? page.tint(color,'55') : 'rgba(255,255,255,0.06)'}`,
+                                                            border: `1px solid ${checked ? tint(page.color,'55') : 'rgba(255,255,255,0.06)'}`,
                                                             color: checked ? page.color : 'var(--color-text-muted)',
                                                         }}
                                                     >

@@ -274,7 +274,7 @@ function VisaoGeral({ calc, scores, cfg, potencialReducao, coleta, onIrColeta })
                     <ScoreGauge score={scores.geral} />
                     <div style={{ display: 'flex', gap: '0.7rem', marginTop: '1rem', width: '100%' }}>
                         {[['E', scores.E], ['S', scores.S], ['G', scores.G]].map(([p, s]) => (
-                            <div key={p} style={{ flex: 1, textAlign: 'center', padding: '0.6rem 0.3rem', borderRadius: 10, background: ESG_PILARES[p].tint(color,'12'), border: `1px solid ${ESG_PILARES[p].color}33` }}>
+                            <div key={p} style={{ flex: 1, textAlign: 'center', padding: '0.6rem 0.3rem', borderRadius: 10, background: tint(ESG_PILARES[p].color,'12'), border: `1px solid ${ESG_PILARES[p].color}33` }}>
                                 <div style={{ fontSize: '0.62rem', color: ESG_PILARES[p].color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{ESG_PILARES[p].label}</div>
                                 <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text-main)' }}>{s}</div>
                             </div>
@@ -479,7 +479,7 @@ function Inventario({ emissoes, calc, addEmissao, updEmissao, rmEmissao }) {
                             <tr key={e.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-main)' }}>{e.ano}</td>
                                 <td style={{ padding: '0.55rem 0.8rem' }}>
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: GEE_ESCOPOS[e.escopo].tint(color,'1f'), color: GEE_ESCOPOS[e.escopo].color }}>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: tint(GEE_ESCOPOS[e.escopo].color,'1f'), color: GEE_ESCOPOS[e.escopo].color }}>
                                         {ESCOPO_ICON[e.escopo]} {e.escopo}
                                     </span>
                                 </td>
@@ -668,7 +668,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                     <div style={{ display: 'flex', gap: '1.2rem', marginBottom: '0.8rem', fontSize: '0.72rem', color: 'var(--color-text-subtle)', flexWrap: 'wrap' }}>
                         {Object.entries(COLETA_STATUS).map(([k, v]) => (
                             <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                                <span style={{ width: 14, height: 14, borderRadius: 4, background: v.tint(color,'33'), border: `1px solid ${v.color}`, color: v.color, fontSize: '0.6rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{v.sigla}</span> {v.label}
+                                <span style={{ width: 14, height: 14, borderRadius: 4, background: tint(v.color,'33'), border: `1px solid ${v.color}`, color: v.color, fontSize: '0.6rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{v.sigla}</span> {v.label}
                             </span>
                         ))}
                     </div>
@@ -718,7 +718,7 @@ function MapaColeta({ mapa, updMapa, addMapa, rmMapa, contatos, coleta }) {
                                                                 : <span style={{ color: 'var(--color-danger)', fontSize: '0.72rem' }} title="Designar fornecedor">a designar</span>}
                                                         </td>
                                                         <td style={{ padding: '0.5rem 0.4rem', textAlign: 'center' }}>
-                                                            <span style={{ fontSize: '0.64rem', fontWeight: 700, color: sf.color, background: sf.tint(color,'1f'), padding: '2px 7px', borderRadius: 5, whiteSpace: 'nowrap' }} title={sf.desc}>{sf.label}</span>
+                                                            <span style={{ fontSize: '0.64rem', fontWeight: 700, color: sf.color, background: tint(sf.color,'1f'), padding: '2px 7px', borderRadius: 5, whiteSpace: 'nowrap' }} title={sf.desc}>{sf.label}</span>
                                                         </td>
                                                         {MESES.map((mes) => {
                                                             if (na) return <td key={mes} style={{ textAlign: 'center', color: 'var(--color-text-faint)' }}>—</td>;
@@ -913,7 +913,7 @@ function Indicadores({ scores, esgInd, updInd }) {
                         <Card key={p} style={{ borderTop: `3px solid ${pil.color}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                    <div style={{ width: 34, height: 34, borderRadius: 9, background: pil.tint(color,'1f'), color: pil.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{pil.sigla}</div>
+                                    <div style={{ width: 34, height: 34, borderRadius: 9, background: tint(pil.color,'1f'), color: pil.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{pil.sigla}</div>
                                     <div>
                                         <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{pil.label}</div>
                                         <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>{pil.desc}</div>
@@ -1054,7 +1054,7 @@ function Descarbonizacao({ calc, cfg, iniciativas, addIni, updIni, rmIni }) {
                             <tr key={i.id} style={{ borderBottom: '1px solid var(--border-color-soft)' }}>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-main)', maxWidth: 280 }}>{i.nome}</td>
                                 <td style={{ padding: '0.55rem 0.8rem' }}>
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: GEE_ESCOPOS[i.escopo].tint(color,'1f'), color: GEE_ESCOPOS[i.escopo].color }}>{ESCOPO_ICON[i.escopo]} {i.escopo}</span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '2px 8px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: tint(GEE_ESCOPOS[i.escopo].color,'1f'), color: GEE_ESCOPOS[i.escopo].color }}>{ESCOPO_ICON[i.escopo]} {i.escopo}</span>
                                 </td>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-muted)', fontSize: '0.76rem' }}>{i.responsavel || '—'}</td>
                                 <td style={{ padding: '0.55rem 0.8rem', color: 'var(--color-text-muted)' }}>{i.prazo ? i.prazo.split('-').reverse().join('/') : '—'}</td>

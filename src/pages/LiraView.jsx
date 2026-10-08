@@ -462,8 +462,8 @@ function LiraView({ onBack }) {
                                 onClick={() => setFSetor(ativo ? 'todos' : s.setor)}
                                 title="Clique para filtrar a tabela por este setor"
                                 style={{
-                                    border: `1px solid ${ativo ? info.tint(cor,'aa') : 'var(--border-color-soft)'}`,
-                                    background: ativo ? info.tint(cor,'10') : 'var(--bg-card)',
+                                    border: `1px solid ${ativo ? tint(info.cor,'aa') : 'var(--border-color-soft)'}`,
+                                    background: ativo ? tint(info.cor,'10') : 'var(--bg-card)',
                                     borderRadius: 10, padding: '0.55rem 0.7rem', cursor: 'pointer', transition: 'all 0.15s',
                                 }}
                             >
@@ -483,7 +483,7 @@ function LiraView({ onBack }) {
                                     </span>
                                 </div>
                                 <div style={{ marginTop: 10 }}>
-                                    <Btn variant="outline" color={info.cor} onClick={(e) => { e.stopPropagation(); setShowRelatorioSetor(s.setor); }} style={{ padding: '0.35rem', fontSize: '0.65rem', width: '100%', borderColor: info.tint(cor,'44') }}>
+                                    <Btn variant="outline" color={info.cor} onClick={(e) => { e.stopPropagation(); setShowRelatorioSetor(s.setor); }} style={{ padding: '0.35rem', fontSize: '0.65rem', width: '100%', borderColor: tint(info.cor,'44') }}>
                                         <FaPrint size={10} style={{ marginRight: 6 }} /> Gerar Relatório
                                     </Btn>
                                 </div>
