@@ -5,8 +5,8 @@ import { useCollection, COL } from '../lib/store';
 import { obterEventosProximos } from '../lib/constants';
 import {
     FaLeaf, FaSignOutAlt, FaChartPie, FaFileSignature, FaFileExcel, FaTruckMoving,
-    FaTicketAlt, FaSmog, FaFileInvoiceDollar, FaUsers, FaDatabase, FaRecycle,
-    FaCalendarAlt, FaBell, FaGlobeAmericas, FaUsersCog, FaBalanceScale, FaBug, FaTable
+    FaFileInvoiceDollar, FaUsers, FaDatabase, FaRecycle,
+    FaCalendarAlt, FaBell, FaUsersCog, FaBalanceScale, FaBug, FaTable
 } from 'react-icons/fa';
 
 
@@ -17,13 +17,10 @@ const MENU = [
     // Operação de resíduos
     { id: 'autorizacoes', label: 'Autorização de Saída', icon: <FaFileSignature size={22} />, color: 'var(--color-primary)', description: 'Preenchimento diário (seg–sáb)', cat: 'residuos' },
     { id: 'manifestos', label: 'Manifesto MTR / SINIR', icon: <FaTruckMoving size={22} />, color: 'var(--color-info)', description: 'Emissão e controle de MTR', cat: 'residuos' },
-    { id: 'tickets', label: 'Tickets de Coleta', icon: <FaTicketAlt size={22} />, color: 'var(--color-orange)', description: 'Tickets vinculados aos manifestos', cat: 'residuos' },
     { id: 'controle-residuos', label: 'Controle de Saída', icon: <FaFileExcel size={22} />, color: 'var(--color-success)', description: 'Histórico consolidado · exporta Excel', cat: 'residuos' },
     { id: 'conciliacao', label: 'Conciliação Mensal', icon: <FaTable size={22} />, color: 'var(--color-secondary)', description: 'Conferência por fornecedor · pivot anual', cat: 'residuos' },
 
     // Monitoramento
-    { id: 'esg-carbono', label: 'ESG & Carbono', icon: <FaGlobeAmericas size={22} />, color: 'var(--color-success)', description: 'Inventário de GEE e trajetória Net Zero', cat: 'monitoramento' },
-    { id: 'fumaca', label: 'Fumaça Preta', icon: <FaSmog size={22} />, color: 'var(--color-purple)', description: 'Medição Ringelmann dos geradores', cat: 'monitoramento' },
     { id: 'lira', label: 'LIRA · Requisitos Legais', icon: <FaBalanceScale size={22} />, color: 'var(--color-secondary)', description: 'Análise de conformidade legal · meta diária', cat: 'monitoramento' },
     { id: 'dedetizacao', label: 'Controle de Pragas', icon: <FaBug size={22} />, color: 'var(--color-orange)', description: 'Dedetização FR 861 · solicitações e reincidências', cat: 'monitoramento' },
 
@@ -41,8 +38,8 @@ const MENU = [
 
 const CATEGORIES = [
     { id: 'visao', label: 'Visão Geral', color: 'var(--color-secondary)', ids: ['dashboard', 'calendario'] },
-    { id: 'residuos', label: 'Operação de Resíduos', color: 'var(--color-primary)', ids: ['autorizacoes', 'manifestos', 'tickets', 'controle-residuos', 'conciliacao'] },
-    { id: 'monitoramento', label: 'Monitoramento & Conformidade', color: 'var(--color-success)', ids: ['esg-carbono', 'fumaca', 'lira', 'dedetizacao'] },
+    { id: 'residuos', label: 'Operação de Resíduos', color: 'var(--color-primary)', ids: ['autorizacoes', 'manifestos', 'controle-residuos', 'conciliacao'] },
+    { id: 'monitoramento', label: 'Monitoramento & Conformidade', color: 'var(--color-success)', ids: ['lira', 'dedetizacao'] },
     { id: 'comercial', label: 'Comercial & Logística', color: 'var(--color-warning)', ids: ['nf-sucata', 'motoristas'] },
     { id: 'cadastros', label: 'Cadastros', color: 'var(--color-purple)', ids: ['cadastros', 'ficha-residuos'] },
     { id: 'admin', label: 'Administração', color: 'var(--color-purple)', ids: ['usuarios'] },

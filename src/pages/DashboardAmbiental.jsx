@@ -1,14 +1,12 @@
 import { useMemo } from 'react';
 import {
-    FaChartPie, FaTruckMoving, FaFileSignature, FaSmog, FaRecycle, FaLeaf,
-    FaCheckCircle, FaExclamationTriangle, FaWeightHanging,
+    FaChartPie, FaTruckMoving, FaFileSignature, FaRecycle, FaLeaf, FaWeightHanging,
 } from 'react-icons/fa';
 import {
     PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import { PageShell, Card, Kpi } from '../components/ui';
 import { useCollection, COL } from '../lib/store';
-import { apuradoInfo } from '../lib/constants';
 import { tint } from '../lib/color';
 
 const PIE_COLORS = ['var(--color-primary)', 'var(--color-info)', 'var(--color-warning)', 'var(--color-purple)', 'var(--color-orange)', 'var(--color-cyan)', 'var(--color-danger)', 'var(--color-success)'];
@@ -16,7 +14,6 @@ const PIE_COLORS = ['var(--color-primary)', 'var(--color-info)', 'var(--color-wa
 function DashboardAmbiental({ onBack, onNavigate }) {
     const { items: autorizacoes } = useCollection(COL.AUTORIZACOES);
     const { items: manifestos } = useCollection(COL.MANIFESTOS);
-    const { items: fumaca } = useCollection(COL.FUMACA);
     const { items: residuos } = useCollection(COL.RESIDUOS);
 
     const data = useMemo(() => {
@@ -45,16 +42,8 @@ function DashboardAmbiental({ onBack, onNavigate }) {
         manifestos.forEach((m) => { statusCount[m.status] = (statusCount[m.status] || 0) + 1; });
         const barStatus = Object.entries(statusCount).map(([name, qtd]) => ({ name, qtd }));
 
-        // Conformidade fumaça — percorre todas as medições de todos os relatórios
-        let fumTotal = 0, fumOk = 0;
-        fumaca.forEach((rel) => (rel.rounds || []).forEach((r) => r.medicoes.forEach((m) => {
-            fumTotal++;
-            if (apuradoInfo(m.apurado).conforme) fumOk++;
-        })));
-        const taxaFumaca = fumTotal ? Math.round((fumOk / fumTotal) * 100) : 100;
-
-        return { kgTotal, pieDestinacao, taxaValorizacao, barStatus, taxaFumaca, fumReprov: fumTotal - fumOk };
-    }, [autorizacoes, manifestos, fumaca]);
+        return { kgTotal, pieDestinacao, taxaValorizacao, barStatus };
+    }, [autorizacoes, manifestos]);
 
     const pendentes = autorizacoes.filter((a) => a.status === 'Pendente').length;
 
@@ -65,7 +54,6 @@ function DashboardAmbiental({ onBack, onNavigate }) {
                 <Kpi icon={<FaWeightHanging size={13} />} label="Resíduo destinado" value={`${data.kgTotal.toLocaleString('pt-BR')} kg`} color="var(--color-primary)" />
                 <Kpi icon={<FaRecycle size={13} />} label="Taxa de valorização" value={`${data.taxaValorizacao}%`} sub="reciclado / coprocessado" color="var(--color-success)" />
                 <Kpi icon={<FaTruckMoving size={13} />} label="Manifestos (MTR)" value={manifestos.length} color="var(--color-info)" />
-                <Kpi icon={data.taxaFumaca >= 100 ? <FaCheckCircle size={13} /> : <FaExclamationTriangle size={13} />} label="Conformidade fumaça" value={`${data.taxaFumaca}%`} sub={`${data.fumReprov} reprovado(s)`} color={data.taxaFumaca >= 100 ? 'var(--color-success)' : 'var(--color-danger)'} />
                 <Kpi icon={<FaFileSignature size={13} />} label="Autorizações pendentes" value={pendentes} color="var(--color-warning)" />
             </div>
 
@@ -106,7 +94,6 @@ function DashboardAmbiental({ onBack, onNavigate }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.8rem' }}>
                 <Shortcut color="var(--color-primary)" icon={<FaFileSignature size={16} />} label="Autorização de Saída" onClick={() => onNavigate('autorizacoes')} />
                 <Shortcut color="var(--color-info)" icon={<FaTruckMoving size={16} />} label="Manifesto MTR" onClick={() => onNavigate('manifestos')} />
-                <Shortcut color="var(--color-purple)" icon={<FaSmog size={16} />} label="Fumaça Preta" onClick={() => onNavigate('fumaca')} />
                 <Shortcut color="var(--color-success)" icon={<FaLeaf size={16} />} label="Controle de Saída" onClick={() => onNavigate('controle-residuos')} />
             </div>
         </PageShell>

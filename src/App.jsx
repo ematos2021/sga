@@ -10,9 +10,6 @@ import DashboardAmbiental from './pages/DashboardAmbiental';
 import AutorizacaoSaidaView from './pages/AutorizacaoSaidaView';
 import ControleResiduosView from './pages/ControleResiduosView';
 import ManifestoMTRView from './pages/ManifestoMTRView';
-import TicketsColetaView from './pages/TicketsColetaView';
-import FumacaPretaView from './pages/FumacaPretaView';
-import ESGCarbonoView from './pages/ESGCarbonoView';
 import NFSucataView from './pages/NFSucataView';
 import MotoristasView from './pages/MotoristasView';
 import CadastrosView from './pages/CadastrosView';
@@ -79,11 +76,8 @@ function App() {
                 {view === 'autorizacoes' && guardedView('autorizacoes', AutorizacaoSaidaView, { onBack: back })}
                 {view === 'controle-residuos' && guardedView('controle-residuos', ControleResiduosView, { onBack: back })}
                 {view === 'manifestos' && guardedView('manifestos', ManifestoMTRView, { onBack: back })}
-                {view === 'tickets' && guardedView('tickets', TicketsColetaView, { onBack: back })}
-                {view === 'fumaca' && guardedView('fumaca', FumacaPretaView, { onBack: back })}
                 {view === 'lira' && guardedView('lira', LiraView, { onBack: back })}
                 {view === 'dedetizacao' && guardedView('dedetizacao', DedetizacaoView, { onBack: back })}
-                {view === 'esg-carbono' && guardedView('esg-carbono', ESGCarbonoView, { onBack: back })}
                 {view === 'nf-sucata' && guardedView('nf-sucata', NFSucataView, { onBack: back })}
                 {view === 'motoristas' && guardedView('motoristas', MotoristasView, { onBack: back })}
                 {view === 'cadastros' && guardedView('cadastros', CadastrosView, { onBack: back })}
