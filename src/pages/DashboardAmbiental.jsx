@@ -67,7 +67,7 @@ function DashboardAmbiental({ onBack, onNavigate }) {
                                 <Pie data={data.pieDestinacao} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} label={(e) => e.name}>
                                     {data.pieDestinacao.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                                 </Pie>
-                                <Tooltip contentStyle={tooltipStyle} />
+                                <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItem} labelStyle={tooltipItem} />
                             </PieChart>
                         </ResponsiveContainer>
                     )}
@@ -78,10 +78,10 @@ function DashboardAmbiental({ onBack, onNavigate }) {
                     {data.barStatus.length === 0 ? <Empty /> : (
                         <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={data.barStatus}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color-soft)" />
                                 <XAxis dataKey="name" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                                 <YAxis allowDecimals={false} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                                <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItem} labelStyle={tooltipItem} cursor={{ fill: 'var(--bg-card-hover)' }} />
                                 <Bar dataKey="qtd" fill="var(--color-info)" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -90,7 +90,7 @@ function DashboardAmbiental({ onBack, onNavigate }) {
             </div>
 
             {/* Atalhos rápidos */}
-            <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', color: 'var(--color-text-main)' }}>Acesso rápido</h3>
+            <h3 style={{ margin: '0 0 0.8rem', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-text-strong)' }}>Acesso rápido</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.8rem' }}>
                 <Shortcut color="var(--color-primary)" icon={<FaFileSignature size={16} />} label="Autorização de Saída" onClick={() => onNavigate('autorizacoes')} />
                 <Shortcut color="var(--color-info)" icon={<FaTruckMoving size={16} />} label="Manifesto MTR" onClick={() => onNavigate('manifestos')} />
@@ -100,8 +100,9 @@ function DashboardAmbiental({ onBack, onNavigate }) {
     );
 }
 
-const chartTitle = { margin: '0 0 1rem', fontSize: '0.78rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' };
-const tooltipStyle = { background: '#1c1d26', border: '1px solid #2a2b32', borderRadius: 8, color: 'var(--color-on-accent)', fontSize: '0.8rem' };
+const chartTitle = { margin: '0 0 1rem', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-text-strong)', display: 'flex', alignItems: 'center', gap: '0.5rem' };
+const tooltipStyle = { background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--color-text-main)', fontSize: '0.8rem', boxShadow: 'var(--shadow-md)' };
+const tooltipItem = { color: 'var(--color-text-main)' };
 const Empty = () => <div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>Sem dados ainda.</div>;
 
 function Shortcut({ color, icon, label, onClick }) {
@@ -114,7 +115,7 @@ function Shortcut({ color, icon, label, onClick }) {
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color-soft)'; e.currentTarget.style.transform = 'none'; }}
         >
             <span style={{ width: 28, height: 28, borderRadius: 8, background: tint(color,'1f'), color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</span>
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--color-text-main)' }}>{label}</span>
+            <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--color-text-main)' }}>{label}</span>
         </button>
     );
 }

@@ -3,60 +3,53 @@
 // ════════════════════════════════════════════════════════════════
 import { Children, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FaArrowLeft, FaTimes, FaChevronDown, FaCheck, FaSearch } from 'react-icons/fa';
+import { FaArrowLeft, FaTimes, FaChevronDown, FaCheck, FaSearch, FaInbox } from 'react-icons/fa';
 import { tint } from '../lib/color';
 
 // ─── Casca de página com cabeçalho ───
 export function PageShell({ icon, color = 'var(--color-primary)', title, subtitle, onBack, actions, maxWidth = 1200, children }) {
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '1.1rem 1.5rem 1rem', borderBottom: '1px solid var(--border-color-soft)',
-                flexShrink: 0, gap: '1rem', flexWrap: 'wrap',
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+            <div className="page-shell__head">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 0 }}>
                     {onBack && (
-                        <button onClick={onBack} title="Voltar" style={iconBtn}>
-                            <FaArrowLeft size={14} />
+                        <button onClick={onBack} title="Voltar ao menu" className="page-back">
+                            <FaArrowLeft size={12} /><span>Menu</span>
                         </button>
                     )}
                     <div style={{
-                        width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center',
+                        width: 40, height: 40, borderRadius: 11, display: 'flex', alignItems: 'center',
                         justifyContent: 'center', background: `${tint(color,'18')}`, color, flexShrink: 0,
                     }}>
                         {icon}
                     </div>
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{title}</h1>
-                        {subtitle && <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', marginTop: 2 }}>{subtitle}</div>}
+                    <div style={{ minWidth: 0 }}>
+                        <h1 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text-strong)', lineHeight: 1.25 }}>{title}</h1>
+                        {subtitle && <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: 2 }}>{subtitle}</div>}
                     </div>
                 </div>
                 {actions && <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>{actions}</div>}
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+            <div className="page-shell__body">
                 <div style={{ maxWidth: maxWidth === '100%' ? '100%' : `${maxWidth}px`, margin: '0 auto', width: '100%' }}>{children}</div>
             </div>
         </div>
     );
 }
 
-const iconBtn = {
-    background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--color-text-muted)',
-    width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
-};
-
 // ─── Botão de ação ───
-export function Btn({ children, color = 'var(--color-primary)', variant = 'solid', onClick, type = 'button', style }) {
+export function Btn({ children, color = 'var(--color-primary)', variant = 'solid', onClick, type = 'button', style, disabled, title }) {
     const solid = variant === 'solid';
     return (
         <button
             type={type}
             onClick={onClick}
+            disabled={disabled}
+            title={title}
             style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.55rem 1rem',
-                borderRadius: 10, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                borderRadius: 10, fontSize: '0.8rem', fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.55 : 1, fontFamily: 'inherit',
                 transition: 'all 0.18s', whiteSpace: 'nowrap',
                 background: solid ? color : 'transparent',
                 color: solid ? 'var(--color-on-accent)' : color,
@@ -82,7 +75,7 @@ export function Card({ children, style }) {
 export function Field({ label, children, required, span }) {
     return (
         <div style={{ gridColumn: span ? `span ${span}` : undefined }}>
-            <label className="label-muted" style={{ fontSize: '0.65rem' }}>
+            <label className="label-muted">
                 {label} {required && <span style={{ color: 'var(--color-danger)' }}>*</span>}
             </label>
             {children}
@@ -138,6 +131,8 @@ export function Select({ children, value, onChange, style, disabled, placeholder
         window.addEventListener('resize', reposicionar);
         return () => { window.removeEventListener('scroll', reposicionar, true); window.removeEventListener('resize', reposicionar); };
     }, [open]);
+
+    useEscCamada(open, () => setOpen(false));
 
     const escolher = (v) => { onChange?.({ target: { value: v } }); setOpen(false); };
     const filtrados = q ? realOpts.filter((o) => o.labelText.toLowerCase().includes(q.toLowerCase())) : realOpts;
@@ -212,7 +207,7 @@ export function StatusBadge({ status, map }) {
     return (
         <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '3px 10px',
-            borderRadius: 6, fontSize: '0.65rem', fontWeight: 600, background: tint(color,'1f'), color,
+            borderRadius: 6, fontSize: '0.72rem', fontWeight: 600, background: tint(color,'1f'), color,
             whiteSpace: 'nowrap',
         }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
@@ -225,20 +220,23 @@ export function StatusBadge({ status, map }) {
 export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = false, onRowClick, rowStyle }) {
     if (!rows || rows.length === 0) {
         return (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-subtle)', fontSize: '0.9rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem', padding: '3rem 1rem', color: 'var(--color-text-muted)', fontSize: '0.88rem', textAlign: 'center' }}>
+                <span style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-card-hover)', color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FaInbox size={18} />
+                </span>
                 {empty}
             </div>
         );
     }
     return (
         <div style={{ overflowX: 'auto', borderTop: '1px solid var(--border-color)' }}>
-            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: dense ? '0.7rem' : '0.76rem' }}>
+            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: dense ? '0.76rem' : '0.82rem' }}>
                 <thead>
                     <tr>
                         {columns.map((c) => (
                             <th key={c.key} style={{
-                                textAlign: c.align || 'left', padding: dense ? '0.45rem 0.6rem' : '0.55rem 0.8rem', color: 'var(--color-text-subtle)',
-                                fontSize: dense ? '0.56rem' : '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px',
+                                textAlign: c.align || 'left', padding: dense ? '0.5rem 0.6rem' : '0.6rem 0.8rem', color: 'var(--color-text-muted)',
+                                fontSize: dense ? '0.66rem' : '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px',
                                 whiteSpace: 'nowrap', borderBottom: '1px solid var(--border-color)',
                             }}>{c.label}</th>
                         ))}
@@ -260,7 +258,7 @@ export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = f
                         >
                             {columns.map((c) => (
                                 <td key={c.key} style={{
-                                    textAlign: c.align || 'left', padding: dense ? '0.4rem 0.6rem' : '0.55rem 0.8rem',
+                                    textAlign: c.align || 'left', padding: dense ? '0.45rem 0.6rem' : '0.65rem 0.8rem',
                                     color: 'var(--color-text-main)', whiteSpace: c.wrap ? 'normal' : 'nowrap',
                                 }}>
                                     {c.render ? c.render(row) : (row[c.key] ?? '—')}
@@ -275,7 +273,30 @@ export function DataTable({ columns, rows, empty = 'Nenhum registro.', dense = f
 }
 
 // ─── Modal ───
+// Pilha de camadas abertas (modal, lista suspensa…): o Esc fecha só a de cima.
+// Assim, Esc numa lista dentro de um modal fecha a lista e não joga o formulário fora.
+const pilhaCamadas = [];
+
+export function useEscCamada(ativo, onEsc) {
+    const fecharRef = useRef(onEsc);
+    fecharRef.current = onEsc;
+    useEffect(() => {
+        if (!ativo) return;
+        const eu = {};
+        pilhaCamadas.push(eu);
+        const onKey = (e) => {
+            if (e.key === 'Escape' && pilhaCamadas[pilhaCamadas.length - 1] === eu) fecharRef.current?.();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            pilhaCamadas.splice(pilhaCamadas.indexOf(eu), 1);
+        };
+    }, [ativo]);
+}
+
 export function Modal({ title, onClose, children, width = 560 }) {
+    useEscCamada(true, onClose);
     return (
         <div
             onClick={onClose}
@@ -298,8 +319,8 @@ export function Modal({ title, onClose, children, width = 560 }) {
                     padding: '1.1rem 1.4rem', borderBottom: '1px solid var(--border-color-soft)',
                     position: 'sticky', top: 0, background: 'var(--bg-surface)', zIndex: 1,
                 }}>
-                    <h2 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{title}</h2>
-                    <button onClick={onClose} style={{ ...iconBtn, width: 32, height: 32 }}><FaTimes size={13} /></button>
+                    <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-strong)' }}>{title}</h2>
+                    <button onClick={onClose} title="Fechar (Esc)" className="ghost-btn ghost-btn--icon" style={{ width: 34, height: 34, minWidth: 34 }}><FaTimes size={13} /></button>
                 </div>
                 <div style={{ padding: '1.4rem' }}>{children}</div>
             </div>
@@ -314,24 +335,24 @@ export function Kpi({ icon, label, value, sub, color = 'var(--color-primary)', o
             className="glass-panel" 
             onClick={onClick}
             style={{
-                padding: '0.55rem 0.65rem', display: 'flex', flexDirection: 'column',
+                padding: '0.75rem 0.7rem', display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '0.2rem',
                 cursor: onClick ? 'pointer' : 'default',
                 border: active ? `1px solid ${tint(color,'aa')}` : '1px solid var(--border-color-soft)',
-                background: active ? `${tint(color,'11')}` : 'var(--bg-card)',
+                background: active ? `${tint(color,'11')}` : 'var(--bg-surface-glass)',
                 transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => { if (onClick && !active) e.currentTarget.style.borderColor = tint(color,'55'); }}
             onMouseLeave={(e) => { if (onClick && !active) e.currentTarget.style.borderColor = 'var(--border-color-soft)'; }}
         >
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                <div style={{ width: 20, height: 20, borderRadius: 6, background: tint(color,'1f'), color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, background: tint(color,'1f'), color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {icon}
                 </div>
-                <span style={{ fontSize: '0.55rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>{label}</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 600, lineHeight: 1.25 }}>{label}</span>
             </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--color-text-main)', lineHeight: 1, marginTop: '0.05rem' }}>{value}</div>
-            {sub && <div style={{ fontSize: '0.54rem', color: 'var(--color-text-subtle)' }}>{sub}</div>}
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-strong)', lineHeight: 1.1, marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+            {sub && <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', lineHeight: 1.3 }}>{sub}</div>}
         </div>
     );
 }

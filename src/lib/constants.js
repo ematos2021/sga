@@ -193,7 +193,7 @@ export function isEventOnDate(event, dia, mes) {
     return event.dia === dia && event.mes === mes;
 }
 
-export function obterEventosProximos(eventos, dataReferencia = new Date(2026, 5, 9), diasAntecedencia = 15) {
+export function obterEventosProximos(eventos, dataReferencia = new Date(), diasAntecedencia = 15) {
     const ref = new Date(dataReferencia);
     ref.setHours(0, 0, 0, 0);
     const refYear = ref.getFullYear();

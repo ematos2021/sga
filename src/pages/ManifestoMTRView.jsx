@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FaTruckMoving, FaPlus, FaTrash, FaFileExcel, FaExternalLinkAlt, FaEdit, FaForward, FaPrint, FaClipboardList, FaSave, FaTimes, FaDollarSign, FaBan, FaUndoAlt, FaWeightHanging, FaFilter } from 'react-icons/fa';
+import { FaTruckMoving, FaPlus, FaFileImport, FaTrash, FaFileExcel, FaExternalLinkAlt, FaEdit, FaForward, FaPrint, FaClipboardList, FaSave, FaTimes, FaDollarSign, FaBan, FaUndoAlt, FaWeightHanging, FaFilter } from 'react-icons/fa';
 import { PageShell, Btn, Card, Field, Input, Select, Textarea, FormGrid, DataTable, RowAction, Modal, Kpi } from '../components/ui';
 import { uid } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
@@ -428,8 +428,8 @@ function ManifestoMTRView({ onBack }) {
     };
 
     const columns = [
-        { key: 'data', label: 'Data', align: 'center', render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{brData(r.data)}{r.hora ? <span style={{ color: 'var(--color-text-subtle)', display: 'block', fontSize: '0.62rem' }}>{r.hora}</span> : ''}</span> },
-        { key: 'numeroMTR', label: 'Manifesto', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{r.numeroMTR || '—'}{r.manifestoSupertrans ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem' }}>ST {r.manifestoSupertrans}</div> : null}</span> },
+        { key: 'data', label: 'Data', align: 'center', render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{brData(r.data)}{r.hora ? <span style={{ color: 'var(--color-text-subtle)', display: 'block', fontSize: '0.68rem' }}>{r.hora}</span> : ''}</span> },
+        { key: 'numeroMTR', label: 'Manifesto', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{r.numeroMTR || '—'}{r.manifestoSupertrans ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.68rem' }}>ST {r.manifestoSupertrans}</div> : null}</span> },
         { key: 'ticketSustentare', label: 'Ticket Sustentare', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{r.ticketSustentare || '—'}</span> },
         {
             key: 'residuo',
@@ -448,7 +448,7 @@ function ManifestoMTRView({ onBack }) {
                         <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{primeiro}</span>
                         {temMais && (
                             <span style={{
-                                fontSize: '0.6rem',
+                                fontSize: '0.68rem',
                                 fontWeight: 700,
                                 background: 'rgba(0, 204, 255, 0.12)',
                                 color: 'var(--color-secondary)',
@@ -469,7 +469,7 @@ function ManifestoMTRView({ onBack }) {
         },
         { key: 'notaFiscal', label: 'Nota Fiscal', align: 'center', render: (r) => r.notaFiscal || '—' },
         { key: 'solicitante', label: 'Solicitante', align: 'center', wrap: true, render: (r) => r.solicitante || '—' },
-        { key: 'motorista', label: 'Motorista / Placa', align: 'center', wrap: true, render: (r) => <span>{r.motorista || '—'}{r.placa ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', fontFamily: 'ui-monospace, monospace' }}>{r.placa}</div> : null}</span> },
+        { key: 'motorista', label: 'Motorista / Placa', align: 'center', wrap: true, render: (r) => <span>{r.motorista || '—'}{r.placa ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.68rem', fontFamily: 'ui-monospace, monospace' }}>{r.placa}</div> : null}</span> },
         { key: 'setorColeta', label: 'Setor de Coleta', align: 'center', render: (r) => r.setorColeta || '—' },
         { key: 'destinador', label: 'Transportador', align: 'center', wrap: true, render: (r) => r.destinador || '—' },
         { key: 'destinadorFinal', label: 'Destinador', align: 'center', wrap: true, render: (r) => r.destinadorFinal || '—' },
@@ -489,7 +489,7 @@ function ManifestoMTRView({ onBack }) {
                     const titleText = `Cancelado por ${r.cancelledBy || '—'} em ${brCancelDate}${r.cancelReason ? `\nMotivo: ${r.cancelReason}` : ''}`;
                     return (
                         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }} title={titleText}>
-                            <span style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color: 'var(--color-danger)', background: `${tint('var(--color-danger)','12')}`, border: `1px solid ${tint('var(--color-danger)','40')}`, borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ padding: '0.2rem 0.6rem', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.3px', color: 'var(--color-danger)', background: `${tint('var(--color-danger)','12')}`, border: `1px solid ${tint('var(--color-danger)','40')}`, borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 <FaBan size={9} /> Cancelado
                             </span>
                         </div>
@@ -499,7 +499,7 @@ function ManifestoMTRView({ onBack }) {
                 return (
                     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                         <Select value={r.status} onChange={(e) => update(r.id, { status: e.target.value })}
-                            style={{ padding: '0.2rem 0.6rem', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', width: '120px', minWidth: '120px', color: cor, background: tint(cor,'12'), borderColor: tint(cor,'40'), borderRadius: 20, justifyContent: 'center', textAlign: 'center', gap: '6px' }}>
+                            style={{ padding: '0.2rem 0.6rem', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.3px', width: '120px', minWidth: '120px', color: cor, background: tint(cor,'12'), borderColor: tint(cor,'40'), borderRadius: 20, justifyContent: 'center', textAlign: 'center', gap: '6px' }}>
                             {STATUS_MANIFESTO.filter(s => s !== 'Cancelado').map((s) => <option key={s} value={s}>{s}</option>)}
                         </Select>
                     </div>
@@ -576,7 +576,7 @@ function ManifestoMTRView({ onBack }) {
             {filtroAtivo && (
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.45rem',
-                    fontSize: '0.64rem', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase',
+                    fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase',
                     color: 'var(--color-info)',
                 }}>
                     <FaFilter size={9} />
@@ -612,7 +612,7 @@ function ManifestoMTRView({ onBack }) {
                     <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                         📝 Registrar Novo Manifesto
                     </span>
-                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
                         {showForm ? '▲ Recolher formulário' : '▼ Expandir formulário'}
                     </span>
                 </div>
@@ -996,15 +996,15 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                     {isCancelado ? <FaBan size={16} color="var(--color-danger)" /> : iconeResiduo(manifesto.residuo)}
                 </div>
                 <div style={{ flex: '1 1 200px' }}>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Manifesto MTR</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Manifesto MTR</div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 700, color: isCancelado ? 'var(--color-text-muted)' : 'var(--color-text-main)', textDecoration: isCancelado ? 'line-through' : 'none' }}>
                         {manifesto.numeroMTR || 'Sem número'}
                     </div>
                 </div>
                 <div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600, textAlign: 'right' }}>Status</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600, textAlign: 'right' }}>Status</div>
                     <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.2rem 0.7rem', fontSize: '0.66rem', fontWeight: 700,
+                        display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.2rem 0.7rem', fontSize: '0.7rem', fontWeight: 700,
                         color: corStatus, background: tint(corStatus,'15'), border: `1px solid ${tint(corStatus,'35')}`, borderRadius: 20, textAlign: 'right', marginTop: '2px'
                     }}>
                         {isCancelado && <FaBan size={9} />}
@@ -1142,7 +1142,7 @@ function ViewManifestoModal({ manifesto, isGestorOuAnalista, onClose }) {
                                                 <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>{it.unit}</td>
                                                 <td style={{ padding: '0.4rem 0.6rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>{Number(it.unit_price) > 0 ? `R$ ${Number(it.unit_price).toFixed(2)}` : '—'}</td>
                                                 <td style={{ padding: '0.4rem 0.6rem', color: Number(it.total_price) > 0 ? 'var(--color-orange)' : 'var(--color-text-subtle)', fontWeight: 600, textAlign: 'right' }}>{Number(it.total_price) > 0 ? `R$ ${Number(it.total_price).toFixed(2)}` : '—'}</td>
-                                                <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.62rem' }}>
+                                                <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.68rem' }}>
                                                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
                                                         <span>👤</span>
                                                         <span>{it.created_by || '—'}</span>
@@ -1304,19 +1304,19 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
             {/* Painel de Lançamento e KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.2rem' }}>
                 <div style={{ padding: '0.8rem 1rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 12 }}>
-                    <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Entradas (Receitas)</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Entradas (Receitas)</div>
                     <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-success)', marginTop: '4px' }}>
                         R$ {totais.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
                 <div style={{ padding: '0.8rem 1rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: 12 }}>
-                    <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Saídas (Custo/Despesas)</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Total Saídas (Custo/Despesas)</div>
                     <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-danger)', marginTop: '4px' }}>
                         R$ {totais.saidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
                 <div style={{ padding: '0.8rem 1rem', background: totais.saldo >= 0 ? 'rgba(84, 160, 255, 0.08)' : 'rgba(239, 68, 68, 0.08)', border: `1px solid ${totais.saldo >= 0 ? 'rgba(84, 160, 255, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`, borderRadius: 12 }}>
-                    <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Saldo Líquido</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Saldo Líquido</div>
                     <div style={{ fontSize: '1.2rem', fontWeight: 800, color: totais.saldo >= 0 ? 'var(--color-info)' : 'var(--color-danger)', marginTop: '4px' }}>
                         R$ {totais.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </div>
@@ -1399,7 +1399,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                 
                 {/* Filtro por Dia */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Dia:</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Dia:</span>
                     <Input
                         type="date"
                         value={filtroDia}
@@ -1416,7 +1416,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
 
                 {/* Filtro por Mês */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Mês:</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Mês:</span>
                     <Select
                         value={filtroMes}
                         onChange={(e) => {
@@ -1443,7 +1443,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
 
                 {/* Filtro por Ano */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Ano:</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Ano:</span>
                     <Select
                         value={filtroAno}
                         onChange={(e) => {
@@ -1468,7 +1468,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                             setFiltroMes('todos');
                             setFiltroAno('todos');
                         }}
-                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.66rem', height: '28px' }}
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', height: '28px' }}
                     >
                         Limpar Filtros
                     </Btn>
@@ -1508,7 +1508,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                                         <td style={{ padding: '0.5rem 0.7rem', color: 'var(--color-text-muted)' }}>{brData(it.date)}</td>
                                         <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center' }}>
                                             <span style={{
-                                                display: 'inline-block', padding: '0.1rem 0.45rem', fontSize: '0.58rem', fontWeight: 800,
+                                                display: 'inline-block', padding: '0.1rem 0.45rem', fontSize: '0.68rem', fontWeight: 800,
                                                 color: corTipo, background: tint(corTipo,'12'), border: `1px solid ${tint(corTipo,'25')}`, borderRadius: 10, textTransform: 'uppercase'
                                             }}>
                                                 {it.type === 'entrada' ? 'Receita' : 'Custo'}
@@ -1519,7 +1519,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                                                     <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}>{it.manifest_number}</span>
                                                     {it.residuo && (
-                                                        <span style={{ fontSize: '0.62rem', color: 'var(--color-text-subtle)', background: 'rgba(255,255,255,0.03)', padding: '1px 4px', borderRadius: 4, whiteSpace: 'nowrap' }}>
+                                                        <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', background: 'rgba(255,255,255,0.03)', padding: '1px 4px', borderRadius: 4, whiteSpace: 'nowrap' }}>
                                                             {iconeResiduo(it.residuo)} {it.residuo.split(/\s*\|\s*/)[0]}
                                                         </span>
                                                     )}
@@ -1532,7 +1532,7 @@ function CashFlowAuditModal({ manifestos, allRefunds, currentUser, onClose }) {
                                         <td style={{ padding: '0.5rem 0.7rem', color: corTipo, fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>
                                             {it.type === 'entrada' ? '+' : '-'} R$ {Number(it.amount).toFixed(2)}
                                         </td>
-                                        <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center', color: 'var(--color-text-muted)', fontWeight: 500, fontSize: '0.66rem' }}>
+                                        <td style={{ padding: '0.5rem 0.7rem', textAlign: 'center', color: 'var(--color-text-muted)', fontWeight: 500, fontSize: '0.7rem' }}>
                                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
                                                 <span>👤</span>
                                                 <span>{it.created_by || '—'}</span>
@@ -1637,19 +1637,19 @@ function RefundsManagerModal({ manifesto, currentUser, onClose }) {
                 marginBottom: '1.2rem', flexWrap: 'wrap'
             }}>
                 <div style={{ flex: '1 1 180px', minWidth: 180 }}>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Manifesto MTR</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Manifesto MTR</div>
                     <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
                         {manifesto.numeroMTR || 'Sem número'}
                     </div>
                 </div>
                 <div style={{ flex: '1 1 120px', minWidth: 120 }}>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Data</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Data</div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--color-text-main)', fontWeight: 500 }}>
                         {brData(manifesto.data)} {manifesto.hora ? `às ${manifesto.hora}` : ''}
                     </div>
                 </div>
                 <div style={{ flex: '2 1 300px', minWidth: 300 }}>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Resíduos</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', fontWeight: 600 }}>Resíduos</div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--color-text-main)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{iconeResiduo(manifesto.residuo)}</span>
                         <span style={{ whiteSpace: 'normal', wordBreak: 'break-all', display: 'inline-block' }}>
@@ -1870,7 +1870,7 @@ function EditManifestoModal({ manifesto, fichas, residuosUnicos, setoresUnicos, 
                         {f.residuo || 'Resíduo não informado'} · {brData(f.data)}
                     </div>
                 </div>
-                <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', textAlign: 'right' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', textAlign: 'right' }}>
                     <FaEdit size={10} style={{ marginRight: 4 }} />
                     Editando registro
                 </div>

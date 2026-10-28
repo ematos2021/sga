@@ -19,15 +19,16 @@ const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export default function CalendarioAmbientalView({ onBack }) {
     const { items: events, add, remove } = useCollection(COL.CALENDARIO);
     
-    // Default reference date: June 9, 2026
-    const [currentMonth, setCurrentMonth] = useState(5); // Junho
-    const [currentYear, setCurrentYear] = useState(2026);
+    // Abre no mês de hoje (antes ficava preso em 9/jun/2026)
+    const hoje = new Date();
+    const [currentMonth, setCurrentMonth] = useState(hoje.getMonth());
+    const [currentYear, setCurrentYear] = useState(hoje.getFullYear());
     
     const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'list'
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     
-    const [selectedDate, setSelectedDate] = useState({ dia: 9, mes: 6 }); // Dia de hoje padrão
+    const [selectedDate, setSelectedDate] = useState({ dia: hoje.getDate(), mes: hoje.getMonth() + 1 }); // começa no dia de hoje
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     
     // Estado para o formulário de novo evento
@@ -270,7 +271,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                     <span 
                                         key={day} 
                                         style={{ 
-                                            fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', 
+                                            fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', 
                                             color: idx === 0 || idx === 6 ? 'var(--color-danger)' : 'var(--color-text-muted)', 
                                             letterSpacing: '0.5px', padding: '6px 0' 
                                         }}
@@ -295,12 +296,12 @@ export default function CalendarioAmbientalView({ onBack }) {
                                     });
                                     
                                     const isSelected = selectedDate.dia === cell.dia && selectedDate.mes === cell.mes && cell.isCurrentMonth;
-                                    const isToday = cell.dia === 9 && cell.mes === 6 && cell.year === 2026; // Data fixada no sistema
-                                    
+                                    const isToday = cell.dia === hoje.getDate() && cell.mes === hoje.getMonth() + 1 && cell.year === hoje.getFullYear();
+
                                     // Estilo da borda
-                                    let cellBorder = '1px solid rgba(255,255,255,0.03)';
+                                    let cellBorder = '1px solid var(--border-color-soft)';
                                     if (isSelected) cellBorder = '1px solid var(--color-success)';
-                                    else if (isToday) cellBorder = '1px solid rgba(0, 255, 157, 0.4)';
+                                    else if (isToday) cellBorder = '1px solid var(--color-primary-strong)';
                                     
                                     return (
                                         <div
@@ -318,8 +319,8 @@ export default function CalendarioAmbientalView({ onBack }) {
                                             style={{
                                                 minHeight: '74px', padding: '6px', borderRadius: '10px',
                                                 background: cell.isCurrentMonth 
-                                                    ? (isToday ? 'rgba(0,255,157,0.04)' : 'rgba(20,23,33,0.3)')
-                                                    : 'rgba(255,255,255,0.01)',
+                                                    ? (isToday ? 'var(--color-primary-soft)' : 'var(--bg-card)')
+                                                    : 'transparent',
                                                 border: cellBorder, cursor: 'pointer', transition: 'all 0.2s',
                                                 display: 'flex', flexDirection: 'column', gap: '3px', position: 'relative',
                                                 opacity: cell.isCurrentMonth ? 1 : 0.4,
@@ -328,27 +329,27 @@ export default function CalendarioAmbientalView({ onBack }) {
                                             className="calendar-day-cell"
                                             onMouseEnter={(e) => {
                                                 e.currentTarget.style.transform = 'translateY(-2px)';
-                                                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                                                e.currentTarget.style.background = 'var(--bg-card-hover)';
                                             }}
                                             onMouseLeave={(e) => {
                                                 e.currentTarget.style.transform = 'none';
                                                 e.currentTarget.style.background = cell.isCurrentMonth 
-                                                    ? (isToday ? 'rgba(0,255,157,0.04)' : 'rgba(20,23,33,0.3)')
-                                                    : 'rgba(255,255,255,0.01)';
+                                                    ? (isToday ? 'var(--color-primary-soft)' : 'var(--bg-card)')
+                                                    : 'transparent';
                                             }}
                                         >
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <span style={{ 
                                                     fontSize: '0.78rem', fontWeight: isToday || isSelected ? 800 : 500,
                                                     color: isToday ? 'var(--color-primary)' : 'var(--color-text-main)',
-                                                    background: isToday ? 'rgba(0,255,157,0.15)' : 'transparent',
+                                                    background: isToday ? 'var(--color-primary-soft)' : 'transparent',
                                                     width: 20, height: 20, borderRadius: '50%', display: 'flex',
                                                     alignItems: 'center', justifyContent: 'center'
                                                 }}>
                                                     {cell.dia}
                                                 </span>
                                                 {isToday && (
-                                                    <span style={{ fontSize: '0.52rem', textTransform: 'uppercase', color: 'var(--color-primary)', fontWeight: 700, letterSpacing: '0.5px' }}>
+                                                    <span className="hide-mobile" style={{ fontSize: '0.66rem', textTransform: 'uppercase', color: 'var(--color-primary)', fontWeight: 700, letterSpacing: '0.5px' }}>
                                                         Hoje
                                                     </span>
                                                 )}
@@ -362,7 +363,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                         <div 
                                                             key={eIdx}
                                                             style={{
-                                                                fontSize: '0.56rem', padding: '2px 4px', borderRadius: 4,
+                                                                fontSize: '0.66rem', padding: '2px 4px', borderRadius: 4,
                                                                 background: tint(catColor,'1c'), color: catColor,
                                                                 borderLeft: `2px solid ${catColor}`, whiteSpace: 'nowrap',
                                                                 textOverflow: 'ellipsis', overflow: 'hidden', fontWeight: 600
@@ -374,7 +375,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                     );
                                                 })}
                                                 {visibleEvents.length > 2 && (
-                                                    <div style={{ fontSize: '0.52rem', color: 'var(--color-text-subtle)', fontStyle: 'italic', paddingLeft: 4 }}>
+                                                    <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', fontStyle: 'italic', paddingLeft: 4 }}>
                                                         + {visibleEvents.length - 2} mais
                                                     </div>
                                                 )}
@@ -389,7 +390,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <Card style={{ borderLeft: '3px solid var(--color-success)' }}>
                                 <div style={{ marginBottom: '0.8rem' }}>
-                                    <span style={{ fontSize: '0.64rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         Eventos Selecionados
                                     </span>
                                     <h3 style={{ margin: '2px 0 0 0', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text-main)' }}>
@@ -428,7 +429,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                 >
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
                                                         <span style={{
-                                                            fontSize: '0.62rem', fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+                                                            fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 4,
                                                             background: tint(cat.color,'15'), color: cat.color, border: `1px solid ${cat.color}33`,
                                                             display: 'inline-flex', alignItems: 'center', gap: '4px'
                                                         }}>
@@ -465,7 +466,7 @@ export default function CalendarioAmbientalView({ onBack }) {
                                     <FaInfoCircle size={14} color="var(--color-success)" style={{ marginTop: 2, flexShrink: 0 }} />
                                     <div>
                                         <h4 style={{ margin: '0 0 4px 0', fontSize: '0.76rem', fontWeight: 700, color: 'var(--color-text-main)' }}>Práticas ISO 14001</h4>
-                                        <p style={{ margin: 0, fontSize: '0.68rem', color: 'var(--color-text-subtle)', lineHeight: 1.3 }}>
+                                        <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--color-text-subtle)', lineHeight: 1.3 }}>
                                             As datas comemorativas ambientais auxiliam a equipe do SGI no planejamento de campanhas de DDS (Diálogo Diário de Segurança) e conscientização ambiental periódica.
                                         </p>
                                     </div>
@@ -526,14 +527,14 @@ export default function CalendarioAmbientalView({ onBack }) {
                                                                     {evt.titulo}
                                                                 </h4>
                                                                 {evt.obs && (
-                                                                    <p style={{ margin: '2px 0 0 0', fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>
+                                                                    <p style={{ margin: '2px 0 0 0', fontSize: '0.72rem', color: 'var(--color-text-subtle)' }}>
                                                                         {evt.obs}
                                                                     </p>
                                                                 )}
                                                             </div>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                                 <span style={{
-                                                                    fontSize: '0.58rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                                                                    fontSize: '0.68rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4,
                                                                     background: tint(catColor,'10'), color: catColor, border: `1px solid ${tint(catColor,'22')}`
                                                                 }}>
                                                                     {CALENDAR_CATEGORIES[evt.categoria]?.label || 'Custom'}

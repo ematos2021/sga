@@ -3,6 +3,7 @@ import { useAuth } from './contexts/AuthContext';
 import { applyThemeClass, getStoredTheme } from './components/ThemePicker';
 import { seedIfEmpty } from './lib/seed';
 import { FaLeaf } from 'react-icons/fa';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import LoginPage from './pages/LoginPage';
 import MainMenu from './pages/MainMenu';
@@ -72,6 +73,7 @@ function App() {
     return (
         <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-app)', overflow: 'hidden' }}>
             <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                <ErrorBoundary resetKey={view} onBack={back}>
                 {view === 'dashboard' && guardedView('dashboard', DashboardAmbiental, { onBack: back, onNavigate: setView })}
                 {view === 'autorizacoes' && guardedView('autorizacoes', AutorizacaoSaidaView, { onBack: back })}
                 {view === 'controle-residuos' && guardedView('controle-residuos', ControleResiduosView, { onBack: back })}
@@ -85,6 +87,7 @@ function App() {
                 {view === 'usuarios' && (currentUser?.is_admin ? <UsuariosView onBack={back} /> : (() => { setTimeout(() => setView('main-menu'), 0); return null; })())}
                 {view === 'calendario' && guardedView('calendario', CalendarioAmbientalView, { onBack: back })}
                 {view === 'conciliacao' && guardedView('conciliacao', ConciliacaoFornecedoresView, { onBack: back })}
+                </ErrorBoundary>
             </main>
         </div>
     );

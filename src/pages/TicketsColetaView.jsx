@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaTicketAlt, FaTrash, FaFileExcel, FaWeightHanging, FaCheckDouble } from 'react-icons/fa';
+import { FaTicketAlt, FaPlus, FaTrash, FaFileExcel, FaWeightHanging, FaCheckDouble } from 'react-icons/fa';
 import { PageShell, Btn, Card, Field, Input, Select, FormGrid, DataTable, StatusBadge, Modal, RowAction } from '../components/ui';
 import { useCollection, COL } from '../lib/store';
 import { STATUS_TICKET, UNIDADES } from '../lib/constants';

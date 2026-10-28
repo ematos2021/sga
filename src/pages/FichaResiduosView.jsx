@@ -128,11 +128,11 @@ function FichaResiduosView({ onBack }) {
     const transportadores = (r) => [r.transporter_1_name, r.transporter_2_name, r.transporter_3_name, r.transporter_4_name].filter(Boolean).join(' · ') || '—';
 
     const columns = [
-        { key: 'waste_type', label: 'Resíduo', align: 'center', wrap: true, render: (r) => <span style={{ fontWeight: 600 }}>{r.waste_type || '—'}{r.category ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.66rem', fontWeight: 400 }}>{r.category}</div> : null}</span> },
+        { key: 'waste_type', label: 'Resíduo', align: 'center', wrap: true, render: (r) => <span style={{ fontWeight: 600 }}>{r.waste_type || '—'}{r.category ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.7rem', fontWeight: 400 }}>{r.category}</div> : null}</span> },
         { key: 'ibama_code', label: 'IBAMA', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.74rem' }}>{r.ibama_code || '—'}</span> },
         { key: 'waste_class', label: 'Classe', align: 'center', render: (r) => r.waste_class || '—' },
         { key: 'treatment', label: 'Tratamento', align: 'center', wrap: true, render: (r) => r.treatment || '—' },
-        { key: 'destinator_name', label: 'Destinador', align: 'center', wrap: true, render: (r) => <span>{r.destinator_name || '—'}{r.destinator_cnpj ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.66rem', fontFamily: 'ui-monospace, monospace' }}>{r.destinator_cnpj}</div> : null}</span> },
+        { key: 'destinator_name', label: 'Destinador', align: 'center', wrap: true, render: (r) => <span>{r.destinator_name || '—'}{r.destinator_cnpj ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.7rem', fontFamily: 'ui-monospace, monospace' }}>{r.destinator_cnpj}</div> : null}</span> },
         { key: 'transportadores', label: 'Transportadores', align: 'center', wrap: true, render: (r) => <span style={{ fontSize: '0.72rem' }}>{transportadores(r)}</span> },
         { key: 'unit', label: 'Un.', align: 'center', render: (r) => r.unit || '—' },
         {
@@ -184,7 +184,7 @@ function FichaResiduosView({ onBack }) {
                             🆕 Registrar Novo Resíduo
                         </span>
                     </div>
-                    <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>
                         {showForm ? 'Recolher formulário ▴' : 'Expandir formulário ▾'}
                     </span>
                 </div>
@@ -232,16 +232,16 @@ function FichaResiduosView({ onBack }) {
             {/* Filtros */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem', flexWrap: 'wrap' }}>
                 <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-text-main)', marginRight: 'auto' }}>Resíduos <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>({filtrados.length})</span></h3>
-                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" style={{ width: 170, fontSize: '0.68rem', padding: '0.3rem 0.55rem' }} />
-                <Select value={fTipo} onChange={(e) => setFTipo(e.target.value)} style={{ width: 120, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" style={{ width: 170, fontSize: '0.72rem', padding: '0.3rem 0.55rem' }} />
+                <Select value={fTipo} onChange={(e) => setFTipo(e.target.value)} style={{ width: 120, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Tipo</option>
                     {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
                 </Select>
-                <Select value={fTratamento} onChange={(e) => setFTratamento(e.target.value)} style={{ width: 130, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fTratamento} onChange={(e) => setFTratamento(e.target.value)} style={{ width: 130, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Tratamento</option>
                     {tratamentos.map((t) => <option key={t} value={t}>{t}</option>)}
                 </Select>
-                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n}/pág</option>)}
                 </Select>
             </div>

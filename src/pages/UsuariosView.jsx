@@ -101,7 +101,7 @@ function UsuariosView({ onBack }) {
                     <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', flexShrink: 0 }}>{u.avatar || '👤'}</span>
                     <span>
                         <div style={{ fontWeight: 600 }}>{u.name || '—'}</div>
-                        <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.66rem' }}>{u.email || ''}</div>
+                        <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.7rem' }}>{u.email || ''}</div>
                     </span>
                 </span>
             ),
@@ -109,14 +109,14 @@ function UsuariosView({ onBack }) {
         {
             key: 'role', label: 'Papel', align: 'center', render: (u) => {
                 const c = corPapel(u.role);
-                return <span style={{ fontSize: '0.62rem', fontWeight: 700, color: c, background: tint(c,'1a'), border: `1px solid ${tint(c,'55')}`, padding: '2px 9px', borderRadius: 20, textTransform: 'uppercase' }}>{ROLE_LABELS[u.role] || u.role}</span>;
+                return <span style={{ fontSize: '0.68rem', fontWeight: 700, color: c, background: tint(c,'1a'), border: `1px solid ${tint(c,'55')}`, padding: '2px 9px', borderRadius: 20, textTransform: 'uppercase' }}>{ROLE_LABELS[u.role] || u.role}</span>;
             },
         },
         { key: 'is_admin', label: 'Admin', align: 'center', render: (u) => u.is_admin ? <FaUserShield size={14} color="var(--color-warning)" title="Administrador" /> : <span style={{ color: 'var(--color-text-subtle)' }}>—</span> },
         {
             key: 'active', label: 'Ativo', align: 'center', render: (u) => {
                 const on = u.active !== false; const c = on ? 'var(--color-success)' : 'var(--color-text-muted)';
-                return <span onClick={() => update(u.id, { active: !on })} title="Clique para alternar" style={{ cursor: 'pointer', fontSize: '0.62rem', fontWeight: 700, color: c, background: tint(c,'1a'), border: `1px solid ${tint(c,'55')}`, padding: '2px 9px', borderRadius: 20 }}>{on ? 'ATIVO' : 'INATIVO'}</span>;
+                return <span onClick={() => update(u.id, { active: !on })} title="Clique para alternar" style={{ cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700, color: c, background: tint(c,'1a'), border: `1px solid ${tint(c,'55')}`, padding: '2px 9px', borderRadius: 20 }}>{on ? 'ATIVO' : 'INATIVO'}</span>;
             },
         },
         {
@@ -190,14 +190,14 @@ function UsuariosView({ onBack }) {
                                     <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
                                         Permissões de Acesso
                                     </span>
-                                    <span style={{ fontSize: '0.62rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>
+                                    <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>
                                         ({(modal.permissions || []).length}/{ALL_PAGES.length} telas)
                                     </span>
                                 </div>
                                 <button
                                     onClick={toggleAllPermissions}
                                     style={{
-                                        padding: '3px 10px', fontSize: '0.62rem', fontWeight: 700, borderRadius: 6,
+                                        padding: '3px 10px', fontSize: '0.68rem', fontWeight: 700, borderRadius: 6,
                                         border: '1px solid rgba(167,139,250,0.3)', background: 'rgba(167,139,250,0.08)',
                                         color: 'var(--color-purple)', cursor: 'pointer', transition: 'all 0.2s',
                                     }}
@@ -211,7 +211,7 @@ function UsuariosView({ onBack }) {
                                 return (
                                     <div key={cat} style={{ marginBottom: '0.5rem' }}>
                                         <div style={{
-                                            fontSize: '0.58rem', fontWeight: 700, color: 'var(--color-text-subtle)',
+                                            fontSize: '0.68rem', fontWeight: 700, color: 'var(--color-text-subtle)',
                                             letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '0.3rem',
                                             paddingBottom: '0.2rem', borderBottom: '1px solid rgba(255,255,255,0.04)',
                                         }}>

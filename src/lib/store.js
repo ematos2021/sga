@@ -16,7 +16,9 @@ function emit(collection) {
 export function getCollection(collection) {
     try {
         const raw = localStorage.getItem(PREFIX + collection);
-        return raw ? JSON.parse(raw) : [];
+        const parsed = raw ? JSON.parse(raw) : [];
+        // Dado antigo/corrompido (objeto, null, número) derrubava a tela no .map/.filter
+        return Array.isArray(parsed) ? parsed.filter((it) => it && typeof it === 'object') : [];
     } catch {
         return [];
     }

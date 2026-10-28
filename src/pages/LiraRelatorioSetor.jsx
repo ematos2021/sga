@@ -47,7 +47,6 @@ function RelatorioSetor({ setor, itens, emissor, onClose }) {
     const [recado, setRecado] = useState('');
     const [fora, setFora] = useState(() => new Set()); // normas deixadas para outra remessa
     const prazoFmt = prazo ? prazo.split('-').reverse().join('/') : '____/____/______';
-    const contato = emissor ? `${emissor}, do Meio Ambiente` : 'a equipe de Meio Ambiente';
 
     const pendentes = useMemo(() => itens.filter(pendente), [itens]);
     const conformes = itens.filter((r) => nm(r.conformidade) === 'CONFORME').length;
@@ -184,7 +183,7 @@ function RelatorioSetor({ setor, itens, emissor, onClose }) {
                 <div className="folha" style={{ padding: '1.6rem 1.8rem 2rem' }}>
 
                     {/* Cabeçalho */}
-                    <div className="bloco" style={{ borderLeft: `4px solid ${cor}`, paddingLeft: '0.85rem' }}>
+                    <div className="bloco">
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
                             <span style={rotulo}>Grupo MK · Meio Ambiente · Requisitos legais</span>
                             <span style={rotulo}>Emitido em {hoje}</span>
@@ -245,7 +244,7 @@ function RelatorioSetor({ setor, itens, emissor, onClose }) {
                         <p style={{ fontSize: '8pt', color: PAPEL.media, lineHeight: 1.5, margin: '0.5rem 0 0' }}>
                             Em cada item, marque uma opção e escreva na linha a prova ou o próximo passo. Se um tema inteiro não existe na área
                             (por exemplo, radiação ionizante), marque o quadrinho do tema e pule os itens dele.
-                            Devolver até <strong>{prazoFmt}</strong> para {contato}. Dúvidas, é só chamar.
+                            Devolver até <strong>{prazoFmt}</strong>.
                         </p>
                     </div>
 

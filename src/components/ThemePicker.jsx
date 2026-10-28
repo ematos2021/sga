@@ -48,27 +48,21 @@ function ThemePicker() {
             <button
                 onClick={() => setOpen((o) => !o)}
                 title="Alterar tema"
-                style={{
-                    background: 'var(--bg-surface-glass)', border: '1px solid var(--border-color)', color: 'var(--color-text-muted)',
-                    width: '40px', height: '40px', borderRadius: '50%', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                    transition: 'all 0.2s', backdropFilter: 'blur(10px)',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                aria-label="Alterar tema"
+                className="ghost-btn ghost-btn--icon"
             >
                 <FaPalette size={14} />
             </button>
 
             {open && (
                 <div style={{
-                    position: 'absolute', top: '50px', right: 0, zIndex: 200,
-                    background: 'var(--bg-surface-glass)', border: '1px solid var(--border-color)', borderRadius: '12px',
+                    position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 200,
+                    background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px',
                     padding: '0.8rem', minWidth: '200px', backdropFilter: 'blur(12px)',
                     boxShadow: 'var(--shadow-lg)', animation: 'fadeIn 0.15s ease-out',
                 }}>
-                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem', padding: '0 0.3rem' }}>
-                        Tema
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.76rem', fontWeight: 700, marginBottom: '0.6rem', padding: '0 0.3rem' }}>
+                        Aparência
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                         {THEMES.map((t) => {
@@ -79,8 +73,8 @@ function ThemePicker() {
                                     onClick={() => handlePick(t.id)}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.5rem 0.6rem',
-                                        background: isActive ? 'rgba(0,255,157,0.08)' : 'transparent',
-                                        border: `1px solid ${isActive ? 'rgba(0,255,157,0.3)' : 'transparent'}`,
+                                        background: isActive ? 'var(--color-primary-soft)' : 'transparent',
+                                        border: `1px solid ${isActive ? 'var(--color-primary-strong)' : 'transparent'}`,
                                         borderRadius: '8px', color: isActive ? 'var(--color-primary)' : 'var(--color-text-main)',
                                         cursor: 'pointer', fontSize: '0.85rem', textAlign: 'left', transition: 'all 0.15s',
                                     }}

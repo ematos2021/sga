@@ -78,7 +78,7 @@ const corConformidade = (c) => {
 };
 function Pill({ text, color }) {
     if (!text) return <span style={{ color: 'var(--color-text-subtle)' }}>—</span>;
-    return <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color, background: tint(color,'1a'), border: `1px solid ${tint(color,'45')}`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{text}</span>;
+    return <span style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.3px', color, background: tint(color,'1a'), border: `1px solid ${tint(color,'45')}`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{text}</span>;
 }
 
 const trunca = (s, n) => { const t = String(s ?? ''); return t.length > n ? t.slice(0, n) + '…' : t; };
@@ -336,8 +336,8 @@ function LiraView({ onBack }) {
             key: 'requisito', label: 'Requisito legal', wrap: true, render: (r) => (
                 <span title={`${r.requisito || ''}${r.sumario ? '\n\n' + r.sumario : ''}`}>
                     <span style={{ fontWeight: 600 }}>{trunca(r.requisito || '—', 52)}</span>
-                    {r.sumario ? <div style={{ color: 'var(--color-text-muted)', fontSize: '0.66rem' }}>{trunca(r.sumario, 64)}</div> : null}
-                    <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem' }}>{[r.origem, r.situacao].filter(Boolean).join(' · ') || ''}</div>
+                    {r.sumario ? <div style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>{trunca(r.sumario, 64)}</div> : null}
+                    <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.68rem' }}>{[r.origem, r.situacao].filter(Boolean).join(' · ') || ''}</div>
                 </span>
             ),
         },
@@ -345,14 +345,14 @@ function LiraView({ onBack }) {
         {
             key: 'setor', label: 'Setor', align: 'center', render: (r) => {
                 const s = setorInfo(setorDe(r));
-                return <span title={r.setor ? 'Setor gravado' : 'Sugestão automática (não gravado)'}><Pill text={`${s.emoji} ${s.nome}`} color={s.cor} />{!r.setor && <div style={{ fontSize: '0.56rem', color: 'var(--color-text-subtle)', marginTop: 1 }}>auto</div>}</span>;
+                return <span title={r.setor ? 'Setor gravado' : 'Sugestão automática (não gravado)'}><Pill text={`${s.emoji} ${s.nome}`} color={s.cor} />{!r.setor && <div style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', marginTop: 1 }}>auto</div>}</span>;
             },
         },
         { key: 'prioridade', label: 'Prioridade', align: 'center', render: (r) => <Pill text={r.prioridade} color={corPrioridade(r.prioridade)} /> },
         { key: 'conformidade', label: 'Conformidade', align: 'center', render: (r) => <Pill text={r.conformidade} color={corConformidade(r.conformidade)} /> },
         {
             key: 'analise', label: 'Análise', align: 'center', render: (r) => foiAnalisado(r)
-                ? <span><Pill text="Analisado" color="var(--color-success)" />{r.analisado_em ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem', marginTop: 2 }}>{brDataHora(r.analisado_em)}</div> : null}</span>
+                ? <span><Pill text="Analisado" color="var(--color-success)" />{r.analisado_em ? <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.68rem', marginTop: 2 }}>{brDataHora(r.analisado_em)}</div> : null}</span>
                 : <Pill text="Pendente" color="var(--color-warning)" />,
         },
         {
@@ -410,7 +410,7 @@ function LiraView({ onBack }) {
                             <div style={{ height: '100%', width: `${Math.min(100, (stats.hoje / META_DIA) * 100)}%`, background: metaBatida ? 'var(--color-success)' : 'var(--color-secondary)', transition: 'width 0.4s' }} />
                         </div>
                     </div>
-                    <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>{stats.pendentes} pendentes no total</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)' }}>{stats.pendentes} pendentes no total</span>
                 </div>
             </Card>
 
@@ -446,10 +446,10 @@ function LiraView({ onBack }) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.7rem' }}>
                     <h3 style={{ margin: 0, fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: 6 }}>
                         🏭 Avaliação por setor responsável
-                        <span style={{ fontSize: '0.62rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>· para onde as análises estão inclinando</span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>· para onde as análises estão inclinando</span>
                     </h3>
                     {podeGerenciar && pendentesClassificacao > 0 && (
-                        <Btn variant="outline" color="var(--color-secondary)" onClick={aplicarClassificacao} style={{ padding: '0.3rem 0.7rem', fontSize: '0.66rem' }}>
+                        <Btn variant="outline" color="var(--color-secondary)" onClick={aplicarClassificacao} style={{ padding: '0.3rem 0.7rem', fontSize: '0.7rem' }}>
                             {classificando ? 'Gravando…' : `Classificar ${pendentesClassificacao} itens automaticamente`}
                         </Btn>
                     )}
@@ -471,12 +471,12 @@ function LiraView({ onBack }) {
                             >
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                                     <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{info.emoji} {s.setor}</span>
-                                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)' }}>{s.total} itens</span>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)' }}>{s.total} itens</span>
                                 </div>
                                 <div style={{ height: 5, borderRadius: 3, background: 'var(--bg-surface-2)', overflow: 'hidden', marginBottom: 4 }}>
                                     <div style={{ height: '100%', width: `${s.pctAnalisado}%`, background: info.cor }} />
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: 'var(--color-text-subtle)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>
                                     <span>{s.analisados}/{s.total} analisados ({s.pctAnalisado}%)</span>
                                     <span>
                                         <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>{s.conformes}✓</span>
@@ -485,7 +485,7 @@ function LiraView({ onBack }) {
                                     </span>
                                 </div>
                                 <div style={{ marginTop: 10 }}>
-                                    <Btn variant="outline" color={info.cor} onClick={(e) => { e.stopPropagation(); setShowRelatorioSetor(s.setor); }} style={{ padding: '0.35rem', fontSize: '0.65rem', width: '100%', borderColor: tint(info.cor,'44') }}>
+                                    <Btn variant="outline" color={info.cor} onClick={(e) => { e.stopPropagation(); setShowRelatorioSetor(s.setor); }} style={{ padding: '0.35rem', fontSize: '0.7rem', width: '100%', borderColor: tint(info.cor,'44') }}>
                                         <FaPrint size={10} style={{ marginRight: 6 }} /> Gerar Relatório
                                     </Btn>
                                 </div>
@@ -500,39 +500,39 @@ function LiraView({ onBack }) {
                 <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-text-main)', marginRight: 'auto' }}>
                     Requisitos <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>({filtrados.length})</span>
                 </h3>
-                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" style={{ width: 180, fontSize: '0.68rem', padding: '0.3rem 0.55rem' }} />
-                <Select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={{ width: 125, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" style={{ width: 180, fontSize: '0.72rem', padding: '0.3rem 0.55rem' }} />
+                <Select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={{ width: 125, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Status</option>
                     <option value="pendentes">Pendentes</option>
                     <option value="analisados">Analisados</option>
                 </Select>
-                <Select value={fOrigem} onChange={(e) => setFOrigem(e.target.value)} style={{ width: 120, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fOrigem} onChange={(e) => setFOrigem(e.target.value)} style={{ width: 120, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Origem</option>
                     {origens.map((o) => <option key={o} value={o}>{o}</option>)}
                 </Select>
-                <Select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} style={{ width: 125, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} style={{ width: 125, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Prioridade</option>
                     {prioridades.map((p) => <option key={p} value={p}>{p}</option>)}
                 </Select>
-                <Select value={fSetor} onChange={(e) => setFSetor(e.target.value)} style={{ width: 138, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fSetor} onChange={(e) => setFSetor(e.target.value)} style={{ width: 138, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Setor</option>
                     {SETORES.map((s) => <option key={s.nome} value={s.nome}>{s.emoji} {s.nome}</option>)}
                     <option value={SETOR_INDEFINIDO}>❓ {SETOR_INDEFINIDO}</option>
                 </Select>
-                <Select value={fAno} onChange={(e) => setFAno(e.target.value)} style={{ width: 92, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fAno} onChange={(e) => setFAno(e.target.value)} style={{ width: 92, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Ano</option>
                     {anos.map((a) => <option key={a} value={a}>{a}</option>)}
                 </Select>
-                <Select value={fMes} onChange={(e) => setFMes(e.target.value)} style={{ width: 110, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fMes} onChange={(e) => setFMes(e.target.value)} style={{ width: 110, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Mês</option>
                     {MESES_OPCOES.map((m) => <option key={m.v} value={m.v}>{m.l}</option>)}
                 </Select>
-                <Input type="date" value={fDia} onChange={(e) => setFDia(e.target.value)} title="Dia exato da análise" style={{ width: 128, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }} />
-                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Input type="date" value={fDia} onChange={(e) => setFDia(e.target.value)} title="Dia exato da análise" style={{ width: 128, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }} />
+                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n}/pág</option>)}
                 </Select>
                 {(temFiltroData || busca || fStatus !== 'todos' || fOrigem !== 'todos' || fPrioridade !== 'todos' || fSetor !== 'todos') && (
-                    <Btn variant="outline" color="var(--color-danger)" onClick={() => { setBusca(''); setFStatus('todos'); setFOrigem('todos'); setFPrioridade('todos'); setFSetor('todos'); setFDia(''); setFMes('todos'); setFAno('todos'); }} style={{ padding: '0.3rem 0.6rem', fontSize: '0.66rem' }}>
+                    <Btn variant="outline" color="var(--color-danger)" onClick={() => { setBusca(''); setFStatus('todos'); setFOrigem('todos'); setFPrioridade('todos'); setFSetor('todos'); setFDia(''); setFMes('todos'); setFAno('todos'); }} style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem' }}>
                         Limpar
                     </Btn>
                 )}
@@ -577,7 +577,7 @@ function LiraView({ onBack }) {
                     <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
                         {selecionados.size} requisito{selecionados.size > 1 ? 's' : ''} selecionado{selecionados.size > 1 ? 's' : ''}
                     </span>
-                    <span style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)', marginRight: 'auto' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', marginRight: 'auto' }}>
                         gere o formulário de cobrança e envie ao setor responder
                     </span>
                     <Btn variant="outline" color="var(--color-text-muted)" onClick={() => setSelecionados(new Set())} style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}>Limpar seleção</Btn>
@@ -659,7 +659,7 @@ function LiraView({ onBack }) {
                     </FormGrid>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', gap: '0.6rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)' }}>
                             Hoje: {stats.hoje}/{META_DIA} análises
                         </span>
                         <div style={{ display: 'flex', gap: '0.6rem' }}>
@@ -678,7 +678,7 @@ function LiraView({ onBack }) {
 function BlocoLeitura({ titulo, texto, destaque }) {
     return (
         <div style={{ marginBottom: '0.8rem' }}>
-            <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: destaque ? 'var(--color-secondary)' : 'var(--color-text-subtle)', marginBottom: '0.3rem' }}>{titulo}</div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: destaque ? 'var(--color-secondary)' : 'var(--color-text-subtle)', marginBottom: '0.3rem' }}>{titulo}</div>
             <div style={{
                 fontSize: '0.78rem', lineHeight: 1.55, color: 'var(--color-text-main)', whiteSpace: 'pre-wrap',
                 background: destaque ? 'rgba(0,204,255,0.06)' : 'var(--bg-surface-2)',

@@ -150,11 +150,11 @@ export function GlossarioModal({ onClose }) {
                         <div key={t.termo} style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '0.7rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{t.termo}</span>
-                                {t.tag && <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--color-secondary)', background: `${tint('var(--color-secondary)','18')}`, padding: '1px 7px', borderRadius: 5 }}>{t.tag}</span>}
+                                {t.tag && <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--color-secondary)', background: `${tint('var(--color-secondary)','18')}`, padding: '1px 7px', borderRadius: 5 }}>{t.tag}</span>}
                             </div>
                             <div style={{ fontSize: '0.79rem', color: 'var(--color-text-muted)', lineHeight: 1.55 }}>{t.def}</div>
                             {t.formula && <div style={{ marginTop: 4, fontFamily: 'ui-monospace, monospace', fontSize: '0.74rem', color: 'var(--color-success)', background: `${tint('var(--color-success)','0c')}`, padding: '0.3rem 0.5rem', borderRadius: 6, display: 'inline-block' }}>{t.formula}</div>}
-                            {t.ref && <div style={{ marginTop: 3, fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>Referência: {t.ref}</div>}
+                            {t.ref && <div style={{ marginTop: 3, fontSize: '0.72rem', color: 'var(--color-text-subtle)' }}>Referência: {t.ref}</div>}
                         </div>
                     ))}
                 </div>

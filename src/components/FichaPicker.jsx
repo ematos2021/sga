@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react';
 import { FaSearch, FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { tint } from '../lib/color';
+import { useEscCamada } from './ui';
 
 // Emoji por tipo de resíduo (aproximado, só para leitura rápida)
 const iconeResiduo = (wt = '', cat = '') => {
@@ -43,6 +44,7 @@ const corTratamento = (tr = '') => {
 export default function FichaPicker({ fichas = [], onSelect, color = 'var(--color-info)' }) {
     const [open, setOpen] = useState(false);
     const [busca, setBusca] = useState('');
+    useEscCamada(open, () => setOpen(false));
 
     const lista = useMemo(() => {
         const ordenadas = [...fichas].sort((a, b) =>
@@ -99,7 +101,7 @@ export default function FichaPicker({ fichas = [], onSelect, color = 'var(--colo
                                     color: 'var(--color-text-main)', fontSize: '0.78rem',
                                 }}
                             />
-                            <span style={{ fontSize: '0.62rem', color: 'var(--color-text-subtle)' }}>{lista.length}</span>
+                            <span style={{ fontSize: '0.68rem', color: 'var(--color-text-subtle)' }}>{lista.length}</span>
                         </div>
 
                         {/* Lista */}
@@ -132,7 +134,7 @@ export default function FichaPicker({ fichas = [], onSelect, color = 'var(--colo
                                             <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {f.waste_type}{f.category ? <span style={{ color: 'var(--color-text-subtle)', fontWeight: 400 }}> · {f.category}</span> : null}
                                             </div>
-                                            <div style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 <FaArrowRight size={8} style={{ color: cor, flexShrink: 0 }} />
                                                 {f.destinator_name || 'sem destinador'}
                                             </div>
@@ -140,7 +142,7 @@ export default function FichaPicker({ fichas = [], onSelect, color = 'var(--colo
 
                                         {f.treatment && (
                                             <span style={{
-                                                flexShrink: 0, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px',
+                                                flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.3px',
                                                 color: cor, background: tint(cor,'1a'), border: `1px solid ${tint(cor,'40')}`,
                                                 padding: '2px 8px', borderRadius: 20, textTransform: 'uppercase',
                                             }}>{f.treatment}</span>

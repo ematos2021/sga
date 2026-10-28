@@ -306,7 +306,7 @@ function ConciliacaoFornecedoresView({ onBack }) {
                                     return (
                                         <tr key={idx} className={isGroupStart ? 'row-group-start' : ''}>
                                             {isFirstOfGroup ? (
-                                                <td rowSpan={rowSpan} style={{ verticalAlign: 'middle', fontSize: '0.66rem', lineHeight: 1.3, whiteSpace: 'normal', wordBreak: 'break-word', borderRight: '1px solid var(--border-color-soft)' }}>
+                                                <td rowSpan={rowSpan} style={{ verticalAlign: 'middle', fontSize: '0.7rem', lineHeight: 1.3, whiteSpace: 'normal', wordBreak: 'break-word', borderRight: '1px solid var(--border-color-soft)' }}>
                                                     {row.residuo || '—'}
                                                 </td>
                                             ) : null}

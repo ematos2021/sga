@@ -82,7 +82,7 @@ function StepItem({ step, index, total, color }) {
                 {isEnd ? (
                     <FaCheckCircle size={14} color="#fff" />
                 ) : isDecision ? (
-                    <span style={{ transform: 'rotate(-45deg)', fontSize: '0.65rem', fontWeight: 800, color }}>?</span>
+                    <span style={{ transform: 'rotate(-45deg)', fontSize: '0.7rem', fontWeight: 800, color }}>?</span>
                 ) : (
                     <span className="process-step__number" style={{ color }}>{index + 1}</span>
                 )}
@@ -117,7 +117,7 @@ function StepItem({ step, index, total, color }) {
                                             boxShadow: isActive ? `0 2px 6px ${branchColor}35` : 'none',
                                         }}
                                     >
-                                        <span style={{ fontSize: '0.55rem' }}>{isActive ? '●' : '○'}</span>
+                                        <span style={{ fontSize: '0.66rem' }}>{isActive ? '●' : '○'}</span>
                                         {branch.label}
                                     </button>
                                 );

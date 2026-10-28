@@ -1,4 +1,4 @@
-import { cloneElement, useState } from 'react';
+import { cloneElement, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import ThemePicker from '../components/ThemePicker';
 import { useCollection, COL } from '../lib/store';
@@ -6,7 +6,8 @@ import { obterEventosProximos } from '../lib/constants';
 import {
     FaLeaf, FaSignOutAlt, FaChartPie, FaFileSignature, FaFileExcel, FaTruckMoving,
     FaFileInvoiceDollar, FaUsers, FaDatabase, FaRecycle,
-    FaCalendarAlt, FaBell, FaUsersCog, FaBalanceScale, FaBug, FaTable
+    FaCalendarAlt, FaBell, FaUsersCog, FaBalanceScale, FaBug, FaTable,
+    FaSearch, FaChevronRight, FaCheckCircle
 } from 'react-icons/fa';
 
 
@@ -45,235 +46,283 @@ const CATEGORIES = [
     { id: 'admin', label: 'Administração', color: 'var(--color-purple)', ids: ['usuarios'] },
 ];
 
+// Busca sem acento e sem caixa: "residuo" acha "Resíduo"
+const normalizar = (s) => String(s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+// "eugenio" / "eugenio.matos@x.com" → "Eugenio"
+function primeiroNome(nome) {
+    const base = String(nome || '').split('@')[0].split(/[\s._-]+/)[0];
+    return base ? base.charAt(0).toUpperCase() + base.slice(1) : '';
+}
+
+function saudacao(d = new Date()) {
+    const h = d.getHours();
+    return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+}
+
 function MainMenu({ onNavigate, onLogout }) {
     const { currentUser, ROLE_LABELS } = useAuth();
     const { items: events } = useCollection(COL.CALENDARIO);
+    const { items: autorizacoes } = useCollection(COL.AUTORIZACOES);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [busca, setBusca] = useState('');
+    const buscaRef = useRef(null);
+    const sinoRef = useRef(null);
 
     const upcomingEvents = obterEventosProximos(events, new Date(), 15);
+    const autorizacoesPendentes = autorizacoes.filter((a) => a.status === 'Pendente').length;
+
+    const podeVer = (m) => {
+        if (m.admin && !currentUser?.is_admin) return false;
+        if (currentUser?.allowed_pages === 'all') return true;
+        return (currentUser?.allowed_pages || []).includes(m.id);
+    };
+
+    // "/" leva o cursor para a busca, como em qualquer buscador
+    useEffect(() => {
+        const onKey = (e) => {
+            const tag = e.target?.tagName;
+            if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); buscaRef.current?.focus(); }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
+    // Clique fora fecha a lista de eventos
+    useEffect(() => {
+        if (!showNotifications) return;
+        const onDown = (e) => { if (sinoRef.current && !sinoRef.current.contains(e.target)) setShowNotifications(false); };
+        document.addEventListener('mousedown', onDown);
+        return () => document.removeEventListener('mousedown', onDown);
+    }, [showNotifications]);
+
+    const termo = normalizar(busca.trim());
+    // Procura no nome do módulo, na descrição e no nome da seção ("resíduo" traz a Operação de Resíduos inteira)
+    const casa = (m, cat) => !termo || normalizar(`${m.label} ${m.description} ${cat.label}`).includes(termo);
+
+    const secoes = CATEGORIES
+        .map((cat) => ({ ...cat, items: cat.ids.map((id) => MENU.find((m) => m.id === id)).filter(Boolean).filter(podeVer).filter((m) => casa(m, cat)) }))
+        .filter((cat) => cat.items.length > 0);
+    const resultados = secoes.flatMap((c) => c.items);
+
+    // Só entra o que tem número e que a pessoa pode abrir — zero não vira aviso
+    const pendencias = [
+        autorizacoesPendentes > 0 && podeVer({ id: 'autorizacoes' }) && {
+            id: 'autorizacoes', num: autorizacoesPendentes, cor: 'var(--color-warning)', icon: <FaFileSignature size={15} />,
+            texto: <><strong>{autorizacoesPendentes === 1 ? 'autorização de saída' : 'autorizações de saída'}</strong> {autorizacoesPendentes === 1 ? 'aguardando liberação' : 'aguardando liberação'}</>,
+        },
+        upcomingEvents.length > 0 && podeVer({ id: 'calendario' }) && {
+            id: 'calendario', num: upcomingEvents.length, cor: 'var(--color-info)', icon: <FaCalendarAlt size={15} />,
+            texto: <><strong>{upcomingEvents.length === 1 ? 'data ambiental' : 'datas ambientais'}</strong> nos próximos 15 dias</>,
+        },
+    ].filter(Boolean);
+
+    const nome = primeiroNome(currentUser?.name);
+    const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     const renderCard = (item, index) => (
         <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            style={{
-                padding: '1rem 0.9rem', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                justifyContent: 'center', gap: '0.4rem', cursor: 'pointer',
-                border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14,
-                transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)', background: 'rgba(20,23,33,0.55)',
-                backdropFilter: 'blur(8px)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                position: 'relative', overflow: 'hidden', width: '100%', minHeight: 108,
-                animation: `slideUp 0.5s cubic-bezier(0.16,1,0.3,1) ${index * 0.04}s both`,
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px) scale(1.015)';
-                e.currentTarget.style.background = 'rgba(28,32,45,0.75)';
-                e.currentTarget.style.boxShadow = `0 16px 32px rgba(0,0,0,0.3), 0 0 1px ${item.color}40`;
-                e.currentTarget.style.borderColor = `${item.color}35`;
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.background = 'rgba(20,23,33,0.55)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-            }}
+            className="menu-card"
+            style={{ '--card-color': item.color, animationDelay: `${Math.min(index, 8) * 0.03}s` }}
         >
-            <div style={{
-                position: 'absolute', top: '-20%', left: '-20%', width: '140%', height: '140%',
-                background: `radial-gradient(circle at 30% 30%, ${item.color}08 0%, transparent 60%)`, pointerEvents: 'none',
-            }} />
+            <span className="menu-card__icon">{cloneElement(item.icon, { size: 19 })}</span>
+            <span className="menu-card__body">
+                <span className="menu-card__title">{item.label}</span>
+                <span className="menu-card__desc">{item.description}</span>
+            </span>
             {item.id === 'calendario' && upcomingEvents.length > 0 && (
-                <div 
-                    style={{
-                        position: 'absolute', top: 8, right: 8, background: 'linear-gradient(135deg, var(--color-danger), #ff6b81)', color: 'var(--color-on-accent)',
-                        padding: '2px 8px', borderRadius: 20, fontSize: '0.55rem', fontWeight: 800,
-                        boxShadow: '0 0 8px rgba(255,71,87,0.4)', letterSpacing: '0.5px', textTransform: 'uppercase',
-                        zIndex: 2
-                    }}
-                    className="animate-pulse"
-                >
-                    {upcomingEvents.length} Alerta{upcomingEvents.length > 1 ? 's' : ''}
-                </div>
+                <span className="menu-card__tag" title="Datas ambientais nos próximos 15 dias">{upcomingEvents.length}</span>
             )}
-            <div style={{ color: item.color, position: 'relative', zIndex: 1, height: 26, display: 'flex', alignItems: 'center' }}>
-                {cloneElement(item.icon)}
-            </div>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-main)', textAlign: 'center', lineHeight: 1.2, zIndex: 1 }}>
-                {item.label}
-            </span>
-            <span style={{ fontSize: '0.6rem', color: 'var(--color-text-subtle)', textAlign: 'center', zIndex: 1, lineHeight: 1.3, maxWidth: 180 }}>
-                {item.description}
-            </span>
+            <FaChevronRight size={12} className="menu-card__chevron" />
         </button>
     );
 
     return (
-        <div className="main-menu-bg" style={{ minHeight: '100vh', padding: '1.25rem', display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.5s ease-out' }}>
-            {/* HEADER */}
+        <div className="main-menu-bg" style={{ height: '100vh', display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.4s ease-out' }}>
+            {/* CABEÇALHO */}
             <header style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem',
-                padding: '0.6rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem',
+                padding: '0.8rem clamp(1rem, 3vw, 2rem)', borderBottom: '1px solid var(--border-color-soft)', flexShrink: 0,
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
                     <div style={{
-                        width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg,var(--color-primary),var(--color-success))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg,var(--color-primary),var(--color-success))',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                     }}>
-                        <FaLeaf size={20} color="var(--color-on-accent)" />
+                        <FaLeaf size={18} color="var(--color-on-accent)" />
                     </div>
-                    <div>
-                        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-                            SGA · Gestão Ambiental
-                        </h2>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)' }}>
-                            {currentUser?.avatar} {currentUser?.name} — {ROLE_LABELS[currentUser?.role] || currentUser?.role}
-                        </span>
+                    <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--color-text-strong)', whiteSpace: 'nowrap' }}>SGA</div>
+                        <div className="hide-mobile" style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>Gestão Ambiental</div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    {/* NOTIFICAÇÕES BELL */}
-                    <div style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {/* DATAS AMBIENTAIS */}
+                    <div ref={sinoRef} style={{ position: 'relative' }}>
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}
-                            style={{
-                                padding: '0.45rem', background: 'rgba(20,23,33,0.55)', border: '1px solid rgba(255,255,255,0.06)',
-                                borderRadius: 8, color: upcomingEvents.length > 0 ? 'var(--color-warning)' : 'var(--color-text-muted)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
-                                width: 34, height: 34, position: 'relative', outline: 'none'
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
-                            title="Datas Ambientais Próximas"
+                            className="ghost-btn ghost-btn--icon"
+                            style={{ position: 'relative', color: upcomingEvents.length > 0 ? 'var(--color-warning)' : undefined }}
+                            title="Datas ambientais próximas"
+                            aria-label="Datas ambientais próximas"
                         >
-                            <FaBell size={14} className={upcomingEvents.length > 0 ? "bell-glow" : ""} />
+                            <FaBell size={14} className={upcomingEvents.length > 0 ? 'bell-glow' : ''} />
                             {upcomingEvents.length > 0 && (
                                 <span style={{
-                                    position: 'absolute', top: -3, right: -3, background: 'var(--color-danger)', color: 'var(--color-on-accent)',
-                                    borderRadius: '50%', width: 15, height: 15, fontSize: '0.55rem', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 0 6px var(--color-danger)'
+                                    position: 'absolute', top: -5, right: -5, background: 'var(--color-danger)', color: 'var(--color-on-accent)',
+                                    borderRadius: 10, minWidth: 18, height: 18, padding: '0 4px', fontSize: '0.68rem', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontVariantNumeric: 'tabular-nums',
                                 }}>
                                     {upcomingEvents.length}
                                 </span>
                             )}
                         </button>
                         {showNotifications && (
-                            <div 
-                                className="glass-panel"
-                                style={{
-                                    position: 'absolute', top: '125%', right: 0, width: 310, maxHeight: 380,
-                                    overflowY: 'auto', zIndex: 1000, padding: '0.9rem', border: '1px solid var(--border-color)',
-                                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)', borderRadius: 12, display: 'flex',
-                                    flexDirection: 'column', gap: '0.6rem', background: 'var(--bg-surface)'
-                                }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem' }}>
-                                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-                                        Eventos Ambientais Próximos
-                                    </span>
-                                    <span style={{ fontSize: '0.58rem', color: 'var(--color-success)', fontWeight: 600 }}>
-                                        Próximos 15 dias
-                                    </span>
+                            <div style={{
+                                position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 'min(330px, calc(100vw - 2rem))', maxHeight: 420,
+                                overflowY: 'auto', zIndex: 1000, padding: '0.9rem', border: '1px solid var(--border-color)',
+                                boxShadow: 'var(--shadow-lg)', borderRadius: 14, display: 'flex',
+                                flexDirection: 'column', gap: '0.6rem', background: 'var(--bg-surface)', animation: 'fadeIn 0.15s ease-out',
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem', borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--color-text-strong)' }}>Datas ambientais</span>
+                                    <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>próximos 15 dias</span>
                                 </div>
                                 {upcomingEvents.length === 0 ? (
-                                    <div style={{ padding: '1.2rem 0', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>
-                                        Nenhum evento ambiental próximo.
+                                    <div style={{ padding: '1.2rem 0', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
+                                        Nenhuma data nos próximos 15 dias.
                                     </div>
                                 ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                         {upcomingEvents.map((evt, idx) => (
-                                            <div 
-                                                key={idx} 
+                                            <button
+                                                key={idx}
                                                 onClick={() => { setShowNotifications(false); onNavigate('calendario'); }}
-                                                style={{ 
-                                                    padding: '0.5rem', borderRadius: 8, background: 'rgba(255,255,255,0.02)',
-                                                    border: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column',
-                                                    gap: '2px', cursor: 'pointer', transition: 'all 0.15s'
-                                                }}
-                                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                                                className="attention-item"
+                                                style={{ padding: '0.55rem 0.7rem', background: 'var(--bg-surface-2)' }}
                                             >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-success)' }}>
-                                                        {evt.dia}/{String(evt.mes).padStart(2, '0')}
-                                                    </span>
-                                                    <span style={{ fontSize: '0.56rem', color: 'var(--color-warning)', fontWeight: 700 }}>
-                                                        {evt.diasRestantes === 0 ? 'Hoje!' : evt.diasRestantes === 1 ? 'Amanhã!' : `Em ${evt.diasRestantes} dias`}
-                                                    </span>
-                                                </div>
-                                                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--color-text-main)', lineHeight: 1.2 }}>
-                                                    {evt.titulo}
+                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text-strong)', fontVariantNumeric: 'tabular-nums', minWidth: 42 }}>
+                                                    {String(evt.dia).padStart(2, '0')}/{String(evt.mes).padStart(2, '0')}
                                                 </span>
-                                            </div>
+                                                <span style={{ flex: 1, minWidth: 0, fontSize: '0.8rem', lineHeight: 1.3, color: 'var(--color-text-main)' }}>{evt.titulo}</span>
+                                                <span style={{ fontSize: '0.72rem', color: evt.diasRestantes <= 1 ? 'var(--color-warning)' : 'var(--color-text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                                    {evt.diasRestantes === 0 ? 'hoje' : evt.diasRestantes === 1 ? 'amanhã' : `em ${evt.diasRestantes} dias`}
+                                                </span>
+                                            </button>
                                         ))}
                                     </div>
                                 )}
-                                <button 
+                                <button
                                     onClick={() => { setShowNotifications(false); onNavigate('calendario'); }}
-                                    style={{ 
-                                        padding: '0.45rem', background: 'rgba(16,185,129,0.1)', border: 'none',
-                                        borderRadius: 6, color: 'var(--color-success)', fontSize: '0.68rem', cursor: 'pointer',
-                                        fontWeight: 'bold', marginTop: '0.2rem', textAlign: 'center', transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.18)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.1)'}
+                                    className="ghost-btn"
+                                    style={{ width: '100%', color: 'var(--color-primary)' }}
                                 >
-                                    Abrir Calendário Completo
+                                    Abrir calendário
                                 </button>
                             </div>
                         )}
                     </div>
                     <ThemePicker />
-                    <button
-                        onClick={onLogout}
-                        style={{
-                            padding: '0.45rem 0.9rem', background: 'transparent', border: '1px solid rgba(255,71,87,0.2)',
-                            borderRadius: 8, color: 'var(--color-danger)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '0.35rem', transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,71,87,0.08)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                    >
-                        <FaSignOutAlt size={12} /> SAIR
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', paddingLeft: '0.35rem' }} title={currentUser?.email}>
+                        <span className="avatar-initial">{nome ? nome.charAt(0) : '?'}</span>
+                        <div className="hide-mobile" style={{ lineHeight: 1.25 }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-main)' }}>{nome}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{ROLE_LABELS[currentUser?.role] || currentUser?.role}</div>
+                        </div>
+                    </div>
+                    <button onClick={onLogout} className="ghost-btn" title="Sair do sistema">
+                        <FaSignOutAlt size={13} /><span className="hide-mobile">Sair</span>
                     </button>
                 </div>
             </header>
 
-            {/* CATEGORIES */}
-            <div style={{ flex: 1, overflowY: 'auto', maxWidth: 1100, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {CATEGORIES.map((cat) => {
-                    const items = cat.ids
-                        .map((id) => MENU.find((m) => m.id === id))
-                        .filter(Boolean)
-                        .filter((m) => !m.admin || currentUser?.is_admin)
-                        .filter((m) => {
-                            // Admin tem acesso total
-                            if (currentUser?.allowed_pages === 'all') return true;
-                            // Usuário normal: verifica se tem permissão
-                            return (currentUser?.allowed_pages || []).includes(m.id);
-                        });
-                    if (items.length === 0) return null;
-                    return (
-                        <div key={cat.id}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.7rem' }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: cat.color, boxShadow: `0 0 8px ${cat.color}66` }} />
-                                <span style={{ fontSize: '0.64rem', fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--color-text-subtle)' }}>
-                                    {cat.label}
-                                </span>
-                                <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.06), transparent)' }} />
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.6rem clamp(1rem, 3vw, 2rem) 2rem' }}>
+                <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.6rem' }}>
+                    {/* BOAS-VINDAS + BUSCA */}
+                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div>
+                            <h1 style={{ margin: 0, fontSize: 'clamp(1.35rem, 3vw, 1.7rem)', fontWeight: 700, color: 'var(--color-text-strong)', lineHeight: 1.2 }}>
+                                {saudacao()}{nome ? `, ${nome}` : ''}
+                            </h1>
+                            <p style={{ margin: '0.3rem 0 0', fontSize: '0.88rem', color: 'var(--color-text-muted)' }}>
+                                Hoje é {hoje}. O que você vai fazer agora?
+                            </p>
+                        </div>
+                        <label className="menu-search">
+                            <FaSearch size={13} />
+                            <input
+                                ref={buscaRef}
+                                className="input-dark"
+                                value={busca}
+                                onChange={(e) => setBusca(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && resultados.length === 1) onNavigate(resultados[0].id);
+                                    if (e.key === 'Escape') setBusca('');
+                                }}
+                                placeholder="Procurar módulo…"
+                                aria-label="Procurar módulo"
+                            />
+                            {!busca && <kbd className="hide-mobile" title="Tecle / para procurar">/</kbd>}
+                        </label>
+                    </div>
+
+                    {/* PARA HOJE */}
+                    {!termo && (
+                        <section>
+                            <div className="menu-section-title">Para hoje</div>
+                            {pendencias.length === 0 ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1rem', borderRadius: 12, border: '1px dashed var(--border-color)', color: 'var(--color-text-muted)', fontSize: '0.84rem' }}>
+                                    <FaCheckCircle size={14} style={{ color: 'var(--color-text-subtle)' }} />
+                                    Nada pendente por aqui. Escolha um módulo abaixo para começar.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.75rem' }}>
+                                    {pendencias.map((p) => (
+                                        <button key={p.id} className="attention-item" onClick={() => onNavigate(p.id)}>
+                                            <span style={{ width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: p.cor, background: `color-mix(in srgb, ${p.cor} 14%, transparent)` }}>
+                                                {p.icon}
+                                            </span>
+                                            <span className="attention-item__num" style={{ color: p.cor }}>{p.num}</span>
+                                            <span className="attention-item__txt" style={{ flex: 1 }}>{p.texto}</span>
+                                            <FaChevronRight size={11} style={{ color: 'var(--color-text-faint)', flexShrink: 0 }} />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+                    )}
+
+                    {/* MÓDULOS */}
+                    {secoes.map((cat) => (
+                        <section key={cat.id}>
+                            <div className="menu-section-title">
+                                <i style={{ background: cat.color }} />
+                                {cat.label}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.8rem' }}>
-                                {items.map((item, idx) => renderCard(item, idx))}
+                            <div className="menu-grid">
+                                {cat.items.map((item, idx) => renderCard(item, idx))}
+                            </div>
+                        </section>
+                    ))}
+
+                    {termo && resultados.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                            Nenhum módulo encontrado para “{busca.trim()}”.
+                            <div style={{ marginTop: '0.8rem' }}>
+                                <button className="ghost-btn" onClick={() => setBusca('')}>Limpar busca</button>
                             </div>
                         </div>
-                    );
-                })}
-            </div>
+                    )}
 
-            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <span style={{ fontSize: '0.65rem', color: 'var(--color-text-faint)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-                    <FaRecycle size={10} style={{ verticalAlign: 'middle', marginRight: 5 }} />
-                    Sistema de Gestão Ambiental
-                </span>
+                    <div style={{ textAlign: 'center', paddingTop: '0.5rem' }}>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)' }}>
+                            <FaRecycle size={11} style={{ verticalAlign: '-1px', marginRight: 6 }} />
+                            Sistema de Gestão Ambiental
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { FaLeaf, FaUser, FaLock, FaArrowRight } from 'react-icons/fa';
+import { FaLeaf, FaUser, FaLock, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 function LoginPage({ onLoginSuccess }) {
     const { login } = useAuth();
@@ -8,6 +8,7 @@ function LoginPage({ onLoginSuccess }) {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [carregando, setCarregando] = useState(false);
+    const [verSenha, setVerSenha] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -26,13 +27,16 @@ function LoginPage({ onLoginSuccess }) {
                     <div style={{
                         width: 64, height: 64, borderRadius: 18, margin: '0 auto 1rem',
                         background: 'linear-gradient(135deg, var(--color-primary), var(--color-success))', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,255,157,0.3)',
+                        alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px color-mix(in srgb, var(--color-primary) 30%, transparent)',
                     }}>
                         <FaLeaf size={30} color="var(--color-on-accent)" />
                     </div>
                     <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-main)' }}>SGA</h1>
-                    <p style={{ margin: '0.3rem 0 0', fontSize: '0.82rem', color: 'var(--color-text-subtle)', letterSpacing: '0.5px' }}>
+                    <p style={{ margin: '0.3rem 0 0', fontSize: '0.88rem', color: 'var(--color-text-muted)' }}>
                         Sistema de Gestão Ambiental
+                    </p>
+                    <p style={{ margin: '0.9rem 0 0', fontSize: '0.84rem', color: 'var(--color-text-subtle)' }}>
+                        Entre com seu e-mail e senha para continuar.
                     </p>
                 </div>
 
@@ -49,8 +53,12 @@ function LoginPage({ onLoginSuccess }) {
                         <label className="label-muted">Senha</label>
                         <div style={{ position: 'relative' }}>
                             <FaLock size={13} style={iconInside} />
-                            <input className="input-dark" style={{ paddingLeft: '2.5rem' }} type="password" value={password}
+                            <input className="input-dark" style={{ paddingLeft: '2.5rem', paddingRight: '2.8rem' }} type={verSenha ? 'text' : 'password'} value={password}
                                 onChange={(e) => setPassword(e.target.value)} placeholder="••••" />
+                            <button type="button" onClick={() => setVerSenha((v) => !v)} title={verSenha ? 'Esconder senha' : 'Mostrar senha'} aria-label={verSenha ? 'Esconder senha' : 'Mostrar senha'}
+                                style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 34, height: 34, border: 'none', background: 'transparent', color: 'var(--color-text-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}>
+                                {verSenha ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                            </button>
                         </div>
                     </div>
 

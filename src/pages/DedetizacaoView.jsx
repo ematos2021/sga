@@ -34,7 +34,7 @@ const corPrioridade = (p) => ({ 'Baixa': 'var(--color-info)', 'Média': 'var(--c
 
 function Pill({ text, color }) {
     if (!text) return <span style={{ color: 'var(--color-text-subtle)' }}>—</span>;
-    return <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.3px', color, background: tint(color,'1a'), border: `1px solid ${tint(color,'45')}`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{text}</span>;
+    return <span style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.3px', color, background: tint(color,'1a'), border: `1px solid ${tint(color,'45')}`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>{text}</span>;
 }
 
 const trunca = (s, n) => { const t = String(s ?? ''); return t.length > n ? t.slice(0, n) + '…' : t; };
@@ -213,21 +213,21 @@ function DedetizacaoView({ onBack }) {
     };
 
     const columns = [
-        { key: 'id', label: 'Nº', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{String(r.id).padStart(3, '0')}<div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem' }}>{brData(r.created_at)}</div></span> },
+        { key: 'id', label: 'Nº', align: 'center', render: (r) => <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.7rem' }}>{String(r.id).padStart(3, '0')}<div style={{ color: 'var(--color-text-subtle)', fontSize: '0.68rem' }}>{brData(r.created_at)}</div></span> },
         { key: 'area', label: 'Área', wrap: true, render: (r) => (
             <span>
                 <span style={{ fontWeight: 600 }}>{r.area_solicitante || '—'}</span>
                 {(ocorrencias.idx[r.id] || 0) >= 2 && (
                     <div style={{ marginTop: 2 }}><Pill text={`↻ ${ocorrencias.idx[r.id]}ª na área`} color="var(--color-danger)" /></div>
                 )}
-                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.62rem' }}>{r.solicitante || ''}{r.empresa ? ` · ${r.empresa}` : ''}</div>
+                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.68rem' }}>{r.solicitante || ''}{r.empresa ? ` · ${r.empresa}` : ''}</div>
             </span>
         ) },
         { key: 'praga', label: 'Praga', align: 'center', render: (r) => r.tipo_praga ? <span title={r.tipo_praga} style={{ whiteSpace: 'nowrap' }}><span style={{ fontSize: '0.95rem', marginRight: 4 }}>{pragaEmoji(r.tipo_praga)}</span>{trunca(r.tipo_praga.split(' ')[0].replace('/', ''), 10)}</span> : '—' },
         { key: 'local', label: 'Motivo / Localização', wrap: true, render: (r) => (
             <span title={`${r.motivo || ''}\n${r.localizacao || ''}\n${r.descricao || ''}`}>
                 {trunca(r.motivo || '—', 46)}
-                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.64rem', display: 'flex', alignItems: 'center', gap: 3 }}><FaMapMarkerAlt size={8} />{trunca(r.localizacao || '—', 50)}</div>
+                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 3 }}><FaMapMarkerAlt size={8} />{trunca(r.localizacao || '—', 50)}</div>
             </span>
         ) },
         { key: 'agend', label: 'Agendamento', align: 'center', render: (r) => <span style={{ fontSize: '0.72rem' }}>{brData(r.data_agendamento)}</span> },
@@ -326,20 +326,20 @@ function DedetizacaoView({ onBack }) {
                 <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-text-main)', marginRight: 'auto' }}>
                     Solicitações <span style={{ fontSize: '0.72rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>({filtrados.length})</span>
                 </h3>
-                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" style={{ width: 180, fontSize: '0.68rem', padding: '0.3rem 0.55rem' }} />
-                <Select value={fSituacao} onChange={(e) => setFSituacao(e.target.value)} style={{ width: 130, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" style={{ width: 180, fontSize: '0.72rem', padding: '0.3rem 0.55rem' }} />
+                <Select value={fSituacao} onChange={(e) => setFSituacao(e.target.value)} style={{ width: 130, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Situação</option>
                     {SITUACOES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </Select>
-                <Select value={fPraga} onChange={(e) => setFPraga(e.target.value)} style={{ width: 150, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fPraga} onChange={(e) => setFPraga(e.target.value)} style={{ width: 150, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Praga</option>
                     {PRAGAS.map((p) => <option key={p.nome} value={p.nome}>{p.emoji} {p.nome}</option>)}
                 </Select>
-                <Select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} style={{ width: 118, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={fPrioridade} onChange={(e) => setFPrioridade(e.target.value)} style={{ width: 118, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     <option value="todos">Prioridade</option>
                     {PRIORIDADES.map((p) => <option key={p} value={p}>{p}</option>)}
                 </Select>
-                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.68rem', padding: '0.3rem 0.5rem' }}>
+                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ width: 90, fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}>
                     {[25, 50, 100].map((n) => <option key={n} value={n}>{n}/pág</option>)}
                 </Select>
             </div>
@@ -387,7 +387,7 @@ function DedetizacaoView({ onBack }) {
                             {areasSugeridas.length > 0 && (
                                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
                                     {areasSugeridas.slice(0, 8).map((a) => (
-                                        <span key={a} onClick={() => setN('area_solicitante', a)} style={{ cursor: 'pointer', fontSize: '0.62rem', padding: '2px 8px', borderRadius: 20, background: 'var(--bg-surface-2)', border: '1px solid var(--border-color-soft)', color: 'var(--color-text-muted)' }}>{a}</span>
+                                        <span key={a} onClick={() => setN('area_solicitante', a)} style={{ cursor: 'pointer', fontSize: '0.68rem', padding: '2px 8px', borderRadius: 20, background: 'var(--bg-surface-2)', border: '1px solid var(--border-color-soft)', color: 'var(--color-text-muted)' }}>{a}</span>
                                     ))}
                                 </div>
                             )}
@@ -459,7 +459,7 @@ function DedetizacaoView({ onBack }) {
                     </FormGrid>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', gap: '0.6rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.66rem', color: 'var(--color-text-subtle)' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)' }}>
                             {analise.row.analisado_em ? `1ª análise: ${brData(analise.row.analisado_em)} · ${analise.row.analisado_por || '—'}` : `Análise será registrada por ${nomeUsuario}`}
                         </span>
                         <div style={{ display: 'flex', gap: '0.6rem' }}>
